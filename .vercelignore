@@ -1,0 +1,13 @@
+# Ignore backend folder and files
+backend/
+backend/**
+
+# Ignore other non-frontend files
+*.md
+.git/
+.gitignore
+.DS_Store
+node_modules/
+
+# Keep only frontend for deployment
+!frontend/
