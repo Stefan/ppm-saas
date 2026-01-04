@@ -4,6 +4,7 @@ import { useAuth } from '../providers/SupabaseAuthProvider'
 import { useState } from 'react'
 import { MessageCircle, FileText, Download, Loader, Send, Bot, User } from 'lucide-react'
 import AppLayout from '../../components/AppLayout'
+import { getApiUrl } from '../../lib/api'
 
 interface ChatMessage {
   id: string
@@ -39,7 +40,7 @@ export default function Reports() {
   const [showReportOptions, setShowReportOptions] = useState(false)
 
   const handleSendMessage = async () => {
-    if (!currentQuery.trim() || !session) return
+    if (!currentQuery.trim() || !session?.access_token) return
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -53,7 +54,7 @@ export default function Reports() {
     setIsLoading(true)
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reports/query`, {
+      const response = await fetch(getApiUrl('/reports/query'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,7 +80,7 @@ export default function Reports() {
       }
 
       setMessages(prev => [...prev, assistantMessage])
-    } catch (error) {
+    } catch (error: unknown) {
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
@@ -94,12 +95,12 @@ export default function Reports() {
   }
 
   const handleGenerateReport = async () => {
-    if (!currentQuery.trim() || !session) return
+    if (!currentQuery.trim() || !session?.access_token) return
 
     setIsLoading(true)
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reports/generate`, {
+      const response = await fetch(getApiUrl('/reports/generate'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -127,7 +128,7 @@ export default function Reports() {
       setMessages(prev => [...prev, reportMessage])
       setCurrentQuery('')
       setShowReportOptions(false)
-    } catch (error) {
+    } catch (error: unknown) {
       const errorMessage: ChatMessage = {
         id: Date.now().toString(),
         type: 'assistant',

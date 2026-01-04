@@ -27,31 +27,115 @@ function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isSignup, setIsSignup] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleAuth = async () => {
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
     const { data, error } = isSignup
       ? await supabase.auth.signUp({ email, password })
       : await supabase.auth.signInWithPassword({ email, password })
-    if (error) alert(error.message)
-  }
-
-  const handleResetPassword = async () => {
-    const email = prompt('Gib deine Email ein:')
-    if (email) {
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email)
-      if (error) alert(error.message)
-      else alert('Reset-Link gesendet! Check deine Email.')
+    
+    if (error) {
+      setError(error.message)
+    } else if (isSignup) {
+      setError('Please check your email to confirm your account.')
     }
+    
+    setLoading(false)
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
-      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="mb-2 p-2 border" />
-      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" className="mb-2 p-2 border" />
-      <button onClick={handleAuth} className="mb-2 p-2 bg-blue-500 text-white">{isSignup ? 'Sign Up' : 'Login'}</button>
-      <button onClick={() => setIsSignup(!isSignup)} className="p-2 text-blue-500">{isSignup ? 'Switch to Login' : 'Switch to Sign Up'}</button>
-      <div className="mt-4">
-        <button onClick={handleResetPassword} className="text-blue-500">Passwort vergessen?</button>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            {isSignup ? 'Create your account' : 'Sign in to your account'}
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            AI-Powered Project Portfolio Management
+          </p>
+        </div>
+        
+        <form className="mt-8 space-y-6" onSubmit={handleAuth}>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email Address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Enter your email"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete={isSignup ? 'new-password' : 'current-password'}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Enter your password"
+              />
+            </div>
+          </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-4">
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          )}
+
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                isSignup ? 'Sign Up' : 'Sign In'
+              )}
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setIsSignup(!isSignup)}
+              className="text-blue-600 hover:text-blue-500 text-sm"
+            >
+              {isSignup ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
+            </button>
+            
+            {!isSignup && (
+              <a
+                href="/forgot-password"
+                className="text-blue-600 hover:text-blue-500 text-sm"
+              >
+                Forgot password?
+              </a>
+            )}
+          </div>
+        </form>
       </div>
     </div>
   )

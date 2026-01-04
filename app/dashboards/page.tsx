@@ -1,24 +1,29 @@
 'use client'
 
 import { useAuth } from '../providers/SupabaseAuthProvider'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line, Area, AreaChart
+  PieChart, Pie, Cell, LineChart, Line, Area, AreaChart, ComposedChart
 } from 'recharts'
 import AppLayout from '../../components/AppLayout'
-import { Filter, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Clock, DollarSign } from 'lucide-react'
+import { getApiUrl } from '../../lib/api'
+import { 
+  Filter, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Clock, DollarSign,
+  RefreshCw, Eye, EyeOff, Maximize2, Minimize2, Download, Settings, Bell
+} from 'lucide-react'
+import { supabase } from '../../lib/supabase'
 
 interface Project {
   id: string
   name: string
-  description?: string
+  description?: string | null
   status: string
   health: 'green' | 'yellow' | 'red'
-  budget?: number
-  actual_cost?: number
-  start_date?: string
-  end_date?: string
+  budget?: number | null
+  actual_cost?: number | null
+  start_date?: string | null
+  end_date?: string | null
   portfolio_id: string
   created_at: string
 }
@@ -54,13 +59,43 @@ interface DashboardFilters {
   date_range: string
 }
 
+interface TrendData {
+  date: string
+  projects: number
+  budget: number
+  actual: number
+  health_score: number
+}
+
+interface AlertItem {
+  id: string
+  type: 'budget' | 'timeline' | 'health' | 'resource'
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  title: string
+  description: string
+  project_id?: string
+  created_at: string
+}
+
+interface DashboardSettings {
+  autoRefresh: boolean
+  refreshInterval: number // seconds
+  showAdvancedMetrics: boolean
+  compactView: boolean
+  enableNotifications: boolean
+}
+
 export default function Dashboards() {
   const { session } = useAuth()
   const [projects, setProjects] = useState<Project[]>([])
   const [portfolioMetrics, setPortfolioMetrics] = useState<PortfolioMetrics | null>(null)
   const [kpis, setKPIs] = useState<KPIs | null>(null)
+  const [trendData, setTrendData] = useState<TrendData[]>([])
+  const [alerts, setAlerts] = useState<AlertItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [filters, setFilters] = useState<DashboardFilters>({
     status: 'all',
     health: 'all',
@@ -68,6 +103,59 @@ export default function Dashboards() {
     date_range: 'all'
   })
   const [showFilters, setShowFilters] = useState(false)
+  const [settings, setSettings] = useState<DashboardSettings>({
+    autoRefresh: true,
+    refreshInterval: 30,
+    showAdvancedMetrics: true,
+    compactView: false,
+    enableNotifications: true
+  })
+  const [expandedCharts, setExpandedCharts] = useState<Set<string>>(new Set())
+  const [hiddenCharts, setHiddenCharts] = useState<Set<string>>(new Set())
+
+  // Real-time updates with Supabase subscriptions
+  useEffect(() => {
+    if (!session) return
+
+    const projectsSubscription = supabase
+      .channel('projects-changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'projects' },
+        (payload) => {
+          console.log('Project change detected:', payload)
+          // Refresh data when projects change
+          fetchDashboardData()
+        }
+      )
+      .subscribe()
+
+    const risksSubscription = supabase
+      .channel('risks-changes')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'risks' },
+        (payload) => {
+          console.log('Risk change detected:', payload)
+          generateAlerts()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      projectsSubscription.unsubscribe()
+      risksSubscription.unsubscribe()
+    }
+  }, [session])
+
+  // Auto-refresh functionality
+  useEffect(() => {
+    if (!settings.autoRefresh || !session) return
+
+    const interval = setInterval(() => {
+      fetchDashboardData()
+    }, settings.refreshInterval * 1000)
+
+    return () => clearInterval(interval)
+  }, [settings.autoRefresh, settings.refreshInterval, session])
 
   // Filtered projects based on current filters
   const filteredProjects = useMemo(() => {
@@ -98,6 +186,11 @@ export default function Dashboards() {
     })
   }, [projects, filters])
 
+  // Critical alerts calculation
+  const criticalAlerts = useMemo(() => {
+    return alerts.filter(alert => alert.severity === 'critical' || alert.severity === 'high')
+  }, [alerts])
+
   useEffect(() => {
     if (session) {
       fetchDashboardData()
@@ -111,6 +204,15 @@ export default function Dashboards() {
     }
   }, [filters, session])
 
+  const refreshData = useCallback(async () => {
+    setIsRefreshing(true)
+    try {
+      await fetchDashboardData()
+    } finally {
+      setIsRefreshing(false)
+    }
+  }, [])
+
   async function fetchDashboardData() {
     setLoading(true)
     setError(null)
@@ -118,8 +220,11 @@ export default function Dashboards() {
       await Promise.all([
         fetchProjects(),
         fetchPortfolioMetrics(),
-        fetchKPIs()
+        fetchKPIs(),
+        fetchTrendData(),
+        generateAlerts()
       ])
+      setLastUpdated(new Date())
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
@@ -128,47 +233,214 @@ export default function Dashboards() {
   }
 
   async function fetchProjects() {
-    if (!session) throw new Error('Not authenticated')
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/projects/`, {
-      headers: {
-        'Authorization': `Bearer ${session.access_token}`
+    if (!session?.access_token) throw new Error('Not authenticated')
+    
+    try {
+      const response = await fetch(getApiUrl('/projects/'), {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch projects: ${response.status}`)
       }
-    })
-    if (!response.ok) throw new Error('Failed to fetch projects')
-    const data = await response.json()
-    setProjects(data)
+      
+      const data = await response.json()
+      setProjects(Array.isArray(data) ? data as Project[] : [])
+    } catch (error: unknown) {
+      console.error('Error fetching projects:', error)
+      throw error instanceof Error ? error : new Error('Unknown error fetching projects')
+    }
   }
 
   async function fetchPortfolioMetrics() {
-    if (!session) return
+    if (!session?.access_token) return
     
-    const portfolioParam = filters.portfolio_id !== 'all' ? `?portfolio_id=${filters.portfolio_id}` : ''
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/portfolio/metrics${portfolioParam}`, {
-      headers: {
-        'Authorization': `Bearer ${session.access_token}`
+    try {
+      const portfolioParam = filters.portfolio_id !== 'all' ? `?portfolio_id=${filters.portfolio_id}` : ''
+      const response = await fetch(getApiUrl(`/portfolio/metrics${portfolioParam}`), {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch portfolio metrics: ${response.status}`)
       }
-    })
-    if (!response.ok) throw new Error('Failed to fetch portfolio metrics')
-    const data = await response.json()
-    setPortfolioMetrics(data)
+      
+      const data = await response.json()
+      setPortfolioMetrics(data as PortfolioMetrics)
+    } catch (error: unknown) {
+      console.error('Error fetching portfolio metrics:', error)
+    }
   }
 
   async function fetchKPIs() {
-    if (!session) return
+    if (!session?.access_token) return
     
-    const portfolioParam = filters.portfolio_id !== 'all' ? `?portfolio_id=${filters.portfolio_id}` : ''
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/portfolio/kpis${portfolioParam}`, {
-      headers: {
-        'Authorization': `Bearer ${session.access_token}`
+    try {
+      const portfolioParam = filters.portfolio_id !== 'all' ? `?portfolio_id=${filters.portfolio_id}` : ''
+      const response = await fetch(getApiUrl(`/portfolio/kpis${portfolioParam}`), {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch KPIs: ${response.status}`)
       }
-    })
-    if (!response.ok) throw new Error('Failed to fetch KPIs')
-    const data = await response.json()
-    setKPIs(data.kpis)
+      
+      const data = await response.json()
+      setKPIs(data.kpis as KPIs)
+    } catch (error: unknown) {
+      console.error('Error fetching KPIs:', error)
+    }
+  }
+
+  async function fetchTrendData() {
+    if (!session?.access_token) return
+    
+    try {
+      const response = await fetch(getApiUrl('/portfolio/trends?days=30'), {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch trend data: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      
+      // Transform trend data for charts
+      const transformedData = data.trend_data?.map((item: any) => ({
+        date: new Date(item.date).toLocaleDateString(),
+        projects: item.projects_count || 0,
+        budget: item.spending || 0,
+        actual: item.spending || 0,
+        health_score: Math.random() * 3 // Placeholder - would be calculated from actual data
+      })) || []
+      
+      setTrendData(transformedData)
+    } catch (error: unknown) {
+      console.error('Error fetching trend data:', error)
+    }
+  }
+
+  async function generateAlerts() {
+    if (!session?.access_token) return
+    
+    try {
+      // Generate alerts based on current data
+      const newAlerts: AlertItem[] = []
+      
+      // Budget alerts
+      const budgetResponse = await fetch(getApiUrl('/financial-tracking/budget-alerts?threshold_percentage=80'), {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        }
+      })
+      
+      if (budgetResponse.ok) {
+        const budgetData = await budgetResponse.json()
+        budgetData.alerts?.forEach((alert: any) => {
+          newAlerts.push({
+            id: `budget-${alert.project_id}`,
+            type: 'budget',
+            severity: alert.alert_level === 'critical' ? 'critical' : 'high',
+            title: 'Budget Alert',
+            description: alert.message,
+            project_id: alert.project_id,
+            created_at: new Date().toISOString()
+          })
+        })
+      }
+      
+      // Health-based alerts
+      projects.forEach(project => {
+        if (project.health === 'red') {
+          newAlerts.push({
+            id: `health-${project.id}`,
+            type: 'health',
+            severity: 'critical',
+            title: 'Critical Project Health',
+            description: `Project "${project.name}" requires immediate attention`,
+            project_id: project.id,
+            created_at: new Date().toISOString()
+          })
+        } else if (project.health === 'yellow') {
+          newAlerts.push({
+            id: `health-${project.id}`,
+            type: 'health',
+            severity: 'medium',
+            title: 'Project At Risk',
+            description: `Project "${project.name}" is showing warning signs`,
+            project_id: project.id,
+            created_at: new Date().toISOString()
+          })
+        }
+      })
+      
+      setAlerts(newAlerts)
+    } catch (error: unknown) {
+      console.error('Error generating alerts:', error)
+    }
   }
 
   const handleFilterChange = (filterType: keyof DashboardFilters, value: string) => {
     setFilters(prev => ({ ...prev, [filterType]: value }))
+  }
+
+  const toggleChartExpansion = (chartId: string) => {
+    setExpandedCharts(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(chartId)) {
+        newSet.delete(chartId)
+      } else {
+        newSet.add(chartId)
+      }
+      return newSet
+    })
+  }
+
+  const toggleChartVisibility = (chartId: string) => {
+    setHiddenCharts(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(chartId)) {
+        newSet.delete(chartId)
+      } else {
+        newSet.add(chartId)
+      }
+      return newSet
+    })
+  }
+
+  const exportDashboardData = () => {
+    const exportData = {
+      projects: filteredProjects,
+      metrics: portfolioMetrics,
+      kpis,
+      trends: trendData,
+      alerts: criticalAlerts,
+      exported_at: new Date().toISOString()
+    }
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `dashboard-export-${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   }
 
   // Chart data preparation
@@ -180,7 +452,11 @@ export default function Dashboards() {
 
   const statusChartData = portfolioMetrics ? Object.entries(portfolioMetrics.status_distribution).map(([status, count]) => ({
     name: status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' '),
-    value: count
+    value: count,
+    color: status === 'completed' ? '#10B981' : 
+           status === 'active' ? '#3B82F6' :
+           status === 'on-hold' ? '#F59E0B' :
+           status === 'cancelled' ? '#EF4444' : '#6B7280'
   })) : []
 
   const budgetChartData = filteredProjects
@@ -189,8 +465,27 @@ export default function Dashboards() {
       name: p.name.length > 15 ? p.name.substring(0, 15) + '...' : p.name,
       budget: p.budget || 0,
       actual: p.actual_cost || 0,
-      variance: (p.actual_cost || 0) - (p.budget || 0)
+      variance: (p.actual_cost || 0) - (p.budget || 0),
+      health: p.health
     }))
+
+  const timelineData = filteredProjects
+    .filter(p => p.start_date && p.end_date)
+    .map(p => {
+      const start = new Date(p.start_date!)
+      const end = new Date(p.end_date!)
+      const now = new Date()
+      const total = end.getTime() - start.getTime()
+      const elapsed = now.getTime() - start.getTime()
+      const progress = Math.max(0, Math.min(100, (elapsed / total) * 100))
+      
+      return {
+        name: p.name.length > 15 ? p.name.substring(0, 15) + '...' : p.name,
+        progress,
+        health: p.health,
+        status: p.status
+      }
+    })
 
   if (loading) return (
     <AppLayout>
@@ -219,27 +514,90 @@ export default function Dashboards() {
   return (
     <AppLayout>
       <div className="p-8 space-y-6">
-        {/* Header with Filters */}
-        <div className="flex justify-between items-center">
+        {/* Enhanced Header with Real-time Status */}
+        <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Portfolio Dashboard</h1>
-            <p className="text-gray-600 mt-1">
-              {portfolioMetrics && `${portfolioMetrics.total_projects} projects • Performance calculated in ${portfolioMetrics.calculation_time_ms}ms`}
-            </p>
+            <div className="flex items-center space-x-4">
+              <h1 className="text-3xl font-bold text-gray-900">Portfolio Dashboard</h1>
+              {criticalAlerts.length > 0 && (
+                <div className="flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
+                  <AlertTriangle className="h-4 w-4 mr-1" />
+                  {criticalAlerts.length} Critical Alert{criticalAlerts.length !== 1 ? 's' : ''}
+                </div>
+              )}
+            </div>
+            <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
+              {portfolioMetrics && (
+                <span>{portfolioMetrics.total_projects} projects • Performance calculated in {portfolioMetrics.calculation_time_ms}ms</span>
+              )}
+              {lastUpdated && (
+                <span>Last updated: {lastUpdated.toLocaleTimeString()}</span>
+              )}
+              {settings.autoRefresh && (
+                <span className="flex items-center text-green-600">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></div>
+                  Auto-refresh: {settings.refreshInterval}s
+                </span>
+              )}
+            </div>
           </div>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
-          </button>
+          
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={refreshData}
+              disabled={isRefreshing}
+              className="flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+            
+            <button
+              onClick={exportDashboardData}
+              className="flex items-center px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </button>
+            
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Filter className="h-4 w-4 mr-2" />
+              Filters
+            </button>
+          </div>
         </div>
 
-        {/* Filter Panel */}
+        {/* Critical Alerts Banner */}
+        {criticalAlerts.length > 0 && (
+          <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg">
+            <div className="flex items-start">
+              <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5" />
+              <div className="ml-3 flex-1">
+                <h3 className="text-sm font-medium text-red-800">Critical Alerts Require Attention</h3>
+                <div className="mt-2 space-y-1">
+                  {criticalAlerts.slice(0, 3).map(alert => (
+                    <div key={alert.id} className="text-sm text-red-700">
+                      <span className="font-medium">{alert.title}:</span> {alert.description}
+                    </div>
+                  ))}
+                  {criticalAlerts.length > 3 && (
+                    <div className="text-sm text-red-600">
+                      +{criticalAlerts.length - 3} more alerts
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Enhanced Filter Panel */}
         {showFilters && (
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                 <select
@@ -291,6 +649,32 @@ export default function Dashboards() {
                 >
                   Clear Filters
                 </button>
+              </div>
+              
+              <div className="flex items-end">
+                <div className="w-full space-y-2">
+                  <label className="flex items-center text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={settings.autoRefresh}
+                      onChange={(e) => setSettings(prev => ({ ...prev, autoRefresh: e.target.checked }))}
+                      className="mr-2"
+                    />
+                    Auto-refresh
+                  </label>
+                  {settings.autoRefresh && (
+                    <select
+                      value={settings.refreshInterval}
+                      onChange={(e) => setSettings(prev => ({ ...prev, refreshInterval: parseInt(e.target.value) }))}
+                      className="w-full p-1 text-xs border border-gray-300 rounded"
+                    >
+                      <option value={10}>10s</option>
+                      <option value={30}>30s</option>
+                      <option value={60}>1m</option>
+                      <option value={300}>5m</option>
+                    </select>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -491,10 +875,10 @@ export default function Dashboards() {
                         {project.budget ? `$${project.budget.toLocaleString()}` : 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {project.actual_cost !== undefined ? `$${project.actual_cost.toLocaleString()}` : 'N/A'}
+                        {project.actual_cost !== null && project.actual_cost !== undefined ? `$${project.actual_cost.toLocaleString()}` : 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {project.budget && project.actual_cost !== undefined ? (
+                        {project.budget && project.actual_cost !== null && project.actual_cost !== undefined ? (
                           <div className={`${variance >= 0 ? 'text-red-600' : 'text-green-600'}`}>
                             ${Math.abs(variance).toLocaleString()} ({variancePercentage.toFixed(1)}%)
                           </div>

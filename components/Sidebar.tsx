@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { LogOut } from 'lucide-react'
+import { LogOut, Activity } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 export default function Sidebar() {
@@ -18,6 +18,12 @@ export default function Sidebar() {
         <li><Link href="/reports" className="block py-2 px-4 rounded hover:bg-gray-700">AI Reports & Analytics</Link></li>
         <li><Link href="/financials" className="block py-2 px-4 rounded hover:bg-gray-700">Financial Tracking</Link></li>
         <li><Link href="/risks" className="block py-2 px-4 rounded hover:bg-gray-700">Risk/Issue Registers</Link></li>
+        <li>
+          <Link href="/admin/performance" className="flex items-center py-2 px-4 rounded hover:bg-gray-700">
+            <Activity className="mr-2 h-4 w-4" />
+            Performance Monitor
+          </Link>
+        </li>
       </ul>
       <button onClick={handleLogout} className="flex items-center"><LogOut className="mr-2" /> Logout</button>
     </nav>
