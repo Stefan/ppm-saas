@@ -2,6 +2,7 @@
 
 import { useAuth } from './providers/SupabaseAuthProvider'
 import Sidebar from '../components/Sidebar'
+import AuthDebugger from '../components/AuthDebugger'
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
@@ -35,14 +36,41 @@ function LoginForm() {
     setLoading(true)
     setError(null)
 
-    const { data, error } = isSignup
-      ? await supabase.auth.signUp({ email, password })
-      : await supabase.auth.signInWithPassword({ email, password })
-    
-    if (error) {
-      setError(error.message)
-    } else if (isSignup) {
-      setError('Please check your email to confirm your account.')
+    try {
+      const { data, error } = isSignup
+        ? await supabase.auth.signUp({ email, password })
+        : await supabase.auth.signInWithPassword({ email, password })
+      
+      if (error) {
+        console.error('Supabase JS Auth error:', error)
+        setError(`Supabase JS Error: ${error.message}`)
+      } else if (isSignup) {
+        setError('Please check your email to confirm your account.')
+      }
+    } catch (err: unknown) {
+      console.error('Unexpected auth error:', err)
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
+      
+      // Try direct API as fallback
+      if (errorMessage.includes('fetch') || errorMessage.includes('Invalid value')) {
+        try {
+          setError('Supabase JS failed, trying direct API...')
+          const { testSupabaseAuth, testSupabaseLogin } = await import('../lib/auth-test')
+          
+          if (isSignup) {
+            const result = await testSupabaseAuth(email, password)
+            setError('Account created successfully via direct API! Please check your email.')
+          } else {
+            const result = await testSupabaseLogin(email, password)
+            setError('Login successful via direct API!')
+          }
+        } catch (directError: unknown) {
+          const directErrorMessage = directError instanceof Error ? directError.message : 'Direct API also failed'
+          setError(`Both methods failed. Supabase JS: ${errorMessage}. Direct API: ${directErrorMessage}`)
+        }
+      } else {
+        setError(`Authentication failed: ${errorMessage}`)
+      }
     }
     
     setLoading(false)
@@ -136,6 +164,9 @@ function LoginForm() {
             )}
           </div>
         </form>
+
+        {/* Debug component - remove in production */}
+        <AuthDebugger />
       </div>
     </div>
   )

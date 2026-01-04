@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { getApiUrl } from '../lib/api'
 import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react'
 
@@ -18,11 +18,7 @@ export default function ApiDebugger() {
     message: 'Initializing...'
   })
 
-  useEffect(() => {
-    checkApiConnection()
-  }, [])
-
-  async function checkApiConnection() {
+  const checkApiConnection = useCallback(async () => {
     const startTime = Date.now()
     
     try {
@@ -67,7 +63,11 @@ export default function ApiDebugger() {
         responseTime
       })
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    checkApiConnection()
+  }, [checkApiConnection])
 
   const getStatusIcon = () => {
     switch (apiStatus.status) {

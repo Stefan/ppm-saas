@@ -10,6 +10,13 @@ if (!env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
   throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable')
 }
 
+// Validate URL format
+try {
+  new URL(env.NEXT_PUBLIC_SUPABASE_URL)
+} catch (error) {
+  throw new Error(`Invalid NEXT_PUBLIC_SUPABASE_URL format: ${env.NEXT_PUBLIC_SUPABASE_URL}`)
+}
+
 export const supabase = createClient(
   env.NEXT_PUBLIC_SUPABASE_URL,
   env.NEXT_PUBLIC_SUPABASE_ANON_KEY,

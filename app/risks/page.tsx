@@ -125,7 +125,7 @@ export default function Risks() {
 
   // Filtered and sorted risks
   const filteredRisks = useMemo(() => {
-    let filtered = risks.filter(risk => {
+    const filtered = risks.filter(risk => {
       const matchesCategory = filterCategory === 'all' || risk.category === filterCategory
       const matchesStatus = filterStatus === 'all' || risk.status === filterStatus
       const matchesSearch = searchTerm === '' || 
