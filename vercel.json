@@ -49,14 +49,20 @@
         {
           "key": "X-XSS-Protection",
           "value": "1; mode=block"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
         }
       ]
     }
   ],
   "functions": {
-    "frontend/app/**/*.tsx": {
+    "frontend/**/*.tsx": {
       "includeFiles": "frontend/**"
     }
   },
-  "ignoreCommand": "cd frontend && npm run build"
+  "installCommand": "cd frontend && npm install",
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/.next"
 }
