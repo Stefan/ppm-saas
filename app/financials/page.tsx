@@ -223,9 +223,9 @@ export default function Financials() {
               />
               <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
               <Tooltip 
-                formatter={(value: number, name: string) => [
-                  `$${value.toLocaleString()}`,
-                  name === 'budget' ? 'Budget' : 'Actual'
+                formatter={(value: number | undefined, name: string | undefined) => [
+                  `$${(value || 0).toLocaleString()}`,
+                  (name === 'budget' ? 'Budget' : 'Actual')
                 ]}
               />
               <Legend />
