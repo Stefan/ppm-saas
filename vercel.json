@@ -3,7 +3,7 @@
   "builds": [
     {
       "src": "frontend/package.json",
-      "use": "@vercel/next",
+      "use": "@vercel/next@latest",
       "config": {
         "distDir": ".next"
       }
@@ -11,14 +11,52 @@
   ],
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "https://backend-six-inky-90.vercel.app/$1",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With"
+      }
+    },
+    {
       "src": "/(.*)",
       "dest": "frontend/$1"
     }
   ],
-  "ignoreCommand": "if [ \"$VERCEL_ENV\" = \"production\" ]; then exit 1; else exit 0; fi",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://backend-six-inky-90.vercel.app/:path*"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "origin-when-cross-origin"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ],
   "functions": {
-    "frontend/app/**": {
+    "frontend/app/**/*.tsx": {
       "includeFiles": "frontend/**"
     }
-  }
+  },
+  "ignoreCommand": "cd frontend && npm run build"
 }
