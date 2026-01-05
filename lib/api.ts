@@ -1,8 +1,8 @@
-import { env } from './env'
+import { ENV_CONFIG } from './supabase-minimal'
 
 // API configuration with fallbacks
 export const API_CONFIG = {
-  baseURL: env.NEXT_PUBLIC_API_URL,
+  baseURL: ENV_CONFIG.apiUrl,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

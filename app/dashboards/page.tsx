@@ -30,17 +30,19 @@ interface Project {
 
 interface PortfolioMetrics {
   total_projects: number
+  active_projects: number
+  completed_projects: number
   health_distribution: { green: number; yellow: number; red: number }
-  status_distribution: Record<string, number>
-  budget_metrics: {
+  budget_summary: {
     total_budget: number
     total_actual: number
     variance: number
-    variance_percentage: number
   }
-  timeline_metrics: { on_time: number; at_risk: number; overdue: number }
-  resource_utilization: { total_resources: number; average_utilization: number }
-  calculation_time_ms: number
+  // Enhanced metrics from the API
+  resource_utilization?: number
+  risk_score?: number
+  on_time_delivery?: number
+  cost_performance_index?: number
 }
 
 interface KPIs {
@@ -272,7 +274,8 @@ export default function Dashboards() {
       }
       
       const data = await response.json()
-      setPortfolioMetrics(data as PortfolioMetrics)
+      // Extract the metrics from the API response structure
+      setPortfolioMetrics(data.metrics as PortfolioMetrics)
     } catch (error: unknown) {
       console.error('Error fetching portfolio metrics:', error)
     }
@@ -444,20 +447,27 @@ export default function Dashboards() {
   }
 
   // Chart data preparation
-  const healthChartData = portfolioMetrics ? [
-    { name: 'Healthy', value: portfolioMetrics.health_distribution.green, color: '#10B981' },
-    { name: 'At Risk', value: portfolioMetrics.health_distribution.yellow, color: '#F59E0B' },
-    { name: 'Critical', value: portfolioMetrics.health_distribution.red, color: '#EF4444' }
+  const healthChartData = portfolioMetrics?.health_distribution ? [
+    { name: 'Healthy', value: portfolioMetrics.health_distribution.green || 0, color: '#10B981' },
+    { name: 'At Risk', value: portfolioMetrics.health_distribution.yellow || 0, color: '#F59E0B' },
+    { name: 'Critical', value: portfolioMetrics.health_distribution.red || 0, color: '#EF4444' }
   ] : []
 
-  const statusChartData = portfolioMetrics ? Object.entries(portfolioMetrics.status_distribution).map(([status, count]) => ({
-    name: status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' '),
-    value: count,
-    color: status === 'completed' ? '#10B981' : 
-           status === 'active' ? '#3B82F6' :
-           status === 'on-hold' ? '#F59E0B' :
-           status === 'cancelled' ? '#EF4444' : '#6B7280'
-  })) : []
+  const statusChartData = projects.length > 0 ? (() => {
+    const statusCounts = projects.reduce((acc, project) => {
+      acc[project.status] = (acc[project.status] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+    
+    return Object.entries(statusCounts).map(([status, count]) => ({
+      name: status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' '),
+      value: count,
+      color: status === 'completed' ? '#10B981' : 
+             status === 'active' ? '#3B82F6' :
+             status === 'on-hold' ? '#F59E0B' :
+             status === 'cancelled' ? '#EF4444' : '#6B7280'
+    }))
+  })() : []
 
   const budgetChartData = filteredProjects
     .filter(p => p.budget && p.actual_cost !== undefined)
@@ -528,7 +538,7 @@ export default function Dashboards() {
             </div>
             <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
               {portfolioMetrics && (
-                <span>{portfolioMetrics.total_projects} projects • Performance calculated in {portfolioMetrics.calculation_time_ms}ms</span>
+                <span>{portfolioMetrics.total_projects || 0} projects</span>
               )}
               {lastUpdated && (
                 <span>Last updated: {lastUpdated.toLocaleTimeString()}</span>

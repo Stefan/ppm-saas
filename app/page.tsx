@@ -2,9 +2,9 @@
 
 import { useAuth } from './providers/SupabaseAuthProvider'
 import Sidebar from '../components/Sidebar'
-import AuthDebugger from '../components/AuthDebugger'
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
+import React from 'react'
+import { supabase, ENV_CONFIG } from '../lib/supabase-minimal'
 
 export default function Home() {
   const { session } = useAuth()
@@ -31,73 +31,151 @@ function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Log environment configuration on component mount
+  React.useEffect(() => {
+    console.log('🔍 LoginForm Environment Check (Production v2):')
+    console.log('- ENV_CONFIG:', ENV_CONFIG)
+    console.log('- Supabase client available:', !!supabase)
+    console.log('- Auth methods available:', !!supabase?.auth)
+    console.log('- Validation source:', ENV_CONFIG.validationSource || 'unknown')
+    console.log('- Force override active:', ENV_CONFIG.forceOverride)
+    console.log('- Production mode:', ENV_CONFIG.productionMode)
+    console.log('- Environment bypass:', ENV_CONFIG.environmentBypass)
+    console.log('- API URL:', ENV_CONFIG.apiUrl)
+    
+    // Additional environment diagnostics
+    console.log('🔧 Environment Diagnostics (Production v2):')
+    console.log('- Using minimal config:', true)
+    console.log('- Hardcoded URL length:', ENV_CONFIG.url.length)
+    console.log('- Hardcoded key length:', ENV_CONFIG.keyLength)
+    console.log('- Key preview:', ENV_CONFIG.keyPreview)
+    console.log('- Supabase client config:', {
+      url: ENV_CONFIG.url,
+      keyLength: ENV_CONFIG.keyLength,
+      isValid: ENV_CONFIG.isValid
+    })
+  }, [])
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
-    console.log('Starting authentication process...')
+    // ENHANCED: Trim and validate inputs - CRITICAL FIX for copy-paste issues
+    const trimmedEmail = email.trim().toLowerCase()
+    const trimmedPassword = password.trim()
+
+    // Enhanced input validation
+    if (!trimmedEmail || !trimmedPassword) {
+      setError('Please enter both email and password')
+      setLoading(false)
+      return
+    }
+
+    if (!trimmedEmail.includes('@') || trimmedEmail.length < 5) {
+      setError('Please enter a valid email address')
+      setLoading(false)
+      return
+    }
+
+    if (trimmedPassword.length < 6) {
+      setError('Password must be at least 6 characters long')
+      setLoading(false)
+      return
+    }
+
+    console.log('🚀 Starting authentication...')
+    console.log('- Email:', trimmedEmail)
+    console.log('- Is Signup:', isSignup)
+    console.log('- ENV Config Valid:', ENV_CONFIG.isValid)
+    console.log('- Force Override Active:', ENV_CONFIG.forceOverride)
+    console.log('- Key Length:', ENV_CONFIG.keyLength)
 
     try {
-      // Try Supabase JS SDK first (more reliable for auth)
-      console.log('Attempting Supabase JS authentication...')
+      console.log('🔐 Calling Supabase auth...')
       
-      const { data, error } = isSignup
+      const { data, error: authError } = isSignup
         ? await supabase.auth.signUp({ 
-            email, 
-            password,
+            email: trimmedEmail, 
+            password: trimmedPassword,
             options: {
               emailRedirectTo: window.location.origin
             }
           })
-        : await supabase.auth.signInWithPassword({ email, password })
+        : await supabase.auth.signInWithPassword({ 
+            email: trimmedEmail, 
+            password: trimmedPassword 
+          })
       
-      if (error) {
-        console.error('Supabase JS Auth error:', error)
-        throw new Error(error.message)
-      } else {
-        console.log('Supabase JS Auth successful:', data)
-        if (isSignup) {
-          setError('Account created successfully! Please check your email to confirm.')
+      if (authError) {
+        console.error('❌ Supabase Auth Error:', authError)
+        console.error('- Error message:', authError.message)
+        console.error('- Error status:', authError.status)
+        
+        // ENHANCED: Specific error handling for different failure modes
+        if (authError.message.includes('Invalid login credentials')) {
+          setError('Invalid email or password. Please check your credentials and try again.')
+        } else if (authError.message.includes('Email not confirmed')) {
+          setError('Please check your email and click the confirmation link before signing in.')
+        } else if (authError.message.includes('User already registered')) {
+          setError('This email is already registered. Please sign in instead.')
+        } else if (authError.message.includes('Invalid API key') || authError.message.includes('JWT')) {
+          setError('❌ CONFIGURATION ERROR: Invalid API key detected. Environment variables need to be fixed.')
+          console.error('💡 SOLUTION: Check Vercel environment variables - ANON_KEY may be corrupted')
+          console.error('💡 Expected key length: ~208 chars, Current:', ENV_CONFIG.keyLength)
+        } else if (authError.message.includes('NetworkError') || authError.message.includes('fetch') || authError.message.includes('CORS')) {
+          setError('❌ NETWORK ERROR: Cannot connect to authentication service. CORS or network issue.')
+          console.error('💡 SOLUTION: Check backend CORS configuration and network connectivity')
         } else {
-          setError('Login successful! Redirecting...')
-          setTimeout(() => {
-            window.location.reload()
-          }, 1500)
+          setError(`Authentication failed: ${authError.message}`)
         }
         setLoading(false)
         return
       }
-    } catch (err: unknown) {
-      console.error('Supabase JS failed, trying direct API fallback:', err)
+
+      // Success handling
+      console.log('✅ Authentication successful:', data)
       
-      // Fallback to direct API
-      try {
-        const { directSignUp, directSignIn } = await import('../lib/auth-direct')
-        
-        console.log('Using direct API authentication...')
-        
-        const result = isSignup 
-          ? await directSignUp(email, password)
-          : await directSignIn(email, password)
-        
-        if (result.success) {
-          console.log('Direct API auth successful:', result.data)
-          setError(result.message || (isSignup ? 'Account created successfully!' : 'Login successful!'))
-          
-          if (!isSignup && result.data) {
-            setTimeout(() => {
-              window.location.reload()
-            }, 1500)
-          }
+      if (isSignup) {
+        if (data.user && !data.user.email_confirmed_at) {
+          setError('✅ Account created successfully! Please check your email to confirm.')
         } else {
-          console.error('Direct API auth failed:', result.error)
-          setError(`Authentication failed: ${result.error}`)
+          setError('✅ Account created and confirmed! You can now sign in.')
         }
-      } catch (directError: unknown) {
-        const originalMessage = err instanceof Error ? err.message : 'Unknown error'
-        const directMessage = directError instanceof Error ? directError.message : 'Unknown error'
-        setError(`All authentication methods failed. Supabase JS: ${originalMessage}. Direct API: ${directMessage}`)
+      } else {
+        setError('✅ Login successful! Redirecting to dashboard...')
+        // Redirect after short delay
+        setTimeout(() => {
+          window.location.href = '/dashboards'
+        }, 1500)
+      }
+      
+    } catch (err: unknown) {
+      console.error('🚨 Authentication Exception:', err)
+      
+      if (err instanceof Error) {
+        console.error('- Exception message:', err.message)
+        console.error('- Exception stack:', err.stack)
+        
+        // ENHANCED: Specific fetch error handling for copy-paste corruption
+        if (err.message.includes('Failed to execute \'fetch\'') || err.message.includes('Invalid value')) {
+          setError('❌ CRITICAL ERROR: Invalid fetch configuration. Environment variables are corrupted.')
+          console.error('💡 SOLUTION: Check browser console for validation errors')
+          console.error('💡 Raw key length should be ~208, current ENV length:', ENV_CONFIG.keyLength)
+          console.error('💡 Fix: Delete and re-add NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel dashboard')
+        } else if (err.message.includes('COPY-PASTE ERROR') || err.message.includes('variable names')) {
+          setError('❌ COPY-PASTE ERROR: Environment variable contains variable names instead of values.')
+          console.error('💡 SOLUTION: In Vercel dashboard, paste ONLY the JWT token value, not the variable name')
+        } else if (err.message.includes('assignment syntax')) {
+          setError('❌ ASSIGNMENT ERROR: Environment variable contains "=" assignment syntax.')
+          console.error('💡 SOLUTION: Copy only the JWT value, not "NEXT_PUBLIC_SUPABASE_ANON_KEY=..."')
+        } else if (err.message.includes('NetworkError') || err.message.includes('CORS')) {
+          setError('❌ NETWORK ERROR: Cannot reach authentication service. Check CORS configuration.')
+        } else {
+          setError(`Unexpected error: ${err.message}`)
+        }
+      } else {
+        setError('An unexpected error occurred. Please try again.')
       }
     }
     
@@ -192,9 +270,6 @@ function LoginForm() {
             )}
           </div>
         </form>
-
-        {/* Debug component - remove in production */}
-        <AuthDebugger />
       </div>
     </div>
   )
