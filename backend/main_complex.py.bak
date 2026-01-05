@@ -35,83 +35,49 @@ try:
         SUPABASE_ANON_KEY = SUPABASE_ANON_KEY or "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjZXlyZnZ4b29pcGxibXdhdmxiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4Mjg3ODEsImV4cCI6MjA4MjQwNDc4MX0.jIyJlwx2g9xn8OTSaLum6H8BKqknyxB8gYxgEKdfgqo"
         print(f"🔄 Using fallback values from configuration")
     
-    # Validate JWT token format with tolerance for timestamp issues
+    # Validate JWT token format
     if SUPABASE_ANON_KEY:
         parts = SUPABASE_ANON_KEY.split('.')
         if len(parts) != 3:
             raise ValueError(f"Invalid JWT format: expected 3 parts, got {len(parts)}")
         if not SUPABASE_ANON_KEY.startswith('eyJ'):
             raise ValueError("Invalid JWT format: must start with 'eyJ'")
-        
-        # Check JWT payload but be tolerant of timestamp issues
-        try:
-            payload = jwt.decode(SUPABASE_ANON_KEY, options={"verify_signature": False})
-            print(f"✅ JWT payload decoded: iss={payload.get('iss')}, role={payload.get('role')}")
-            
-            # Check expiration but be tolerant
-            now = int(datetime.now().timestamp())
-            if payload.get('exp') and payload.get('exp') < now:
-                print(f"⚠️ JWT token expired but continuing (exp: {payload.get('exp')}, now: {now})")
-            
-            if payload.get('iat') and payload.get('iat') > now:
-                print(f"⚠️ JWT token issued in future but continuing (iat: {payload.get('iat')}, now: {now})")
-                
-        except Exception as jwt_error:
-            print(f"⚠️ JWT validation warning: {jwt_error}")
-        
         print(f"✅ JWT token format validated")
     
-    # Create Supabase client with error handling
     supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
     print(f"✅ Supabase client created successfully")
     
-    # Test connection with graceful failure
+    # Test connection
     try:
-        # Simple test query with timeout
+        # Simple test query
         test_response = supabase.table("portfolios").select("count", count="exact").limit(1).execute()
         print(f"✅ Supabase connection test successful")
     except Exception as test_error:
         print(f"⚠️ Supabase connection test failed: {test_error}")
-        print(f"⚠️ Continuing with degraded functionality")
         
 except Exception as e:
     print(f"❌ Error creating Supabase client: {e}")
     print(f"❌ Error type: {type(e).__name__}")
-    print(f"⚠️ Continuing without database functionality")
     # Set supabase to None for graceful degradation
     supabase = None
 
 app = FastAPI(
     title="PPM SaaS MVP API",
-    description="AI-powered Project Portfolio Management Platform",
-    version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc"
+    description="Moderne AI-gestützte Project Portfolio Management Lösung",
+    version="0.1.0"
 )
 
-# Enhanced CORS configuration for monorepo deployment
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://ppm-pearl.vercel.app",
-        "https://orka-ppm.vercel.app", 
-        "https://orka-*.vercel.app",  # Allow all Vercel preview deployments
+        "https://orka-ppm.vercel.app",
         "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "https://localhost:3000"
+        "http://127.0.0.1:3000"
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allow_headers=[
-        "Accept",
-        "Accept-Language", 
-        "Content-Language",
-        "Content-Type",
-        "Authorization",
-        "X-Requested-With",
-        "X-Client-Info",
-        "Cache-Control"
-    ],
+    allow_headers=["*"],
 )
 
 # ---------- Pydantic Models ----------
@@ -197,22 +163,12 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 # ---------- Endpoints ----------
 @app.get("/")
 async def root():
-    try:
-        return {
-            "message": "Willkommen zur PPM SaaS API – Deine Cora-Alternative mit agentic AI 🚀",
-            "status": "healthy",
-            "version": "1.0.0",
-            "timestamp": datetime.now().isoformat(),
-            "database_status": "connected" if supabase else "degraded"
-        }
-    except Exception as e:
-        print(f"Root endpoint error: {e}")
-        return {
-            "message": "PPM SaaS API",
-            "status": "error",
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
+    return {
+        "message": "Willkommen zur PPM SaaS API – Deine Cora-Alternative mit agentic AI 🚀",
+        "status": "healthy",
+        "version": "1.0.0",
+        "timestamp": datetime.now().isoformat()
+    }
 
 @app.get("/debug")
 async def debug_info():
@@ -280,26 +236,17 @@ async def health_check():
                 "timestamp": datetime.now().isoformat()
             }
         
-        # Test Supabase connection with timeout
-        try:
-            response = supabase.table("portfolios").select("count", count="exact").execute()
-            return {
-                "status": "healthy",
-                "database": "connected",
-                "timestamp": datetime.now().isoformat()
-            }
-        except Exception as db_error:
-            return {
-                "status": "degraded",
-                "database": "connection_failed",
-                "error": str(db_error),
-                "timestamp": datetime.now().isoformat()
-            }
+        # Test Supabase connection
+        response = supabase.table("portfolios").select("count", count="exact").execute()
+        return {
+            "status": "healthy",
+            "database": "connected",
+            "timestamp": datetime.now().isoformat()
+        }
     except Exception as e:
-        print(f"Health check error: {e}")
         return {
             "status": "unhealthy",
-            "database": "unknown",
+            "database": "disconnected",
             "error": str(e),
             "timestamp": datetime.now().isoformat()
         }

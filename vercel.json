@@ -30,6 +30,11 @@
       "destination": "https://backend-six-inky-90.vercel.app/:path*"
     }
   ],
+  "outputDirectory": "frontend/.next",
+  "buildCommand": "cd frontend && npm run build",
+  "devCommand": "cd frontend && npm run dev",
+  "installCommand": "cd frontend && npm install",
+  "framework": "nextjs",
   "headers": [
     {
       "source": "/(.*)",
