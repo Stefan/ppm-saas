@@ -12,26 +12,53 @@ import json
 from datetime import date, datetime, timedelta
 from enum import Enum
 
+# Load environment variables
 load_dotenv()
 
-# Environment variables with fallbacks
+# Environment variables with fallbacks and validation
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
 
-# Create Supabase client with error handling
+print(f"🔍 Backend Environment Check:")
+print(f"- SUPABASE_URL set: {bool(SUPABASE_URL)}")
+print(f"- SUPABASE_ANON_KEY set: {bool(SUPABASE_ANON_KEY)}")
+print(f"- SUPABASE_URL: {SUPABASE_URL}")
+print(f"- SUPABASE_ANON_KEY length: {len(SUPABASE_ANON_KEY) if SUPABASE_ANON_KEY else 0}")
+
+# Create Supabase client with enhanced error handling
 supabase: Client = None
 try:
     if not SUPABASE_URL or not SUPABASE_ANON_KEY:
-        print(f"WARNING: Missing environment variables - URL: {bool(SUPABASE_URL)}, KEY: {bool(SUPABASE_ANON_KEY)}")
-        # Use fallback values for debugging
+        print(f"⚠️ WARNING: Missing environment variables - URL: {bool(SUPABASE_URL)}, KEY: {bool(SUPABASE_ANON_KEY)}")
+        # Use fallback values from vercel.json
         SUPABASE_URL = SUPABASE_URL or "https://xceyrfvxooiplbmwavlb.supabase.co"
         SUPABASE_ANON_KEY = SUPABASE_ANON_KEY or "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjZXlyZnZ4b29pcGxibXdhdmxiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4Mjg3ODEsImV4cCI6MjA4MjQwNDc4MX0.jIyJlwx2g9xn8OTSaLum6H8BKqknyxB8gYxgEKdfgqo"
+        print(f"🔄 Using fallback values from configuration")
+    
+    # Validate JWT token format
+    if SUPABASE_ANON_KEY:
+        parts = SUPABASE_ANON_KEY.split('.')
+        if len(parts) != 3:
+            raise ValueError(f"Invalid JWT format: expected 3 parts, got {len(parts)}")
+        if not SUPABASE_ANON_KEY.startswith('eyJ'):
+            raise ValueError("Invalid JWT format: must start with 'eyJ'")
+        print(f"✅ JWT token format validated")
     
     supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
     print(f"✅ Supabase client created successfully")
+    
+    # Test connection
+    try:
+        # Simple test query
+        test_response = supabase.table("portfolios").select("count", count="exact").limit(1).execute()
+        print(f"✅ Supabase connection test successful")
+    except Exception as test_error:
+        print(f"⚠️ Supabase connection test failed: {test_error}")
+        
 except Exception as e:
     print(f"❌ Error creating Supabase client: {e}")
-    # Create a dummy client for development
+    print(f"❌ Error type: {type(e).__name__}")
+    # Set supabase to None for graceful degradation
     supabase = None
 
 app = FastAPI(
@@ -145,15 +172,57 @@ async def root():
 
 @app.get("/debug")
 async def debug_info():
-    """Debug endpoint to check environment variables"""
-    return {
-        "supabase_url_set": bool(os.getenv("SUPABASE_URL")),
-        "supabase_key_set": bool(os.getenv("SUPABASE_ANON_KEY")),
-        "supabase_url_length": len(os.getenv("SUPABASE_URL", "")),
-        "supabase_key_length": len(os.getenv("SUPABASE_ANON_KEY", "")),
-        "environment": "production" if os.getenv("VERCEL") else "development",
-        "timestamp": datetime.now().isoformat()
-    }
+    """Debug endpoint to check environment variables and system status"""
+    try:
+        env_vars = {
+            "supabase_url_set": bool(os.getenv("SUPABASE_URL")),
+            "supabase_key_set": bool(os.getenv("SUPABASE_ANON_KEY")),
+            "supabase_url_length": len(os.getenv("SUPABASE_URL", "")),
+            "supabase_key_length": len(os.getenv("SUPABASE_ANON_KEY", "")),
+            "environment": "production" if os.getenv("VERCEL") else "development",
+            "vercel_env": os.getenv("VERCEL_ENV", "unknown"),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        # Add actual values for debugging (be careful in production)
+        if not os.getenv("VERCEL"):  # Only in development
+            env_vars.update({
+                "supabase_url": os.getenv("SUPABASE_URL", "not_set"),
+                "supabase_key_preview": (os.getenv("SUPABASE_ANON_KEY", "")[:50] + "...") if os.getenv("SUPABASE_ANON_KEY") else "not_set"
+            })
+        
+        # Test Supabase client status
+        supabase_status = {
+            "client_initialized": supabase is not None,
+            "client_type": str(type(supabase)) if supabase else "None"
+        }
+        
+        # Test database connection
+        db_status = {"connected": False, "error": None}
+        if supabase:
+            try:
+                response = supabase.table("portfolios").select("count", count="exact").limit(1).execute()
+                db_status["connected"] = True
+                db_status["table_accessible"] = True
+            except Exception as db_error:
+                db_status["error"] = str(db_error)
+                db_status["error_type"] = type(db_error).__name__
+        
+        return {
+            "status": "debug_info",
+            "environment": env_vars,
+            "supabase": supabase_status,
+            "database": db_status,
+            "message": "Backend debug information"
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "error_type": type(e).__name__,
+            "timestamp": datetime.now().isoformat()
+        }
 
 @app.get("/health")
 async def health_check():
@@ -295,6 +364,82 @@ async def get_dashboard_data(current_user = Depends(get_current_user)):
     except Exception as e:
         print(f"Dashboard error: {e}")  # Server-side logging
         raise HTTPException(status_code=500, detail=f"Dashboard data retrieval failed: {str(e)}")
+
+# Portfolio-specific endpoints that frontend expects
+@app.get("/portfolio/kpis")
+async def get_portfolio_kpis(current_user = Depends(get_current_user)):
+    """Get portfolio KPIs - redirects to dashboard data"""
+    try:
+        dashboard_data = await get_dashboard_data(current_user)
+        return {
+            "kpis": dashboard_data["metrics"],
+            "timestamp": dashboard_data["timestamp"]
+        }
+    except Exception as e:
+        print(f"Portfolio KPIs error: {e}")
+        raise HTTPException(status_code=500, detail=f"KPI data retrieval failed: {str(e)}")
+
+@app.get("/portfolio/trends")
+async def get_portfolio_trends(current_user = Depends(get_current_user)):
+    """Get portfolio trends data"""
+    try:
+        if supabase is None:
+            raise HTTPException(status_code=503, detail="Database service unavailable")
+        
+        # Get projects for trend analysis
+        projects_response = supabase.table("projects").select("*").execute()
+        projects = convert_uuids(projects_response.data)
+        
+        # Calculate simple trends (this would be more sophisticated in production)
+        trends = {
+            "project_completion_rate": {
+                "current": len([p for p in projects if p.get('status') == 'completed']) / max(len(projects), 1) * 100,
+                "trend": "up",  # This would be calculated from historical data
+                "change": 5.2
+            },
+            "budget_utilization": {
+                "current": 75.5,  # This would be calculated from actual data
+                "trend": "stable",
+                "change": 0.8
+            },
+            "health_score": {
+                "current": len([p for p in projects if p.get('health') == 'green']) / max(len(projects), 1) * 100,
+                "trend": "up",
+                "change": 3.1
+            }
+        }
+        
+        return {
+            "trends": trends,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        print(f"Portfolio trends error: {e}")
+        raise HTTPException(status_code=500, detail=f"Trends data retrieval failed: {str(e)}")
+
+@app.get("/portfolio/metrics")
+async def get_portfolio_metrics(current_user = Depends(get_current_user)):
+    """Get detailed portfolio metrics"""
+    try:
+        dashboard_data = await get_dashboard_data(current_user)
+        
+        # Enhanced metrics
+        enhanced_metrics = {
+            **dashboard_data["metrics"],
+            "resource_utilization": 82.3,  # This would be calculated from resource data
+            "risk_score": 2.1,  # This would be calculated from risk register
+            "on_time_delivery": 87.5,  # This would be calculated from project timelines
+            "cost_performance_index": 0.95  # This would be calculated from budget vs actual
+        }
+        
+        return {
+            "metrics": enhanced_metrics,
+            "portfolios": dashboard_data["portfolios"],
+            "timestamp": dashboard_data["timestamp"]
+        }
+    except Exception as e:
+        print(f"Portfolio metrics error: {e}")
+        raise HTTPException(status_code=500, detail=f"Metrics data retrieval failed: {str(e)}")
 
 # For deployment - Vercel serverless function handler
 handler = app

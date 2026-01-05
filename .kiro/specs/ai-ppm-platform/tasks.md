@@ -156,10 +156,12 @@ This implementation plan breaks down the AI-powered PPM platform into discrete c
     - ✅ Improved error handling and diagnostics in LoginForm
     - _Requirements: 8.1, 8.3_
 
-  - [ ] 9.2 Resolve API endpoint mismatch between frontend and backend
+  - [-] 9.2 Resolve API endpoint mismatch between frontend and backend
     - ❌ Frontend calls `/portfolio/kpis`, `/portfolio/trends`, `/portfolio/metrics`
     - ✅ Backend provides `/dashboard`, `/projects/`, `/portfolios/`
-    - **CRITICAL**: Update frontend to use existing `/dashboard` endpoint OR add missing portfolio endpoints
+    - ❌ **CRITICAL**: Backend deployment failing with FUNCTION_INVOCATION_FAILED
+    - **Issue**: Backend returning 500 errors on all endpoints
+    - **Solution**: Debug backend deployment and fix environment variables
     - Test complete authentication → dashboard flow
     - _Requirements: 9.1, 9.2_
 
