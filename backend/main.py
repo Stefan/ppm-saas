@@ -7,10 +7,13 @@ from pydantic import BaseModel
 from uuid import UUID
 import os
 import jwt
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import json
 from datetime import date, datetime, timedelta
 from enum import Enum
+
+# Import AI agents
+from ai_agents import create_ai_agents, RAGReporterAgent, ResourceOptimizerAgent, RiskForecasterAgent
 
 # Load environment variables
 load_dotenv()
@@ -18,12 +21,15 @@ load_dotenv()
 # Environment variables with fallbacks and validation
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 print(f"🔍 Backend Environment Check:")
 print(f"- SUPABASE_URL set: {bool(SUPABASE_URL)}")
 print(f"- SUPABASE_ANON_KEY set: {bool(SUPABASE_ANON_KEY)}")
+print(f"- OPENAI_API_KEY set: {bool(OPENAI_API_KEY)}")
 print(f"- SUPABASE_URL: {SUPABASE_URL}")
 print(f"- SUPABASE_ANON_KEY length: {len(SUPABASE_ANON_KEY) if SUPABASE_ANON_KEY else 0}")
+print(f"- OPENAI_API_KEY length: {len(OPENAI_API_KEY) if OPENAI_API_KEY else 0}")
 
 # Create Supabase client with enhanced error handling
 supabase: Client = None
@@ -64,6 +70,18 @@ try:
     # Create Supabase client with error handling
     supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
     print(f"✅ Supabase client created successfully")
+    
+    # Initialize AI agents
+    ai_agents = None
+    if OPENAI_API_KEY:
+        try:
+            ai_agents = create_ai_agents(supabase, OPENAI_API_KEY)
+            print(f"✅ AI agents initialized successfully")
+        except Exception as ai_error:
+            print(f"⚠️ AI agents initialization failed: {ai_error}")
+            print(f"⚠️ Continuing without AI functionality")
+    else:
+        print(f"⚠️ OPENAI_API_KEY not set - AI features disabled")
     
     # Test connection with graceful failure
     try:
@@ -600,34 +618,236 @@ async def list_resources(current_user = Depends(get_current_user)):
         print(f"Resources error: {e}")
         raise HTTPException(status_code=500, detail=f"Resources data retrieval failed: {str(e)}")
 
+# AI Endpoints - Real Implementation
+
+# Pydantic models for AI requests
+class RAGQueryRequest(BaseModel):
+    query: str
+    conversation_id: Optional[str] = None
+
+class ResourceOptimizationRequest(BaseModel):
+    project_id: Optional[str] = None
+
+class RiskForecastRequest(BaseModel):
+    project_id: Optional[str] = None
+
+@app.post("/ai/rag-query")
+async def process_rag_query(request: RAGQueryRequest, current_user = Depends(get_current_user)):
+    """Process natural language queries using RAG (Retrieval-Augmented Generation)"""
+    try:
+        if not ai_agents or not ai_agents.get("rag_reporter"):
+            # Fallback to mock response if AI agents not available
+            return {
+                "response": f"I understand you're asking: '{request.query}'. However, AI features are currently unavailable. Please check that OPENAI_API_KEY is configured.",
+                "sources": [],
+                "confidence_score": 0.0,
+                "conversation_id": request.conversation_id or f"mock_{int(datetime.now().timestamp())}",
+                "response_time_ms": 100,
+                "status": "ai_unavailable"
+            }
+        
+        rag_agent = ai_agents["rag_reporter"]
+        result = await rag_agent.process_rag_query(
+            request.query, 
+            current_user["user_id"], 
+            request.conversation_id
+        )
+        
+        return result
+        
+    except Exception as e:
+        print(f"RAG query error: {e}")
+        raise HTTPException(status_code=500, detail=f"RAG query failed: {str(e)}")
+
 @app.post("/ai/resource-optimizer")
-async def optimize_resources(current_user = Depends(get_current_user)):
+async def optimize_resources(request: ResourceOptimizationRequest = None, current_user = Depends(get_current_user)):
     """AI-powered resource optimization suggestions"""
     try:
-        # Mock optimization suggestions for development
-        suggestions = [
-            {
-                "resource_id": "1",
-                "resource_name": "Alice Johnson",
-                "match_score": 0.95,
-                "matching_skills": ["React", "TypeScript"],
-                "availability": 8.0,
-                "reasoning": "High skill match for frontend development tasks with available capacity"
-            },
-            {
-                "resource_id": "3",
-                "resource_name": "Carol Davis",
-                "match_score": 0.85,
-                "matching_skills": ["UI/UX Design"],
-                "availability": 20.0,
-                "reasoning": "Strong design skills and significant availability for new projects"
+        if not ai_agents or not ai_agents.get("resource_optimizer"):
+            # Enhanced mock response for development
+            suggestions = [
+                {
+                    "type": "skill_match",
+                    "resource_id": "11111111-1111-1111-1111-111111111111",
+                    "resource_name": "Alice Johnson",
+                    "match_score": 0.95,
+                    "matching_skills": ["React", "TypeScript"],
+                    "current_utilization": 65.0,
+                    "available_hours": 12.0,
+                    "recommendation": "High skill match for frontend development tasks with available capacity",
+                    "priority": "high"
+                },
+                {
+                    "type": "underutilized",
+                    "resource_id": "33333333-3333-3333-3333-333333333333",
+                    "resource_name": "Carol Davis",
+                    "current_utilization": 45.0,
+                    "available_hours": 20.0,
+                    "recommendation": "Consider allocating more work to Carol Davis who has 20.0 available hours",
+                    "priority": "medium"
+                }
+            ]
+            
+            return {
+                "suggestions": suggestions,
+                "utilization_analysis": {
+                    "11111111-1111-1111-1111-111111111111": {
+                        "resource_name": "Alice Johnson",
+                        "utilization_percent": 65.0,
+                        "available_hours": 12.0,
+                        "skills": ["React", "TypeScript", "Node.js"]
+                    }
+                },
+                "summary": {
+                    "total_suggestions": len(suggestions),
+                    "high_priority": 1,
+                    "avg_utilization": 55.0
+                },
+                "status": "ai_unavailable"
             }
-        ]
         
-        return {"suggestions": suggestions}
+        optimizer_agent = ai_agents["resource_optimizer"]
+        project_id = request.project_id if request else None
+        result = await optimizer_agent.analyze_resource_allocation(
+            current_user["user_id"], 
+            project_id
+        )
+        
+        return result
+        
     except Exception as e:
         print(f"Resource optimization error: {e}")
         raise HTTPException(status_code=500, detail=f"Resource optimization failed: {str(e)}")
+
+@app.post("/ai/risk-forecast")
+async def forecast_risks(request: RiskForecastRequest = None, current_user = Depends(get_current_user)):
+    """AI-powered risk forecasting for projects"""
+    try:
+        if not ai_agents or not ai_agents.get("risk_forecaster"):
+            # Mock risk predictions for development
+            predictions = [
+                {
+                    "project_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+                    "risk_type": "budget_overrun",
+                    "description": "Project is at 85.0% of budget with 60% completion",
+                    "probability": 0.75,
+                    "impact_score": 4,
+                    "confidence_score": 0.8,
+                    "predicted_date": (datetime.now() + timedelta(days=14)).date().isoformat(),
+                    "mitigation_suggestions": [
+                        "Review remaining tasks and budget allocation",
+                        "Consider scope reduction or additional funding"
+                    ]
+                },
+                {
+                    "project_id": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+                    "risk_type": "schedule_delay",
+                    "description": "Project appears behind schedule (70% time elapsed, ~50% complete)",
+                    "probability": 0.6,
+                    "impact_score": 3,
+                    "confidence_score": 0.6,
+                    "predicted_date": (datetime.now() + timedelta(days=21)).date().isoformat(),
+                    "mitigation_suggestions": [
+                        "Reassess project timeline and milestones",
+                        "Consider additional resources"
+                    ]
+                }
+            ]
+            
+            return {
+                "predictions": predictions,
+                "summary": {
+                    "total_risks": len(predictions),
+                    "high_probability": 1,
+                    "critical_impact": 1
+                },
+                "status": "ai_unavailable"
+            }
+        
+        forecaster_agent = ai_agents["risk_forecaster"]
+        project_id = request.project_id if request else None
+        result = await forecaster_agent.forecast_project_risks(
+            current_user["user_id"], 
+            project_id
+        )
+        
+        return result
+        
+    except Exception as e:
+        print(f"Risk forecasting error: {e}")
+        raise HTTPException(status_code=500, detail=f"Risk forecasting failed: {str(e)}")
+
+@app.get("/ai/conversation-history/{conversation_id}")
+async def get_conversation_history(conversation_id: str, current_user = Depends(get_current_user)):
+    """Get RAG conversation history"""
+    try:
+        if supabase is None:
+            raise HTTPException(status_code=503, detail="Database service unavailable")
+        
+        response = supabase.table("rag_contexts").select("*").eq(
+            "conversation_id", conversation_id
+        ).eq("user_id", current_user["user_id"]).order("created_at").execute()
+        
+        return {"conversation_history": response.data or []}
+        
+    except Exception as e:
+        print(f"Conversation history error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get conversation history: {str(e)}")
+
+@app.get("/ai/metrics")
+async def get_ai_metrics(current_user = Depends(get_current_user)):
+    """Get AI agent performance metrics"""
+    try:
+        if supabase is None:
+            raise HTTPException(status_code=503, detail="Database service unavailable")
+        
+        # Get recent metrics (last 30 days)
+        thirty_days_ago = (datetime.now() - timedelta(days=30)).isoformat()
+        
+        response = supabase.table("ai_agent_metrics").select("*").gte(
+            "created_at", thirty_days_ago
+        ).execute()
+        
+        metrics_data = response.data or []
+        
+        # Aggregate metrics by agent type
+        agent_stats = {}
+        for metric in metrics_data:
+            agent_type = metric["agent_type"]
+            if agent_type not in agent_stats:
+                agent_stats[agent_type] = {
+                    "total_requests": 0,
+                    "successful_requests": 0,
+                    "avg_response_time": 0,
+                    "avg_confidence": 0,
+                    "total_tokens": 0
+                }
+            
+            stats = agent_stats[agent_type]
+            stats["total_requests"] += 1
+            if metric["success"]:
+                stats["successful_requests"] += 1
+            stats["avg_response_time"] += metric.get("response_time_ms", 0)
+            if metric.get("confidence_score"):
+                stats["avg_confidence"] += metric["confidence_score"]
+            stats["total_tokens"] += metric.get("input_tokens", 0) + metric.get("output_tokens", 0)
+        
+        # Calculate averages
+        for agent_type, stats in agent_stats.items():
+            if stats["total_requests"] > 0:
+                stats["avg_response_time"] = stats["avg_response_time"] / stats["total_requests"]
+                stats["avg_confidence"] = stats["avg_confidence"] / stats["total_requests"]
+                stats["success_rate"] = stats["successful_requests"] / stats["total_requests"]
+        
+        return {
+            "agent_statistics": agent_stats,
+            "total_requests": len(metrics_data),
+            "ai_status": "available" if ai_agents else "unavailable"
+        }
+        
+    except Exception as e:
+        print(f"AI metrics error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get AI metrics: {str(e)}")
 
 # For deployment - Vercel serverless function handler
 handler = app
