@@ -329,31 +329,46 @@ class ResourceOptimizerAgent(AIAgentBase):
     
     def __init__(self, supabase_client: Client, openai_api_key: str):
         super().__init__(supabase_client, openai_api_key)
+        self.optimization_model = "gpt-4"
+        self.skill_match_threshold = 0.6
+        self.utilization_target_min = 60.0
+        self.utilization_target_max = 85.0
     
     async def analyze_resource_allocation(self, user_id: str, project_id: str = None) -> Dict[str, Any]:
         """Analyze current resource allocation and suggest optimizations"""
         start_time = datetime.now()
         
         try:
-            # Get resources with skills
+            # Get comprehensive resource data
             resources_data = await self._get_resources_with_skills()
             
-            # Get project requirements
+            # Get project requirements and current allocations
             requirements_data = await self._get_project_requirements(project_id)
+            current_allocations = await self._get_current_allocations(project_id)
             
             # Get availability data
             availability_data = await self._get_resource_availability()
             
-            # Perform optimization analysis
-            optimization_results = await self._optimize_allocation(
-                resources_data, requirements_data, availability_data
+            # Perform skill matching analysis
+            skill_matches = await self._analyze_skill_matching(resources_data, requirements_data)
+            
+            # Detect allocation conflicts
+            conflicts = await self._detect_allocation_conflicts(current_allocations, availability_data)
+            
+            # Generate optimization recommendations
+            optimization_results = await self._generate_optimization_recommendations(
+                resources_data, requirements_data, availability_data, skill_matches, conflicts
             )
+            
+            # Calculate confidence scores for recommendations
+            optimization_results = await self._calculate_recommendation_confidence(optimization_results)
             
             response_time = int((datetime.now() - start_time).total_seconds() * 1000)
             
             # Log metrics
             await self.log_metrics(
-                "resource_optimization", user_id, 0, 0, response_time, True
+                "resource_optimization", user_id, 0, 0, response_time, True, None,
+                optimization_results.get('overall_confidence', 0.0)
             )
             
             return optimization_results
@@ -366,19 +381,66 @@ class ResourceOptimizerAgent(AIAgentBase):
             logger.error(f"Resource optimization failed: {e}")
             raise
     
+    async def detect_resource_conflicts(self, user_id: str) -> Dict[str, Any]:
+        """Detect conflicts in resource allocations across projects"""
+        try:
+            current_allocations = await self._get_current_allocations()
+            availability_data = await self._get_resource_availability()
+            
+            conflicts = await self._detect_allocation_conflicts(current_allocations, availability_data)
+            
+            return {
+                "conflicts": conflicts,
+                "total_conflicts": len(conflicts),
+                "critical_conflicts": len([c for c in conflicts if c.get("severity") == "critical"]),
+                "resolution_suggestions": await self._generate_conflict_resolutions(conflicts)
+            }
+            
+        except Exception as e:
+            logger.error(f"Conflict detection failed: {e}")
+            raise
+    
+    async def optimize_for_constraints(self, constraints: Dict[str, Any], user_id: str) -> Dict[str, Any]:
+        """Optimize resource allocation based on specific constraints"""
+        try:
+            resources_data = await self._get_resources_with_skills()
+            requirements_data = await self._get_project_requirements()
+            
+            # Apply constraints to optimization
+            constrained_optimization = await self._apply_optimization_constraints(
+                resources_data, requirements_data, constraints
+            )
+            
+            return constrained_optimization
+            
+        except Exception as e:
+            logger.error(f"Constrained optimization failed: {e}")
+            raise
+    
     async def _get_resources_with_skills(self) -> List[Dict]:
-        """Get all resources with their skills"""
+        """Get all resources with their skills and current allocations"""
         try:
             # Get resources
             resources_response = self.supabase.table("resources").select("*").execute()
             resources = resources_response.data or []
             
-            # Get skills for each resource
+            # Enhance each resource with additional data
             for resource in resources:
-                skills_response = self.supabase.table("resource_skills").select("*").eq(
-                    "resource_id", resource["id"]
-                ).execute()
-                resource["skills"] = skills_response.data or []
+                # Get current project allocations
+                allocations_response = self.supabase.table("project_resources").select(
+                    "project_id, allocation_percentage, role_in_project"
+                ).eq("resource_id", resource["id"]).execute()
+                
+                resource["current_allocations"] = allocations_response.data or []
+                
+                # Calculate current utilization
+                total_allocation = sum(alloc.get("allocation_percentage", 0) for alloc in resource["current_allocations"])
+                resource["current_utilization"] = min(total_allocation, 100)
+                resource["available_capacity"] = max(0, 100 - total_allocation)
+                
+                # Ensure skills is a list
+                if not isinstance(resource.get("skills"), list):
+                    resource["skills"] = []
             
             return resources
         except Exception as e:
@@ -386,16 +448,49 @@ class ResourceOptimizerAgent(AIAgentBase):
             return []
     
     async def _get_project_requirements(self, project_id: str = None) -> List[Dict]:
-        """Get project requirements"""
+        """Get project skill requirements and resource needs"""
         try:
-            query = self.supabase.table("project_requirements").select("*")
+            # Get projects
+            query = self.supabase.table("projects").select("*")
+            if project_id:
+                query = query.eq("id", project_id)
+            
+            projects_response = query.execute()
+            projects = projects_response.data or []
+            
+            requirements = []
+            for project in projects:
+                # Generate requirements based on project data
+                project_req = {
+                    "project_id": project["id"],
+                    "project_name": project["name"],
+                    "status": project.get("status", "active"),
+                    "priority": project.get("priority", "medium"),
+                    "required_skills": self._infer_required_skills(project),
+                    "estimated_effort": self._estimate_project_effort(project),
+                    "deadline": project.get("end_date"),
+                    "current_team_size": len(project.get("team_members", []))
+                }
+                requirements.append(project_req)
+            
+            return requirements
+        except Exception as e:
+            logger.error(f"Failed to get project requirements: {e}")
+            return []
+    
+    async def _get_current_allocations(self, project_id: str = None) -> List[Dict]:
+        """Get current resource allocations across projects"""
+        try:
+            query = self.supabase.table("project_resources").select(
+                "*, projects(name, status, priority), resources(name, capacity)"
+            )
             if project_id:
                 query = query.eq("project_id", project_id)
             
             response = query.execute()
             return response.data or []
         except Exception as e:
-            logger.error(f"Failed to get project requirements: {e}")
+            logger.error(f"Failed to get current allocations: {e}")
             return []
     
     async def _get_resource_availability(self) -> List[Dict]:
@@ -404,14 +499,310 @@ class ResourceOptimizerAgent(AIAgentBase):
             start_date = datetime.now().date()
             end_date = start_date + timedelta(days=30)
             
-            response = self.supabase.table("resource_availability").select("*").gte(
-                "date", start_date.isoformat()
-            ).lte("date", end_date.isoformat()).execute()
+            # Get all resources and calculate their availability
+            resources_response = self.supabase.table("resources").select("*").execute()
+            resources = resources_response.data or []
             
-            return response.data or []
+            availability_data = []
+            for resource in resources:
+                # Calculate availability based on capacity and current allocations
+                capacity_hours = resource.get("capacity", 40)
+                availability_percentage = resource.get("availability", 100)
+                effective_capacity = capacity_hours * (availability_percentage / 100)
+                
+                # Get current allocations
+                allocations_response = self.supabase.table("project_resources").select(
+                    "allocation_percentage"
+                ).eq("resource_id", resource["id"]).execute()
+                
+                total_allocated_percentage = sum(
+                    alloc.get("allocation_percentage", 0) 
+                    for alloc in allocations_response.data or []
+                )
+                
+                allocated_hours = effective_capacity * (total_allocated_percentage / 100)
+                available_hours = max(0, effective_capacity - allocated_hours)
+                
+                availability_data.append({
+                    "resource_id": resource["id"],
+                    "resource_name": resource["name"],
+                    "total_capacity_hours": capacity_hours,
+                    "effective_capacity_hours": effective_capacity,
+                    "allocated_hours": allocated_hours,
+                    "available_hours": available_hours,
+                    "utilization_percentage": min(100, total_allocated_percentage),
+                    "availability_status": self._determine_availability_status(total_allocated_percentage)
+                })
+            
+            return availability_data
         except Exception as e:
             logger.error(f"Failed to get resource availability: {e}")
             return []
+    
+    async def _analyze_skill_matching(self, resources: List[Dict], requirements: List[Dict]) -> List[Dict]:
+        """Analyze skill matching between resources and project requirements"""
+        try:
+            skill_matches = []
+            
+            for requirement in requirements:
+                required_skills = requirement.get("required_skills", [])
+                if not required_skills:
+                    continue
+                
+                project_matches = []
+                for resource in resources:
+                    resource_skills = resource.get("skills", [])
+                    
+                    # Calculate skill match score
+                    match_score = self._calculate_skill_match_score(required_skills, resource_skills)
+                    
+                    if match_score >= self.skill_match_threshold:
+                        project_matches.append({
+                            "resource_id": resource["id"],
+                            "resource_name": resource["name"],
+                            "match_score": match_score,
+                            "matching_skills": self._get_matching_skills(required_skills, resource_skills),
+                            "missing_skills": self._get_missing_skills(required_skills, resource_skills),
+                            "current_utilization": resource.get("current_utilization", 0),
+                            "available_capacity": resource.get("available_capacity", 0)
+                        })
+                
+                # Sort by match score and availability
+                project_matches.sort(key=lambda x: (x["match_score"], x["available_capacity"]), reverse=True)
+                
+                skill_matches.append({
+                    "project_id": requirement["project_id"],
+                    "project_name": requirement["project_name"],
+                    "required_skills": required_skills,
+                    "matching_resources": project_matches[:5],  # Top 5 matches
+                    "total_matches": len(project_matches)
+                })
+            
+            return skill_matches
+        except Exception as e:
+            logger.error(f"Skill matching analysis failed: {e}")
+            return []
+    
+    async def _detect_allocation_conflicts(self, allocations: List[Dict], availability: List[Dict]) -> List[Dict]:
+        """Detect conflicts in resource allocations"""
+        try:
+            conflicts = []
+            
+            # Group allocations by resource
+            resource_allocations = {}
+            for allocation in allocations:
+                resource_id = allocation["resource_id"]
+                if resource_id not in resource_allocations:
+                    resource_allocations[resource_id] = []
+                resource_allocations[resource_id].append(allocation)
+            
+            # Check each resource for conflicts
+            for resource_id, resource_allocs in resource_allocations.items():
+                # Find availability data for this resource
+                resource_availability = next(
+                    (av for av in availability if av["resource_id"] == resource_id), 
+                    None
+                )
+                
+                if not resource_availability:
+                    continue
+                
+                total_allocation = sum(alloc.get("allocation_percentage", 0) for alloc in resource_allocs)
+                utilization = resource_availability.get("utilization_percentage", 0)
+                
+                # Detect over-allocation
+                if total_allocation > 100:
+                    conflicts.append({
+                        "type": "over_allocation",
+                        "resource_id": resource_id,
+                        "resource_name": resource_availability["resource_name"],
+                        "total_allocation": total_allocation,
+                        "over_allocation": total_allocation - 100,
+                        "affected_projects": [alloc["project_id"] for alloc in resource_allocs],
+                        "severity": "critical" if total_allocation > 120 else "high",
+                        "description": f"Resource over-allocated by {total_allocation - 100:.1f}%"
+                    })
+                
+                # Detect scheduling conflicts (same time periods)
+                time_conflicts = self._detect_time_conflicts(resource_allocs)
+                for conflict in time_conflicts:
+                    conflicts.append({
+                        "type": "time_conflict",
+                        "resource_id": resource_id,
+                        "resource_name": resource_availability["resource_name"],
+                        "conflicting_projects": conflict["projects"],
+                        "time_period": conflict["period"],
+                        "severity": "medium",
+                        "description": f"Scheduling conflict between projects during {conflict['period']}"
+                    })
+                
+                # Detect skill mismatches
+                skill_conflicts = await self._detect_skill_conflicts(resource_id, resource_allocs)
+                conflicts.extend(skill_conflicts)
+            
+            return conflicts
+        except Exception as e:
+            logger.error(f"Conflict detection failed: {e}")
+            return []
+    
+    async def _generate_optimization_recommendations(self, resources: List[Dict], requirements: List[Dict], 
+                                                   availability: List[Dict], skill_matches: List[Dict], 
+                                                   conflicts: List[Dict]) -> Dict[str, Any]:
+        """Generate comprehensive optimization recommendations"""
+        try:
+            recommendations = []
+            
+            # Generate recommendations based on utilization
+            for resource_avail in availability:
+                utilization = resource_avail["utilization_percentage"]
+                resource_id = resource_avail["resource_id"]
+                resource_name = resource_avail["resource_name"]
+                
+                if utilization < self.utilization_target_min:
+                    # Under-utilized resource
+                    recommendations.append({
+                        "type": "increase_utilization",
+                        "resource_id": resource_id,
+                        "resource_name": resource_name,
+                        "current_utilization": utilization,
+                        "target_utilization": self.utilization_target_min,
+                        "available_hours": resource_avail["available_hours"],
+                        "priority": "medium",
+                        "reasoning": f"Resource is under-utilized at {utilization:.1f}%. Consider allocating additional work.",
+                        "suggested_actions": [
+                            f"Allocate {self.utilization_target_min - utilization:.1f}% more work",
+                            "Review upcoming project needs",
+                            "Consider cross-training opportunities"
+                        ]
+                    })
+                
+                elif utilization > self.utilization_target_max:
+                    # Over-utilized resource
+                    recommendations.append({
+                        "type": "reduce_utilization",
+                        "resource_id": resource_id,
+                        "resource_name": resource_name,
+                        "current_utilization": utilization,
+                        "target_utilization": self.utilization_target_max,
+                        "over_allocation": utilization - self.utilization_target_max,
+                        "priority": "high" if utilization > 100 else "medium",
+                        "reasoning": f"Resource is over-utilized at {utilization:.1f}%. Risk of burnout and quality issues.",
+                        "suggested_actions": [
+                            f"Reduce allocation by {utilization - self.utilization_target_max:.1f}%",
+                            "Redistribute work to other team members",
+                            "Consider hiring additional resources"
+                        ]
+                    })
+            
+            # Generate skill-based recommendations
+            for skill_match in skill_matches:
+                if skill_match["matching_resources"]:
+                    best_match = skill_match["matching_resources"][0]
+                    
+                    recommendations.append({
+                        "type": "skill_optimization",
+                        "project_id": skill_match["project_id"],
+                        "project_name": skill_match["project_name"],
+                        "recommended_resource_id": best_match["resource_id"],
+                        "recommended_resource_name": best_match["resource_name"],
+                        "match_score": best_match["match_score"],
+                        "matching_skills": best_match["matching_skills"],
+                        "priority": "high",
+                        "reasoning": f"Excellent skill match ({best_match['match_score']:.2f}) for {skill_match['project_name']}",
+                        "suggested_actions": [
+                            f"Assign {best_match['resource_name']} to {skill_match['project_name']}",
+                            "Leverage matching skills: " + ", ".join(best_match["matching_skills"]),
+                            "Provide training for missing skills if needed"
+                        ]
+                    })
+            
+            # Generate conflict resolution recommendations
+            for conflict in conflicts:
+                if conflict["type"] == "over_allocation":
+                    recommendations.append({
+                        "type": "resolve_conflict",
+                        "conflict_type": "over_allocation",
+                        "resource_id": conflict["resource_id"],
+                        "resource_name": conflict["resource_name"],
+                        "priority": "critical",
+                        "reasoning": f"Resource over-allocated by {conflict['over_allocation']:.1f}%",
+                        "suggested_actions": [
+                            "Redistribute work among team members",
+                            "Extend project timelines if possible",
+                            "Hire temporary contractors",
+                            "Reduce project scope"
+                        ]
+                    })
+            
+            # Calculate overall metrics
+            total_utilization = sum(av["utilization_percentage"] for av in availability)
+            avg_utilization = total_utilization / len(availability) if availability else 0
+            
+            return {
+                "recommendations": recommendations,
+                "conflicts": conflicts,
+                "skill_matches": skill_matches,
+                "summary": {
+                    "total_recommendations": len(recommendations),
+                    "high_priority": len([r for r in recommendations if r["priority"] == "high"]),
+                    "critical_priority": len([r for r in recommendations if r["priority"] == "critical"]),
+                    "avg_utilization": round(avg_utilization, 1),
+                    "total_conflicts": len(conflicts),
+                    "optimization_potential": self._calculate_optimization_potential(recommendations)
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Recommendation generation failed: {e}")
+            return {"recommendations": [], "conflicts": [], "skill_matches": [], "summary": {}}
+    
+    async def _calculate_recommendation_confidence(self, optimization_results: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate confidence scores for optimization recommendations"""
+        try:
+            recommendations = optimization_results.get("recommendations", [])
+            
+            for recommendation in recommendations:
+                confidence_factors = []
+                
+                # Base confidence on recommendation type
+                type_confidence = {
+                    "increase_utilization": 0.8,
+                    "reduce_utilization": 0.9,
+                    "skill_optimization": 0.85,
+                    "resolve_conflict": 0.95
+                }.get(recommendation["type"], 0.7)
+                confidence_factors.append(type_confidence)
+                
+                # Adjust based on data quality
+                if recommendation.get("match_score"):
+                    confidence_factors.append(recommendation["match_score"])
+                
+                # Adjust based on utilization data
+                if recommendation.get("current_utilization"):
+                    util = recommendation["current_utilization"]
+                    if util < 50 or util > 90:
+                        confidence_factors.append(0.9)  # High confidence for extreme cases
+                    else:
+                        confidence_factors.append(0.7)  # Medium confidence for moderate cases
+                
+                # Calculate final confidence score
+                recommendation["confidence_score"] = sum(confidence_factors) / len(confidence_factors)
+                recommendation["confidence_level"] = self._get_confidence_level(recommendation["confidence_score"])
+            
+            # Calculate overall confidence
+            if recommendations:
+                overall_confidence = sum(r["confidence_score"] for r in recommendations) / len(recommendations)
+            else:
+                overall_confidence = 0.0
+            
+            optimization_results["overall_confidence"] = overall_confidence
+            optimization_results["confidence_level"] = self._get_confidence_level(overall_confidence)
+            
+            return optimization_results
+            
+        except Exception as e:
+            logger.error(f"Confidence calculation failed: {e}")
+            return optimization_results
     
     async def _optimize_allocation(self, resources: List[Dict], requirements: List[Dict], 
                                  availability: List[Dict]) -> Dict[str, Any]:
@@ -502,6 +893,289 @@ class ResourceOptimizerAgent(AIAgentBase):
         except Exception as e:
             logger.error(f"Optimization analysis failed: {e}")
             return {"suggestions": [], "utilization_analysis": {}, "summary": {}}
+    
+    # Helper methods for enhanced functionality
+    def _infer_required_skills(self, project: Dict) -> List[str]:
+        """Infer required skills based on project data"""
+        # This is a simplified implementation - in production, use ML/NLP
+        project_name = project.get("name", "").lower()
+        description = project.get("description", "").lower()
+        
+        skill_keywords = {
+            "python": ["python", "django", "flask", "fastapi"],
+            "javascript": ["javascript", "js", "react", "vue", "angular", "node"],
+            "typescript": ["typescript", "ts"],
+            "java": ["java", "spring", "hibernate"],
+            "sql": ["sql", "database", "mysql", "postgresql"],
+            "aws": ["aws", "cloud", "ec2", "s3"],
+            "docker": ["docker", "container", "kubernetes"],
+            "ui/ux": ["ui", "ux", "design", "figma"],
+            "project management": ["project", "management", "scrum", "agile"]
+        }
+        
+        inferred_skills = []
+        text = f"{project_name} {description}"
+        
+        for skill, keywords in skill_keywords.items():
+            if any(keyword in text for keyword in keywords):
+                inferred_skills.append(skill)
+        
+        return inferred_skills or ["general"]
+    
+    def _estimate_project_effort(self, project: Dict) -> int:
+        """Estimate project effort in person-hours"""
+        # Simplified estimation based on project data
+        base_effort = 160  # 4 weeks * 40 hours
+        
+        # Adjust based on project complexity indicators
+        if project.get("priority") == "high":
+            base_effort *= 1.5
+        
+        team_size = len(project.get("team_members", []))
+        if team_size > 0:
+            base_effort = base_effort * team_size
+        
+        return int(base_effort)
+    
+    def _determine_availability_status(self, utilization_percentage: float) -> str:
+        """Determine availability status based on utilization"""
+        if utilization_percentage >= 100:
+            return "fully_allocated"
+        elif utilization_percentage >= 80:
+            return "mostly_allocated"
+        elif utilization_percentage >= 50:
+            return "partially_allocated"
+        else:
+            return "available"
+    
+    def _calculate_skill_match_score(self, required_skills: List[str], resource_skills: List[str]) -> float:
+        """Calculate skill match score between required and available skills"""
+        if not required_skills:
+            return 1.0
+        
+        # Normalize skills to lowercase for comparison
+        required_normalized = [skill.lower() for skill in required_skills]
+        resource_normalized = [skill.lower() for skill in resource_skills]
+        
+        # Calculate exact matches
+        exact_matches = len(set(required_normalized) & set(resource_normalized))
+        
+        # Calculate partial matches (substring matching)
+        partial_matches = 0
+        for req_skill in required_normalized:
+            for res_skill in resource_normalized:
+                if req_skill in res_skill or res_skill in req_skill:
+                    partial_matches += 0.5
+                    break
+        
+        # Calculate final score
+        total_matches = exact_matches + partial_matches
+        match_score = min(total_matches / len(required_skills), 1.0)
+        
+        return round(match_score, 2)
+    
+    def _get_matching_skills(self, required_skills: List[str], resource_skills: List[str]) -> List[str]:
+        """Get list of matching skills"""
+        required_normalized = [skill.lower() for skill in required_skills]
+        resource_normalized = [skill.lower() for skill in resource_skills]
+        
+        matches = []
+        for req_skill in required_skills:
+            if req_skill.lower() in resource_normalized:
+                matches.append(req_skill)
+        
+        return matches
+    
+    def _get_missing_skills(self, required_skills: List[str], resource_skills: List[str]) -> List[str]:
+        """Get list of missing skills"""
+        required_normalized = [skill.lower() for skill in required_skills]
+        resource_normalized = [skill.lower() for skill in resource_skills]
+        
+        missing = []
+        for req_skill in required_skills:
+            if req_skill.lower() not in resource_normalized:
+                missing.append(req_skill)
+        
+        return missing
+    
+    def _detect_time_conflicts(self, allocations: List[Dict]) -> List[Dict]:
+        """Detect time-based conflicts in allocations"""
+        # Simplified implementation - in production, use actual scheduling data
+        conflicts = []
+        
+        if len(allocations) > 1:
+            # Assume conflict if multiple high-priority projects
+            high_priority_projects = [
+                alloc for alloc in allocations 
+                if alloc.get("projects", {}).get("priority") == "high"
+            ]
+            
+            if len(high_priority_projects) > 1:
+                conflicts.append({
+                    "projects": [alloc["project_id"] for alloc in high_priority_projects],
+                    "period": "current_sprint",
+                    "type": "priority_conflict"
+                })
+        
+        return conflicts
+    
+    async def _detect_skill_conflicts(self, resource_id: str, allocations: List[Dict]) -> List[Dict]:
+        """Detect skill-based conflicts for a resource"""
+        conflicts = []
+        
+        try:
+            # Get resource skills
+            resource_response = self.supabase.table("resources").select("skills").eq("id", resource_id).execute()
+            if not resource_response.data:
+                return conflicts
+            
+            resource_skills = resource_response.data[0].get("skills", [])
+            
+            # Check if resource has skills for all allocated projects
+            for allocation in allocations:
+                project_id = allocation["project_id"]
+                
+                # Get project requirements (simplified)
+                project_response = self.supabase.table("projects").select("*").eq("id", project_id).execute()
+                if project_response.data:
+                    project = project_response.data[0]
+                    required_skills = self._infer_required_skills(project)
+                    
+                    match_score = self._calculate_skill_match_score(required_skills, resource_skills)
+                    
+                    if match_score < self.skill_match_threshold:
+                        conflicts.append({
+                            "type": "skill_mismatch",
+                            "resource_id": resource_id,
+                            "project_id": project_id,
+                            "required_skills": required_skills,
+                            "match_score": match_score,
+                            "severity": "medium",
+                            "description": f"Low skill match ({match_score:.2f}) for project requirements"
+                        })
+            
+        except Exception as e:
+            logger.error(f"Skill conflict detection failed: {e}")
+        
+        return conflicts
+    
+    async def _generate_conflict_resolutions(self, conflicts: List[Dict]) -> List[Dict]:
+        """Generate resolution suggestions for conflicts"""
+        resolutions = []
+        
+        for conflict in conflicts:
+            if conflict["type"] == "over_allocation":
+                resolutions.append({
+                    "conflict_id": f"{conflict['resource_id']}_over_allocation",
+                    "resolution_type": "redistribute_work",
+                    "description": "Redistribute work to other team members",
+                    "steps": [
+                        "Identify tasks that can be reassigned",
+                        "Find available team members with matching skills",
+                        "Update project allocations",
+                        "Communicate changes to stakeholders"
+                    ],
+                    "estimated_effort": "2-4 hours",
+                    "priority": conflict["severity"]
+                })
+            
+            elif conflict["type"] == "skill_mismatch":
+                resolutions.append({
+                    "conflict_id": f"{conflict['resource_id']}_skill_mismatch",
+                    "resolution_type": "skill_development",
+                    "description": "Provide training or reassign to better-matched resource",
+                    "steps": [
+                        "Assess training requirements",
+                        "Provide skill development opportunities",
+                        "Consider pairing with experienced team member",
+                        "Monitor progress and adjust as needed"
+                    ],
+                    "estimated_effort": "1-2 weeks",
+                    "priority": "medium"
+                })
+        
+        return resolutions
+    
+    async def _apply_optimization_constraints(self, resources: List[Dict], requirements: List[Dict], 
+                                            constraints: Dict[str, Any]) -> Dict[str, Any]:
+        """Apply specific constraints to optimization"""
+        try:
+            # Filter resources based on constraints
+            filtered_resources = resources.copy()
+            
+            if constraints.get("required_skills"):
+                filtered_resources = [
+                    r for r in filtered_resources 
+                    if any(skill in r.get("skills", []) for skill in constraints["required_skills"])
+                ]
+            
+            if constraints.get("max_utilization"):
+                max_util = constraints["max_utilization"]
+                filtered_resources = [
+                    r for r in filtered_resources 
+                    if r.get("current_utilization", 0) <= max_util
+                ]
+            
+            if constraints.get("location"):
+                filtered_resources = [
+                    r for r in filtered_resources 
+                    if r.get("location") == constraints["location"]
+                ]
+            
+            # Generate constrained recommendations
+            constrained_recommendations = []
+            for resource in filtered_resources:
+                if resource.get("available_capacity", 0) > 0:
+                    constrained_recommendations.append({
+                        "resource_id": resource["id"],
+                        "resource_name": resource["name"],
+                        "available_capacity": resource["available_capacity"],
+                        "skills": resource.get("skills", []),
+                        "location": resource.get("location"),
+                        "recommendation": f"Available for allocation with {resource['available_capacity']:.1f}% capacity"
+                    })
+            
+            return {
+                "constrained_resources": constrained_recommendations,
+                "applied_constraints": constraints,
+                "total_available_resources": len(constrained_recommendations)
+            }
+            
+        except Exception as e:
+            logger.error(f"Constraint application failed: {e}")
+            return {"constrained_resources": [], "applied_constraints": constraints}
+    
+    def _calculate_optimization_potential(self, recommendations: List[Dict]) -> float:
+        """Calculate the potential improvement from optimization"""
+        if not recommendations:
+            return 0.0
+        
+        # Calculate potential based on recommendation types and priorities
+        potential_score = 0.0
+        
+        for rec in recommendations:
+            if rec["priority"] == "critical":
+                potential_score += 0.3
+            elif rec["priority"] == "high":
+                potential_score += 0.2
+            elif rec["priority"] == "medium":
+                potential_score += 0.1
+        
+        # Normalize to 0-1 scale
+        max_possible_score = len(recommendations) * 0.3
+        if max_possible_score > 0:
+            potential_score = min(potential_score / max_possible_score, 1.0)
+        
+        return round(potential_score, 2)
+    
+    def _get_confidence_level(self, confidence_score: float) -> str:
+        """Convert confidence score to descriptive level"""
+        if confidence_score >= 0.8:
+            return "high"
+        elif confidence_score >= 0.6:
+            return "medium"
+        else:
+            return "low"
 
 class RiskForecasterAgent(AIAgentBase):
     """AI agent for predicting and forecasting project risks"""
