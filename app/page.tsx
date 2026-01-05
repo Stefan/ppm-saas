@@ -36,47 +36,68 @@ function LoginForm() {
     setLoading(true)
     setError(null)
 
+    console.log('Starting authentication process...')
+
     try {
-      // Use direct authentication as primary method
-      const { directSignUp, directSignIn } = await import('../lib/auth-direct')
+      // Try Supabase JS SDK first (more reliable for auth)
+      console.log('Attempting Supabase JS authentication...')
       
-      const result = isSignup 
-        ? await directSignUp(email, password)
-        : await directSignIn(email, password)
+      const { data, error } = isSignup
+        ? await supabase.auth.signUp({ 
+            email, 
+            password,
+            options: {
+              emailRedirectTo: window.location.origin
+            }
+          })
+        : await supabase.auth.signInWithPassword({ email, password })
       
-      if (result.success) {
-        setError(result.message || (isSignup ? 'Account created successfully!' : 'Login successful!'))
-        
-        // If login was successful, you might want to redirect or update app state
-        if (!isSignup && result.data) {
-          // Handle successful login - could trigger a page refresh or state update
+      if (error) {
+        console.error('Supabase JS Auth error:', error)
+        throw new Error(error.message)
+      } else {
+        console.log('Supabase JS Auth successful:', data)
+        if (isSignup) {
+          setError('Account created successfully! Please check your email to confirm.')
+        } else {
+          setError('Login successful! Redirecting...')
           setTimeout(() => {
             window.location.reload()
-          }, 1000)
+          }, 1500)
         }
-      } else {
-        setError(result.error || 'Authentication failed')
+        setLoading(false)
+        return
       }
     } catch (err: unknown) {
-      console.error('Direct authentication failed, trying Supabase JS fallback:', err)
+      console.error('Supabase JS failed, trying direct API fallback:', err)
       
-      // Fallback to Supabase JS SDK
+      // Fallback to direct API
       try {
-        const { data, error } = isSignup
-          ? await supabase.auth.signUp({ email, password })
-          : await supabase.auth.signInWithPassword({ email, password })
+        const { directSignUp, directSignIn } = await import('../lib/auth-direct')
         
-        if (error) {
-          setError(`Fallback auth error: ${error.message}`)
-        } else if (isSignup) {
-          setError('Account created via fallback! Please check your email.')
+        console.log('Using direct API authentication...')
+        
+        const result = isSignup 
+          ? await directSignUp(email, password)
+          : await directSignIn(email, password)
+        
+        if (result.success) {
+          console.log('Direct API auth successful:', result.data)
+          setError(result.message || (isSignup ? 'Account created successfully!' : 'Login successful!'))
+          
+          if (!isSignup && result.data) {
+            setTimeout(() => {
+              window.location.reload()
+            }, 1500)
+          }
         } else {
-          setError('Login successful via fallback!')
+          console.error('Direct API auth failed:', result.error)
+          setError(`Authentication failed: ${result.error}`)
         }
-      } catch (fallbackError: unknown) {
-        const fallbackMessage = fallbackError instanceof Error ? fallbackError.message : 'Unknown error'
+      } catch (directError: unknown) {
         const originalMessage = err instanceof Error ? err.message : 'Unknown error'
-        setError(`All authentication methods failed. Direct: ${originalMessage}. Fallback: ${fallbackMessage}`)
+        const directMessage = directError instanceof Error ? directError.message : 'Unknown error'
+        setError(`All authentication methods failed. Supabase JS: ${originalMessage}. Direct API: ${directMessage}`)
       }
     }
     

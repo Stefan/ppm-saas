@@ -63,26 +63,30 @@ export async function directSignUp(email: string, password: string): Promise<Aut
       body: JSON.stringify({
         email: email.trim(),
         password: password,
+        data: {
+          email_confirm: false // Skip email confirmation for testing
+        }
       }),
     })
 
     console.log('Signup response status:', response.status)
+    console.log('Signup response headers:', Object.fromEntries(response.headers.entries()))
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Signup error:', errorText)
+      console.error('Signup error response:', errorText)
       
       // Try to parse error message
       try {
         const errorData = JSON.parse(errorText)
         return {
           success: false,
-          error: errorData.error_description || errorData.msg || 'Signup failed'
+          error: errorData.error_description || errorData.msg || errorData.message || 'Signup failed'
         }
       } catch {
         return {
           success: false,
-          error: `Signup failed: ${response.status} ${response.statusText}`
+          error: `Signup failed: ${response.status} ${response.statusText} - ${errorText}`
         }
       }
     }
