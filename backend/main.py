@@ -10,14 +10,72 @@ import jwt
 import openai
 import requests
 import time
+import asyncio
 from typing import List, Dict, Any
 import json
 
-# Import performance optimization modules
-from performance import (
-    cached, invalidate_cache, monitor_performance, rate_limit_middleware,
-    performance_monitor, cache_manager, BulkOperationManager
-)
+# Import performance optimization modules (with fallback for serverless)
+try:
+    from performance import (
+        cached, invalidate_cache, monitor_performance, rate_limit_middleware,
+        performance_monitor, cache_manager, BulkOperationManager
+    )
+    PERFORMANCE_MODULE_AVAILABLE = True
+except ImportError as e:
+    print(f"Performance module not available: {e}")
+    PERFORMANCE_MODULE_AVAILABLE = False
+    
+    # Create dummy implementations for serverless deployment
+    def cached(prefix: str, ttl: int = 300, key_params=None):
+        def decorator(func):
+            return func
+        return decorator
+    
+    def invalidate_cache(patterns):
+        pass
+    
+    def monitor_performance(func):
+        return func
+    
+    async def rate_limit_middleware(request, call_next):
+        return await call_next(request)
+    
+    class DummyPerformanceMonitor:
+        def record_request(self, *args, **kwargs):
+            pass
+        def get_stats(self):
+            return {}
+    
+    class DummyCacheManager:
+        def get(self, key):
+            return None
+        def set(self, key, value, ttl=None):
+            return True
+        def delete(self, key):
+            return True
+        def clear_pattern(self, pattern):
+            return True
+    
+    class DummyBulkOperationManager:
+        @staticmethod
+        def chunk_list(items, chunk_size=100):
+            for i in range(0, len(items), chunk_size):
+                yield items[i:i + chunk_size]
+        
+        @staticmethod
+        async def process_in_batches(items, processor, batch_size=100):
+            results = []
+            for batch in DummyBulkOperationManager.chunk_list(items, batch_size):
+                if asyncio.iscoroutinefunction(processor):
+                    batch_results = await processor(batch)
+                else:
+                    batch_results = processor(batch)
+                results.extend(batch_results)
+            return results
+    
+    performance_monitor = DummyPerformanceMonitor()
+    cache_manager = DummyCacheManager()
+    BulkOperationManager = DummyBulkOperationManager()
 
 load_dotenv()
 
@@ -30,8 +88,14 @@ if not SUPABASE_URL or not SUPABASE_ANON_KEY:
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-# Initialize OpenAI client
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# Initialize OpenAI client (optional for basic functionality)
+openai_api_key = os.getenv("OPENAI_API_KEY")
+if openai_api_key:
+    openai.api_key = openai_api_key
+    OPENAI_AVAILABLE = True
+else:
+    print("Warning: OPENAI_API_KEY not set. AI features will be limited.")
+    OPENAI_AVAILABLE = False
 
 app = FastAPI(
     title="PPM SaaS MVP API",
@@ -39,8 +103,9 @@ app = FastAPI(
     version="0.1.0"
 )
 
-# Add performance monitoring middleware
-app.middleware("http")(rate_limit_middleware)
+# Add performance monitoring middleware (only if available)
+if PERFORMANCE_MODULE_AVAILABLE:
+    app.middleware("http")(rate_limit_middleware)
 
 app.add_middleware(
     CORSMiddleware,
