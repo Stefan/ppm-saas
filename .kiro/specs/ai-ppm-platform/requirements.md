@@ -140,3 +140,15 @@ This document specifies the requirements for an AI-powered Project Portfolio Man
 3. WHEN model performance degrades, THE PPM_System SHALL alert administrators and provide performance metrics
 4. THE PPM_System SHALL support A/B testing of different AI models for continuous improvement
 5. WHEN AI recommendations are accepted or rejected by users, THE PPM_System SHALL capture feedback for model training
+
+### Requirement 11: CSV Data Import and Integration
+
+**User Story:** As a financial controller, I want to import daily CSV files for commitments and actuals data, so that I can integrate external financial systems with the PPM platform for comprehensive variance analysis.
+
+#### Acceptance Criteria
+
+1. WHEN CSV files are uploaded, THE PPM_System SHALL parse and validate Commitments and Actuals data according to predefined column mappings
+2. WHEN data is imported, THE PPM_System SHALL store commitments and actuals in separate database tables with proper data types and constraints
+3. WHEN commitments and actuals data is available, THE PPM_System SHALL automatically calculate variance metrics (Actual - Commitment) per project and WBS element
+4. WHEN variance thresholds are exceeded, THE PPM_System SHALL generate automated alerts for budget overruns and cost deviations
+5. WHEN variance data is calculated, THE Financial_Tracker SHALL display commitments vs actuals analysis with filtering by project, WBS, vendor, and currency

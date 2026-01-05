@@ -345,6 +345,90 @@ This implementation plan breaks down the AI-powered PPM platform into discrete c
 - [ ] 20. Final checkpoint - Complete system validation
   - Ensure all tests pass, ask the user if questions arise.
 
+## CSV Import & External Data Processing (High Priority for Roche Integration)
+
+- [ ] 21. Implement CSV Import for Commitments & Actuals
+  - [ ] 21.1 Create database schema for commitments and actuals tables
+    - Implement commitments table with PO data structure
+    - Implement actuals table with invoice/payment data structure
+    - Create financial_variances table for aggregated analysis
+    - Add csv_import_logs table for tracking import history
+    - _Requirements: 11.1, 11.2_
+
+  - [ ] 21.2 Implement CSV parsing and validation service
+    - Create CSV file upload endpoint with file type validation
+    - Implement column mapping for standard and custom fields
+    - Add data validation for required fields and data types
+    - Create error handling for malformed CSV data
+    - _Requirements: 11.1_
+
+  - [ ]* 21.3 Write property test for CSV parsing accuracy
+    - **Property 39: CSV Data Parsing Accuracy**
+    - **Validates: Requirements 11.1**
+
+  - [ ] 21.4 Implement data upsert operations for commitments and actuals
+    - Create upsert logic for commitments based on PO number
+    - Create upsert logic for actuals based on FI document number
+    - Implement batch processing for large CSV files
+    - Add transaction handling for data consistency
+    - _Requirements: 11.2_
+
+  - [ ]* 21.5 Write property test for data storage integrity
+    - **Property 40: CSV Data Storage Integrity**
+    - **Validates: Requirements 11.2**
+
+- [ ] 22. Aggregate Variance & Alerts from CSV Data
+  - [ ] 22.1 Implement variance calculation engine
+    - Create aggregation logic for commitments vs actuals by project/WBS
+    - Implement variance percentage calculation
+    - Add currency handling for multi-currency variance analysis
+    - Create scheduled job for automatic variance recalculation
+    - _Requirements: 11.3_
+
+  - [ ]* 22.2 Write property test for variance calculation accuracy
+    - **Property 41: Variance Calculation Accuracy**
+    - **Validates: Requirements 11.3**
+
+  - [ ] 22.3 Implement automated alert system for budget overruns
+    - Create configurable threshold settings for variance alerts
+    - Implement alert generation for over-budget projects
+    - Add notification system for stakeholders
+    - Create alert history and acknowledgment tracking
+    - _Requirements: 11.4_
+
+  - [ ]* 22.4 Write property test for variance alert generation
+    - **Property 42: Variance Alert Generation**
+    - **Validates: Requirements 11.4**
+
+- [ ] 23. UI for Commitments vs Actuals in Financial Tracking
+  - [ ] 23.1 Create CSV upload interface in Financial Tracking
+    - Add file upload component with drag-and-drop support
+    - Implement upload progress tracking and status display
+    - Create import history view with success/error details
+    - Add column mapping configuration interface
+    - _Requirements: 11.1, 11.5_
+
+  - [ ] 23.2 Implement commitments vs actuals dashboard
+    - Create variance analysis table with project/WBS breakdown
+    - Implement interactive charts for variance visualization
+    - Add filtering capabilities by project, WBS, vendor, currency
+    - Create export functionality for variance reports
+    - _Requirements: 11.5_
+
+  - [ ]* 23.3 Write property test for financial variance display
+    - **Property 43: Financial Variance Display Completeness**
+    - **Validates: Requirements 11.5**
+
+  - [ ] 23.4 Integrate variance data with existing financial dashboards
+    - Add variance KPIs to portfolio dashboard
+    - Create variance trend charts and projections
+    - Implement drill-down capabilities from portfolio to project level
+    - Add variance alerts to notification system
+    - _Requirements: 11.5_
+
+- [ ] 24. Checkpoint - Ensure CSV import system is functional
+  - Ensure all tests pass, ask the user if questions arise.
+
 ## Notes
 
 - Tasks marked with `*` are optional and can be skipped for faster MVP

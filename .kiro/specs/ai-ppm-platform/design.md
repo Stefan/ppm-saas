@@ -230,6 +230,65 @@ interface ExchangeRate {
   rate: number;
   updatedAt: Date;
 }
+
+interface Commitment {
+  id: string;
+  poNumber: string;
+  poDate: Date;
+  vendor: string;
+  vendorDescription?: string;
+  requester?: string;
+  project: string;
+  projectDescription?: string;
+  wbsElement: string;
+  wbsDescription?: string;
+  costCenter: string;
+  costCenterDescription?: string;
+  poNetAmount: number;
+  taxAmount?: number;
+  totalAmount: number;
+  poStatus: string;
+  deliveryDate?: Date;
+  currencyCode: string;
+  customFields: Record<string, any>;
+  importedAt: Date;
+  sourceFile: string;
+  organizationId: string;
+}
+
+interface Actual {
+  id: string;
+  fiDocNo: string;
+  postingDate: Date;
+  documentType?: string;
+  vendor: string;
+  vendorInvoiceNo?: string;
+  projectNr: string;
+  wbs: string;
+  glAccount?: string;
+  costCenter: string;
+  invoiceAmount: number;
+  currencyCode: string;
+  poNo?: string; // Links to Commitment.poNumber
+  customFields: Record<string, any>;
+  importedAt: Date;
+  sourceFile: string;
+  organizationId: string;
+}
+
+interface FinancialVariance {
+  id: string;
+  projectId: string;
+  wbsElement: string;
+  totalCommitment: number;
+  totalActual: number;
+  variance: number;
+  variancePercentage: number;
+  status: 'under' | 'on' | 'over';
+  currencyCode: string;
+  calculatedAt: Date;
+  organizationId: string;
+}
 ```
 
 #### Resource Optimizer Agent
@@ -407,6 +466,54 @@ interface RateLimitResult {
   remaining: number;
   resetTime: Date;
   retryAfter?: number;
+}
+```
+
+#### CSV Import Service
+```typescript
+interface CSVImportService {
+  uploadCSV(file: File, type: 'commitments' | 'actuals'): Promise<ImportResult>;
+  parseCSV(fileContent: string, columnMapping: ColumnMapping): Promise<ParsedData>;
+  validateData(data: ParsedData, type: 'commitments' | 'actuals'): Promise<ValidationResult>;
+  upsertCommitments(commitments: Commitment[]): Promise<UpsertResult>;
+  upsertActuals(actuals: Actual[]): Promise<UpsertResult>;
+  calculateVariances(projectIds?: string[]): Promise<VarianceCalculationResult>;
+  generateVarianceAlerts(variances: FinancialVariance[]): Promise<AlertResult>;
+}
+
+interface ImportResult {
+  success: boolean;
+  recordsProcessed: number;
+  recordsImported: number;
+  errors: ImportError[];
+  warnings: ImportWarning[];
+  importId: string;
+}
+
+interface ColumnMapping {
+  [csvColumn: string]: {
+    targetField: string;
+    dataType: 'string' | 'number' | 'date' | 'boolean';
+    required: boolean;
+    transform?: (value: any) => any;
+  };
+}
+
+interface ParsedData {
+  records: Record<string, any>[];
+  headers: string[];
+  rowCount: number;
+  errors: ParseError[];
+}
+
+interface VarianceCalculationResult {
+  variances: FinancialVariance[];
+  summary: {
+    totalProjects: number;
+    overBudgetProjects: number;
+    totalVariance: number;
+    averageVariancePercentage: number;
+  };
 }
 ```
 
@@ -594,6 +701,114 @@ CREATE TABLE ai_performance_metrics (
 );
 ```
 
+#### CSV Import Tables
+```sql
+-- Commitments table for planned expenditures (Purchase Orders)
+CREATE TABLE commitments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  po_number TEXT NOT NULL UNIQUE,
+  po_date DATE,
+  vendor TEXT,
+  vendor_description TEXT,
+  requester TEXT,
+  project TEXT,
+  project_description TEXT,
+  wbs_element TEXT,
+  wbs_description TEXT,
+  cost_center TEXT,
+  cost_center_description TEXT,
+  po_net_amount DECIMAL(15,2),
+  tax_amount DECIMAL(15,2),
+  total_amount DECIMAL(15,2),
+  po_status TEXT,
+  delivery_date DATE,
+  currency_code TEXT,
+  custom_fields JSONB DEFAULT '{}',
+  imported_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  source_file TEXT,
+  organization_id UUID REFERENCES organizations(id),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Actuals table for actual expenditures (Invoices/Payments)
+CREATE TABLE actuals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  fi_doc_no TEXT NOT NULL UNIQUE,
+  posting_date DATE,
+  document_type TEXT,
+  vendor TEXT,
+  vendor_invoice_no TEXT,
+  project_nr TEXT,
+  wbs TEXT,
+  gl_account TEXT,
+  cost_center TEXT,
+  invoice_amount DECIMAL(15,2),
+  currency_code TEXT,
+  po_no TEXT, -- References commitments.po_number
+  custom_fields JSONB DEFAULT '{}',
+  imported_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  source_file TEXT,
+  organization_id UUID REFERENCES organizations(id),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Financial variances table for aggregated variance analysis
+CREATE TABLE financial_variances (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id TEXT,
+  wbs_element TEXT,
+  total_commitment DECIMAL(15,2),
+  total_actual DECIMAL(15,2),
+  variance DECIMAL(15,2) GENERATED ALWAYS AS (total_actual - total_commitment) STORED,
+  variance_percentage DECIMAL(5,2) GENERATED ALWAYS AS (
+    CASE WHEN total_commitment > 0 
+    THEN ((total_actual - total_commitment) / total_commitment) * 100 
+    ELSE 0 END
+  ) STORED,
+  status TEXT GENERATED ALWAYS AS (
+    CASE 
+      WHEN total_actual < total_commitment * 0.95 THEN 'under'
+      WHEN total_actual <= total_commitment * 1.05 THEN 'on'
+      ELSE 'over'
+    END
+  ) STORED,
+  currency_code TEXT,
+  calculated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  organization_id UUID,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- CSV import logs for tracking import history
+CREATE TABLE csv_import_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  import_type TEXT NOT NULL, -- 'commitments' or 'actuals'
+  file_name TEXT NOT NULL,
+  file_size INTEGER,
+  records_processed INTEGER,
+  records_imported INTEGER,
+  records_failed INTEGER,
+  import_status TEXT DEFAULT 'processing', -- 'processing', 'completed', 'failed'
+  error_details JSONB DEFAULT '{}',
+  imported_by UUID REFERENCES auth.users(id),
+  organization_id UUID REFERENCES organizations(id),
+  started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  completed_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Indexes for performance
+CREATE INDEX idx_commitments_po_number ON commitments(po_number);
+CREATE INDEX idx_commitments_project ON commitments(project);
+CREATE INDEX idx_commitments_wbs ON commitments(wbs_element);
+CREATE INDEX idx_actuals_fi_doc_no ON actuals(fi_doc_no);
+CREATE INDEX idx_actuals_po_no ON actuals(po_no);
+CREATE INDEX idx_actuals_project ON actuals(project_nr);
+CREATE INDEX idx_financial_variances_project ON financial_variances(project_id);
+CREATE INDEX idx_financial_variances_wbs ON financial_variances(wbs_element);
+```
+
 ## Correctness Properties
 
 *A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
@@ -771,6 +986,26 @@ Based on the prework analysis, here are the key correctness properties:
 **Property 38: AI Feedback Capture**
 *For any* AI recommendation interaction, user acceptance or rejection feedback should be captured for model training
 **Validates: Requirements 10.5**
+
+**Property 39: CSV Data Parsing Accuracy**
+*For any* valid CSV file with commitments or actuals data, the parsing should correctly map all columns according to predefined mappings without data loss
+**Validates: Requirements 11.1**
+
+**Property 40: CSV Data Storage Integrity**
+*For any* imported CSV data, all records should be stored in the appropriate database tables with correct data types and constraints
+**Validates: Requirements 11.2**
+
+**Property 41: Variance Calculation Accuracy**
+*For any* project with both commitments and actuals data, the variance calculation (Actual - Commitment) should be mathematically correct and properly aggregated by project and WBS element
+**Validates: Requirements 11.3**
+
+**Property 42: Variance Alert Generation**
+*For any* calculated variance exceeding predefined thresholds, automated alerts should be generated for budget overruns and cost deviations
+**Validates: Requirements 11.4**
+
+**Property 43: Financial Variance Display Completeness**
+*For any* commitments vs actuals analysis request, the display should include all relevant data with proper filtering capabilities by project, WBS, vendor, and currency
+**Validates: Requirements 11.5**
 
 ## Error Handling
 
