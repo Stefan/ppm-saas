@@ -89,14 +89,17 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# Enhanced CORS configuration for Render deployment
+# Enhanced CORS configuration for Vercel deployment (maximum flexibility)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://orka-ppm.vercel.app",
-        "https://ppm-pearl.vercel.app", 
-        "https://orka-*.vercel.app",  # Allow all Vercel preview deployments
-        "http://localhost:3000",
+        "https://orka-ppm.vercel.app",           # Current URL
+        "https://ppm-saas.vercel.app",           # Likely new URL
+        "https://ppm-saas-git-main.vercel.app",  # Git branch deployments
+        "https://ppm-saas-*.vercel.app",         # Preview deployments
+        "https://*.vercel.app",                  # All Vercel deployments
+        "https://ppm-pearl.vercel.app",          # Legacy URL
+        "http://localhost:3000",                 # Local development
         "http://127.0.0.1:3000",
         "https://localhost:3000"
     ],
