@@ -1,94 +1,53 @@
 #!/bin/bash
 
-echo "🧪 Render Deployment Test Script"
-echo "================================"
+# Test script for Render deployment verification
+# This script tests the backend deployment on Render
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+echo "🚀 Testing Render Backend Deployment"
+echo "======================================"
+
+BACKEND_URL="https://orka-ppm.onrender.com"
 
 echo ""
-echo "1. Testing Local Backend..."
-echo "=========================="
-
-# Check if we're in the right directory
-if [ ! -f "backend/main.py" ]; then
-    echo -e "${RED}❌ Error: backend/main.py not found. Run this script from the project root.${NC}"
-    exit 1
-fi
-
-echo "Starting local backend test..."
-echo "Run this command in a separate terminal:"
-echo -e "${YELLOW}cd backend && uvicorn main:app --host 0.0.0.0 --port 8000 --reload${NC}"
-echo ""
-echo "Then test these endpoints:"
-echo "curl http://localhost:8000/"
-echo "curl http://localhost:8000/health"
-echo "curl http://localhost:8000/debug"
-echo ""
-
-echo "2. Testing Render Backend..."
-echo "============================"
-
-RENDER_URL="https://orka-ppm.onrender.com"
-
-echo "Testing Render deployment at: $RENDER_URL"
+echo "🔍 Testing Backend Endpoints..."
 
 # Test root endpoint
-echo -n "Testing root endpoint... "
-if curl -s -f "$RENDER_URL/" > /dev/null; then
-    echo -e "${GREEN}✅ SUCCESS${NC}"
-else
-    echo -e "${RED}❌ FAILED${NC}"
-    echo "Check Render logs for deployment issues"
-fi
-
-# Test health endpoint
-echo -n "Testing health endpoint... "
-if curl -s -f "$RENDER_URL/health" > /dev/null; then
-    echo -e "${GREEN}✅ SUCCESS${NC}"
-else
-    echo -e "${RED}❌ FAILED${NC}"
-fi
-
-# Test debug endpoint
-echo -n "Testing debug endpoint... "
-if curl -s -f "$RENDER_URL/debug" > /dev/null; then
-    echo -e "${GREEN}✅ SUCCESS${NC}"
-else
-    echo -e "${RED}❌ FAILED${NC}"
-fi
+echo "1. Testing root endpoint (/)..."
+curl -s -w "Status: %{http_code}\n" "$BACKEND_URL/" | head -10
 
 echo ""
-echo "3. Frontend Integration Test..."
-echo "==============================="
-
-echo "Go to: https://orka-ppm.vercel.app"
-echo "- Try to sign up with test email"
-echo "- Check browser console (F12) for errors"
-echo "- Verify authentication flow works"
-echo "- Test dashboard loading"
+echo "2. Testing health endpoint (/health)..."
+curl -s -w "Status: %{http_code}\n" "$BACKEND_URL/health" | head -10
 
 echo ""
-echo "4. Environment Variables Check..."
-echo "================================="
-
-echo "Verify these are set in Vercel:"
-echo "NEXT_PUBLIC_API_URL=https://orka-ppm.onrender.com"
-echo "NEXT_PUBLIC_SUPABASE_URL=https://xceyrfvxooiplbmwavlb.supabase.co"
-echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=[JWT_TOKEN]"
+echo "3. Testing debug endpoint (/debug)..."
+curl -s -w "Status: %{http_code}\n" "$BACKEND_URL/debug" | head -10
 
 echo ""
-echo "5. Render Configuration Check..."
-echo "================================"
-
-echo "Verify these settings in Render dashboard:"
-echo "Environment: Python 3"
-echo "Build Command: pip install -r requirements.txt"
-echo "Start Command: uvicorn main:app --host 0.0.0.0 --port \$PORT"
-echo "Root Directory: backend"
+echo "4. Testing dashboard endpoint (/dashboard)..."
+curl -s -w "Status: %{http_code}\n" "$BACKEND_URL/dashboard" | head -10
 
 echo ""
-echo -e "${GREEN}🎉 Test completed! Check results above.${NC}"
+echo "5. Testing CORS headers..."
+curl -s -I -H "Origin: https://orka-ppm.vercel.app" "$BACKEND_URL/" | grep -i "access-control"
+
+echo ""
+echo "🧪 Testing Frontend Integration..."
+
+# Test if frontend can reach backend
+echo "6. Testing frontend API calls..."
+curl -s -H "Origin: https://orka-ppm.vercel.app" \
+     -H "Content-Type: application/json" \
+     "$BACKEND_URL/dashboard" | head -5
+
+echo ""
+echo "✅ Deployment Test Complete!"
+echo ""
+echo "Expected Results:"
+echo "- Status codes should be 200"
+echo "- Root endpoint should return welcome message"
+echo "- Health endpoint should return 'healthy' status"
+echo "- CORS headers should include 'access-control-allow-origin'"
+echo ""
+echo "If any endpoint returns 503 or 500, check Render logs:"
+echo "https://dashboard.render.com → Your Service → Logs"
