@@ -497,6 +497,138 @@ async def get_portfolio_metrics(current_user = Depends(get_current_user)):
         print(f"Portfolio metrics error: {e}")
         raise HTTPException(status_code=500, detail=f"Metrics data retrieval failed: {str(e)}")
 
+# Resources Endpoints
+@app.get("/resources/")
+async def list_resources(current_user = Depends(get_current_user)):
+    """Get all resources with utilization data"""
+    try:
+        if supabase is None:
+            raise HTTPException(status_code=503, detail="Database service unavailable")
+        
+        # Get resources from database
+        resources_response = supabase.table("resources").select("*").execute()
+        resources = convert_uuids(resources_response.data)
+        
+        # If no resources exist, return mock data for development
+        if not resources:
+            mock_resources = [
+                {
+                    "id": "1",
+                    "name": "Alice Johnson",
+                    "email": "alice.johnson@company.com",
+                    "role": "Senior Developer",
+                    "capacity": 40,
+                    "availability": 32,
+                    "hourly_rate": 85,
+                    "skills": ["React", "TypeScript", "Node.js", "Python"],
+                    "location": "New York",
+                    "current_projects": ["proj-1", "proj-2"],
+                    "utilization_percentage": 80.0,
+                    "available_hours": 8.0,
+                    "allocated_hours": 32.0,
+                    "capacity_hours": 40.0,
+                    "availability_status": "partially_allocated",
+                    "can_take_more_work": True,
+                    "created_at": "2024-01-01T00:00:00Z",
+                    "updated_at": "2024-01-01T00:00:00Z"
+                },
+                {
+                    "id": "2",
+                    "name": "Bob Smith",
+                    "email": "bob.smith@company.com",
+                    "role": "Project Manager",
+                    "capacity": 40,
+                    "availability": 40,
+                    "hourly_rate": 95,
+                    "skills": ["Project Management", "Agile", "Scrum", "Leadership"],
+                    "location": "San Francisco",
+                    "current_projects": ["proj-1"],
+                    "utilization_percentage": 100.0,
+                    "available_hours": 0.0,
+                    "allocated_hours": 40.0,
+                    "capacity_hours": 40.0,
+                    "availability_status": "fully_allocated",
+                    "can_take_more_work": False,
+                    "created_at": "2024-01-01T00:00:00Z",
+                    "updated_at": "2024-01-01T00:00:00Z"
+                },
+                {
+                    "id": "3",
+                    "name": "Carol Davis",
+                    "email": "carol.davis@company.com",
+                    "role": "UX Designer",
+                    "capacity": 40,
+                    "availability": 20,
+                    "hourly_rate": 75,
+                    "skills": ["UI/UX Design", "Figma", "Adobe Creative Suite", "User Research"],
+                    "location": "Remote",
+                    "current_projects": ["proj-2", "proj-3"],
+                    "utilization_percentage": 50.0,
+                    "available_hours": 20.0,
+                    "allocated_hours": 20.0,
+                    "capacity_hours": 40.0,
+                    "availability_status": "available",
+                    "can_take_more_work": True,
+                    "created_at": "2024-01-01T00:00:00Z",
+                    "updated_at": "2024-01-01T00:00:00Z"
+                },
+                {
+                    "id": "4",
+                    "name": "David Wilson",
+                    "email": "david.wilson@company.com",
+                    "role": "DevOps Engineer",
+                    "capacity": 40,
+                    "availability": 45,
+                    "hourly_rate": 90,
+                    "skills": ["AWS", "Docker", "Kubernetes", "CI/CD", "Terraform"],
+                    "location": "Austin",
+                    "current_projects": ["proj-1", "proj-2", "proj-3"],
+                    "utilization_percentage": 112.5,
+                    "available_hours": -5.0,
+                    "allocated_hours": 45.0,
+                    "capacity_hours": 40.0,
+                    "availability_status": "fully_allocated",
+                    "can_take_more_work": False,
+                    "created_at": "2024-01-01T00:00:00Z",
+                    "updated_at": "2024-01-01T00:00:00Z"
+                }
+            ]
+            return mock_resources
+        
+        return resources
+    except Exception as e:
+        print(f"Resources error: {e}")
+        raise HTTPException(status_code=500, detail=f"Resources data retrieval failed: {str(e)}")
+
+@app.post("/ai/resource-optimizer")
+async def optimize_resources(current_user = Depends(get_current_user)):
+    """AI-powered resource optimization suggestions"""
+    try:
+        # Mock optimization suggestions for development
+        suggestions = [
+            {
+                "resource_id": "1",
+                "resource_name": "Alice Johnson",
+                "match_score": 0.95,
+                "matching_skills": ["React", "TypeScript"],
+                "availability": 8.0,
+                "reasoning": "High skill match for frontend development tasks with available capacity"
+            },
+            {
+                "resource_id": "3",
+                "resource_name": "Carol Davis",
+                "match_score": 0.85,
+                "matching_skills": ["UI/UX Design"],
+                "availability": 20.0,
+                "reasoning": "Strong design skills and significant availability for new projects"
+            }
+        ]
+        
+        return {"suggestions": suggestions}
+    except Exception as e:
+        print(f"Resource optimization error: {e}")
+        raise HTTPException(status_code=500, detail=f"Resource optimization failed: {str(e)}")
+
 # For deployment - Vercel serverless function handler
 handler = app
 
