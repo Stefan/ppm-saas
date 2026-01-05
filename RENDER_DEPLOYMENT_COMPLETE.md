@@ -131,7 +131,7 @@ curl https://your-render-url.onrender.com/
 
 # Expected response:
 {
-  "message": "Willkommen zur PPM SaaS API – Deine Cora-Alternative mit agentic AI 🚀",
+  "message": "Willkommen zur Orka PPM - mit agentic AI 🚀",
   "status": "healthy",
   "version": "1.0.0",
   "timestamp": "2026-01-05T...",

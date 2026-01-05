@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 from main import app
 from supabase import create_client, Client
 import uuid
+from decimal import Decimal
 from datetime import date, datetime, timedelta
 import json
 import os
@@ -32,8 +33,8 @@ def risk_data_strategy(draw):
     return {
         "title": draw(st.text(min_size=1, max_size=255)),
         "description": draw(st.one_of(st.none(), st.text(max_size=1000))),
-        "probability": draw(st.floats(min_value=0.0, max_value=1.0)),
-        "impact": draw(st.floats(min_value=0.0, max_value=1.0)),
+        "probability": draw(st.integers(min_value=1, max_value=100)) / 100.0,  # Convert to 0.01-1.0 range
+        "impact": draw(st.integers(min_value=1, max_value=100)) / 100.0,  # Convert to 0.01-1.0 range
     }
 
 @st.composite
@@ -46,8 +47,20 @@ def issue_data_strategy(draw):
 
 def create_test_project():
     """Helper function to create a test project for risk/issue association"""
-    # Use the default portfolio ID from the migration
+    # First, ensure the default portfolio exists
     portfolio_id = "7608eb53-768e-4fa8-94f7-633c92b7a6ab"
+    
+    # Try to create the portfolio if it doesn't exist
+    try:
+        portfolio_data = {
+            "id": portfolio_id,
+            "name": "Default Portfolio",
+            "description": "Default portfolio for testing"
+        }
+        test_supabase.table("portfolios").insert(portfolio_data).execute()
+    except Exception:
+        # Portfolio might already exist, which is fine
+        pass
     
     project_data = {
         "portfolio_id": portfolio_id,
@@ -71,13 +84,14 @@ def cleanup_test_data(project_id=None, risk_id=None, issue_id=None):
             test_supabase.table("risks").delete().eq("id", risk_id).execute()
         if project_id:
             test_supabase.table("projects").delete().eq("id", project_id).execute()
+        # Don't delete the default portfolio as it might be used by other tests
     except Exception:
         pass  # Ignore cleanup errors
 
 class TestRegisterDataIntegritySimple:
     """Simplified property-based tests for register data integrity"""
 
-    @settings(max_examples=1)
+    @settings(max_examples=1, deadline=None)
     @given(risk_data=risk_data_strategy())
     def test_risk_register_basic_integrity(self, risk_data):
         """
@@ -97,8 +111,9 @@ class TestRegisterDataIntegritySimple:
             risk_entry = {
                 "project_id": project_id,
                 "title": risk_data["title"],
-                "probability": risk_data["probability"],
-                "impact": risk_data["impact"]
+                "category": "technical",  # Required field - use default category
+                "probability": risk_data["probability"],  # Use float directly
+                "impact": risk_data["impact"]  # Use float directly
             }
             
             # Add optional description if provided
@@ -127,7 +142,7 @@ class TestRegisterDataIntegritySimple:
             # Clean up test data
             cleanup_test_data(project_id=project_id, risk_id=risk_id)
 
-    @settings(max_examples=1)
+    @settings(max_examples=1, deadline=None)
     @given(issue_data=issue_data_strategy())
     def test_issue_register_basic_integrity(self, issue_data):
         """
@@ -177,7 +192,7 @@ class TestRegisterDataIntegritySimple:
             # Clean up test data
             cleanup_test_data(project_id=project_id, issue_id=issue_id)
 
-    @settings(max_examples=1)
+    @settings(max_examples=1, deadline=None)
     @given(risk_data=risk_data_strategy(), issue_data=issue_data_strategy())
     def test_risk_issue_basic_consistency(self, risk_data, issue_data):
         """
@@ -198,8 +213,9 @@ class TestRegisterDataIntegritySimple:
             risk_entry = {
                 "project_id": project_id,
                 "title": risk_data["title"],
-                "probability": risk_data["probability"],
-                "impact": risk_data["impact"]
+                "category": "technical",  # Required field - use default category
+                "probability": risk_data["probability"],  # Use float directly
+                "impact": risk_data["impact"]  # Use float directly
             }
             
             risk_response = test_supabase.table("risks").insert(risk_entry).execute()

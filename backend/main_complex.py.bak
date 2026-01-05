@@ -164,7 +164,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 @app.get("/")
 async def root():
     return {
-        "message": "Willkommen zur PPM SaaS API – Deine Cora-Alternative mit agentic AI 🚀",
+        "message": "Willkommen zur Orka PPM - mit agentic AI 🚀",
         "status": "healthy",
         "version": "1.0.0",
         "timestamp": datetime.now().isoformat()

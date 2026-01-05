@@ -4,8 +4,7 @@ from main import app  # Import deiner main.py
 
 client = TestClient(app)
 
-@pytest.mark.asyncio
-async def test_create_project():
+def test_create_project():
     payload = {
         "portfolio_id": "7608eb53-768e-4fa8-94f7-633c92b7a6ab",  # Deine gültige ID
         "name": "Test Project",
@@ -17,8 +16,7 @@ async def test_create_project():
     assert "id" in response.json()
     # Optional: Lösche das Test-Project per DELETE, um DB sauber zu halten
 
-@pytest.mark.asyncio
-async def test_list_projects():
+def test_list_projects():
     response = client.get("/projects/")
     assert response.status_code == 200
     assert isinstance(response.json(), list)
@@ -29,8 +27,7 @@ async def test_list_projects():
 #   assert response.status_code == 200
 
 # Für Fehlertests
-@pytest.mark.asyncio
-async def test_create_project_invalid_portfolio():
+def test_create_project_invalid_portfolio():
     payload = {
         "portfolio_id": "invalid-uuid",
         "name": "Invalid",
