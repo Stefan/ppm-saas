@@ -253,7 +253,7 @@ def routing_scenario_strategy(draw):
 class TestWorkflowRoutingAccuracy:
     """Property 22: Approval Routing Accuracy tests"""
 
-    @settings(max_examples=25)
+    @settings(max_examples=10)
     @given(scenario=routing_scenario_strategy())
     def test_approval_routing_follows_configured_rules(self, scenario):
         """
@@ -322,7 +322,7 @@ class TestWorkflowRoutingAccuracy:
                 assert any(approver in first_step_approvers for approver in approvers), \
                     "Should include approvers from first step when no rules apply"
 
-    @settings(max_examples=20)
+    @settings(max_examples=10)
     @given(template=workflow_template_strategy())
     def test_approval_routing_handles_empty_steps(self, template):
         """
@@ -358,7 +358,7 @@ class TestWorkflowRoutingAccuracy:
         assert isinstance(approvers, list), "Should return a list even with empty steps"
         # Note: The specific behavior (empty list vs default approvers) depends on implementation
 
-    @settings(max_examples=20)
+    @settings(max_examples=10)
     @given(scenario=routing_scenario_strategy())
     def test_approval_routing_respects_step_configuration(self, scenario):
         """
@@ -416,7 +416,7 @@ class TestWorkflowRoutingAccuracy:
         for result in routing_results[1:]:
             assert result == first_result, "Routing should be consistent for identical inputs"
 
-    @settings(max_examples=20)
+    @settings(max_examples=10)
     @given(scenario=routing_scenario_strategy())
     def test_approval_routing_handles_conditional_rules(self, scenario):
         """

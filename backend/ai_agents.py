@@ -1,6 +1,7 @@
 """
 AI Agents Implementation for PPM Platform
 Implements the four core AI agents: RAG Reporter, Resource Optimizer, Risk Forecaster, and Hallucination Validator
+Enhanced with comprehensive logging and monitoring
 """
 
 import os
@@ -12,6 +13,7 @@ import numpy as np
 from openai import OpenAI
 from supabase import Client
 import logging
+import uuid
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -24,12 +26,63 @@ class AIAgentBase:
         self.supabase = supabase_client
         self.openai_client = OpenAI(api_key=openai_api_key)
         self.agent_type = self.__class__.__name__.lower()
+        
+        # Import AI model management here to avoid circular imports
+        try:
+            from ai_model_management import AIModelManager, ModelOperation, ModelOperationType
+            self.model_manager = AIModelManager(supabase_client)
+            self.ModelOperation = ModelOperation
+            self.ModelOperationType = ModelOperationType
+        except ImportError:
+            logger.warning("AI model management not available - using fallback logging")
+            self.model_manager = None
+            self.ModelOperation = None
+            self.ModelOperationType = None
+    
+    async def log_operation(self, operation_type: str, user_id: str, inputs: Dict[str, Any], 
+                           outputs: Dict[str, Any], response_time_ms: int, success: bool = True, 
+                           error_message: str = None, confidence_score: float = None,
+                           input_tokens: int = 0, output_tokens: int = 0) -> str:
+        """Enhanced operation logging with AI model management"""
+        operation_id = str(uuid.uuid4())
+        
+        try:
+            if self.model_manager and self.ModelOperation and self.ModelOperationType:
+                # Use new AI model management system
+                operation = self.ModelOperation(
+                    operation_id=operation_id,
+                    model_id=f"{self.agent_type}_v1",
+                    operation_type=self.ModelOperationType(operation_type),
+                    user_id=user_id,
+                    inputs=inputs,
+                    outputs=outputs,
+                    confidence_score=confidence_score,
+                    response_time_ms=response_time_ms,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    success=success,
+                    error_message=error_message,
+                    timestamp=datetime.now(),
+                    metadata={"agent_class": self.__class__.__name__}
+                )
+                
+                await self.model_manager.log_model_operation(operation)
+            else:
+                # Fallback to legacy logging
+                await self.log_metrics(operation_type, user_id, input_tokens, output_tokens, 
+                                     response_time_ms, success, error_message, confidence_score)
+            
+            return operation_id
+            
+        except Exception as e:
+            logger.error(f"Failed to log operation: {e}")
+            return operation_id
     
     async def log_metrics(self, operation: str, user_id: str, input_tokens: int = 0, 
                          output_tokens: int = 0, response_time_ms: int = 0, 
                          success: bool = True, error_message: str = None, 
                          confidence_score: float = None):
-        """Log agent performance metrics"""
+        """Legacy metrics logging (fallback)"""
         try:
             self.supabase.table("ai_agent_metrics").insert({
                 "agent_type": self.agent_type,
@@ -87,34 +140,85 @@ class RAGReporterAgent(AIAgentBase):
     
     async def search_similar_content(self, query: str, content_types: List[str] = None, 
                                    limit: int = 5) -> List[Dict]:
-        """Search for similar content using vector similarity"""
+        """Search for similar content using vector similarity with pgvector"""
         try:
             query_embedding = await self.generate_embedding(query)
             
-            # Build the query
+            # Build the query with proper vector similarity search
+            if content_types:
+                content_filter = f"content_type IN ({','.join([f"'{ct}'" for ct in content_types])})"
+            else:
+                content_filter = "TRUE"
+            
+            # Use pgvector's cosine distance for similarity search
+            # Note: We use 1 - cosine_distance to get similarity score (higher = more similar)
+            similarity_query = f"""
+                SELECT 
+                    content_type, 
+                    content_id, 
+                    content_text, 
+                    metadata,
+                    (1 - (embedding <=> %s::vector)) as similarity_score
+                FROM embeddings 
+                WHERE {content_filter}
+                ORDER BY embedding <=> %s::vector
+                LIMIT %s
+            """
+            
+            # Execute the query using Supabase RPC
+            result = self.supabase.rpc('vector_similarity_search', {
+                'query_embedding': query_embedding,
+                'content_types': content_types or [],
+                'similarity_limit': limit
+            }).execute()
+            
+            if result.data:
+                return result.data
+            
+            # Fallback to basic similarity if RPC not available
+            return await self._fallback_similarity_search(query_embedding, content_types, limit)
+            
+        except Exception as e:
+            logger.error(f"Vector similarity search failed: {e}")
+            # Fallback to basic search
+            return await self._fallback_similarity_search(query_embedding if 'query_embedding' in locals() else None, content_types, limit)
+    
+    async def _fallback_similarity_search(self, query_embedding: List[float] = None, 
+                                        content_types: List[str] = None, limit: int = 5) -> List[Dict]:
+        """Fallback similarity search using basic filtering"""
+        try:
             query_builder = self.supabase.table("embeddings").select(
-                "content_type, content_id, content_text, metadata"
+                "content_type, content_id, content_text, metadata, embedding"
             )
             
             if content_types:
                 query_builder = query_builder.in_("content_type", content_types)
             
-            # Note: This is a simplified version. In production, you'd use pgvector
-            # for proper vector similarity search
             response = query_builder.limit(limit * 3).execute()  # Get more to filter
             
             if not response.data:
                 return []
             
-            # Calculate similarity scores (simplified cosine similarity)
+            # Calculate similarity scores if we have query embedding
             results = []
             for item in response.data:
-                if item.get('embedding'):
-                    # This would be done in the database with pgvector in production
+                if item.get('embedding') and query_embedding:
                     similarity = self._calculate_similarity(query_embedding, item['embedding'])
                     results.append({
-                        **item,
+                        'content_type': item['content_type'],
+                        'content_id': item['content_id'],
+                        'content_text': item['content_text'],
+                        'metadata': item['metadata'],
                         'similarity_score': similarity
+                    })
+                else:
+                    # If no embedding comparison possible, use basic text matching
+                    results.append({
+                        'content_type': item['content_type'],
+                        'content_id': item['content_id'],
+                        'content_text': item['content_text'],
+                        'metadata': item['metadata'],
+                        'similarity_score': 0.5  # Default similarity
                     })
             
             # Sort by similarity and return top results
@@ -122,7 +226,7 @@ class RAGReporterAgent(AIAgentBase):
             return results[:limit]
             
         except Exception as e:
-            logger.error(f"Content search failed: {e}")
+            logger.error(f"Fallback similarity search failed: {e}")
             return []
     
     def _calculate_similarity(self, vec1: List[float], vec2: List[float]) -> float:
@@ -177,6 +281,7 @@ class RAGReporterAgent(AIAgentBase):
                               conversation_id: str = None) -> Dict[str, Any]:
         """Process a natural language query using RAG"""
         start_time = datetime.now()
+        operation_id = None
         
         try:
             # Generate conversation ID if not provided
@@ -227,16 +332,23 @@ class RAGReporterAgent(AIAgentBase):
             
             confidence_score = self._calculate_confidence(similar_content, ai_response)
             
+            # Enhanced logging
+            operation_id = await self.log_operation(
+                operation_type="rag_query",
+                user_id=user_id,
+                inputs={"query": query, "conversation_id": conversation_id},
+                outputs={"response": ai_response, "sources": sources},
+                response_time_ms=response_time,
+                success=True,
+                confidence_score=confidence_score,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens
+            )
+            
             # Store conversation
             await self._store_conversation(
                 user_id, conversation_id, query, ai_response, 
-                sources, confidence_score
-            )
-            
-            # Log metrics
-            await self.log_metrics(
-                "rag_query", user_id, input_tokens, output_tokens,
-                response_time, True, None, confidence_score
+                sources, confidence_score, operation_id
             )
             
             return {
@@ -244,14 +356,24 @@ class RAGReporterAgent(AIAgentBase):
                 "sources": sources,
                 "confidence_score": confidence_score,
                 "conversation_id": conversation_id,
-                "response_time_ms": response_time
+                "response_time_ms": response_time,
+                "operation_id": operation_id
             }
             
         except Exception as e:
             response_time = int((datetime.now() - start_time).total_seconds() * 1000)
-            await self.log_metrics(
-                "rag_query", user_id, 0, 0, response_time, False, str(e)
+            
+            # Log error
+            operation_id = await self.log_operation(
+                operation_type="rag_query",
+                user_id=user_id,
+                inputs={"query": query, "conversation_id": conversation_id},
+                outputs={},
+                response_time_ms=response_time,
+                success=False,
+                error_message=str(e)
             )
+            
             logger.error(f"RAG query failed: {e}")
             raise
     
@@ -308,9 +430,218 @@ class RAGReporterAgent(AIAgentBase):
         confidence = (avg_similarity * 0.7) + (response_length_factor * 0.3)
         return min(max(confidence, 0.0), 1.0)
     
+    async def index_existing_content(self) -> Dict[str, Any]:
+        """Index existing content in the database for vector search"""
+        try:
+            indexed_count = 0
+            errors = []
+            
+            # Index projects
+            projects_response = self.supabase.table("projects").select("*").execute()
+            for project in projects_response.data or []:
+                try:
+                    content_text = f"Project: {project['name']}. Description: {project.get('description', '')}. Status: {project.get('status', '')}. Priority: {project.get('priority', '')}."
+                    await self.store_content_embedding(
+                        "project", 
+                        project["id"], 
+                        content_text,
+                        {
+                            "name": project["name"],
+                            "status": project.get("status"),
+                            "priority": project.get("priority"),
+                            "budget": project.get("budget")
+                        }
+                    )
+                    indexed_count += 1
+                except Exception as e:
+                    errors.append(f"Project {project['id']}: {str(e)}")
+            
+            # Index portfolios
+            portfolios_response = self.supabase.table("portfolios").select("*").execute()
+            for portfolio in portfolios_response.data or []:
+                try:
+                    content_text = f"Portfolio: {portfolio['name']}. Description: {portfolio.get('description', '')}."
+                    await self.store_content_embedding(
+                        "portfolio", 
+                        portfolio["id"], 
+                        content_text,
+                        {
+                            "name": portfolio["name"],
+                            "owner_id": portfolio.get("owner_id")
+                        }
+                    )
+                    indexed_count += 1
+                except Exception as e:
+                    errors.append(f"Portfolio {portfolio['id']}: {str(e)}")
+            
+            # Index resources
+            resources_response = self.supabase.table("resources").select("*").execute()
+            for resource in resources_response.data or []:
+                try:
+                    skills_text = ", ".join(resource.get("skills", []))
+                    content_text = f"Resource: {resource['name']}. Role: {resource.get('role', '')}. Skills: {skills_text}. Location: {resource.get('location', '')}."
+                    await self.store_content_embedding(
+                        "resource", 
+                        resource["id"], 
+                        content_text,
+                        {
+                            "name": resource["name"],
+                            "role": resource.get("role"),
+                            "skills": resource.get("skills", []),
+                            "location": resource.get("location")
+                        }
+                    )
+                    indexed_count += 1
+                except Exception as e:
+                    errors.append(f"Resource {resource['id']}: {str(e)}")
+            
+            # Index risks
+            risks_response = self.supabase.table("risks").select("*").execute()
+            for risk in risks_response.data or []:
+                try:
+                    content_text = f"Risk: {risk['title']}. Description: {risk.get('description', '')}. Category: {risk.get('category', '')}. Mitigation: {risk.get('mitigation', '')}."
+                    await self.store_content_embedding(
+                        "risk", 
+                        risk["id"], 
+                        content_text,
+                        {
+                            "title": risk["title"],
+                            "category": risk.get("category"),
+                            "probability": risk.get("probability"),
+                            "impact": risk.get("impact"),
+                            "status": risk.get("status")
+                        }
+                    )
+                    indexed_count += 1
+                except Exception as e:
+                    errors.append(f"Risk {risk['id']}: {str(e)}")
+            
+            # Index issues
+            issues_response = self.supabase.table("issues").select("*").execute()
+            for issue in issues_response.data or []:
+                try:
+                    content_text = f"Issue: {issue['title']}. Description: {issue.get('description', '')}. Severity: {issue.get('severity', '')}. Resolution: {issue.get('resolution', '')}."
+                    await self.store_content_embedding(
+                        "issue", 
+                        issue["id"], 
+                        content_text,
+                        {
+                            "title": issue["title"],
+                            "severity": issue.get("severity"),
+                            "status": issue.get("status"),
+                            "assigned_to": issue.get("assigned_to")
+                        }
+                    )
+                    indexed_count += 1
+                except Exception as e:
+                    errors.append(f"Issue {issue['id']}: {str(e)}")
+            
+            return {
+                "indexed_count": indexed_count,
+                "errors": errors,
+                "success": len(errors) == 0,
+                "message": f"Successfully indexed {indexed_count} items with {len(errors)} errors"
+            }
+            
+        except Exception as e:
+            logger.error(f"Content indexing failed: {e}")
+            return {
+                "indexed_count": 0,
+                "errors": [str(e)],
+                "success": False,
+                "message": f"Content indexing failed: {str(e)}"
+            }
+    
+    async def semantic_search(self, query: str, filters: Dict[str, Any] = None, limit: int = 10) -> Dict[str, Any]:
+        """Perform semantic search across all indexed content"""
+        try:
+            # Apply filters if provided
+            content_types = filters.get("content_types") if filters else None
+            
+            # Search for similar content
+            similar_content = await self.search_similar_content(
+                query, 
+                content_types=content_types,
+                limit=limit
+            )
+            
+            # Group results by content type
+            grouped_results = {}
+            for item in similar_content:
+                content_type = item["content_type"]
+                if content_type not in grouped_results:
+                    grouped_results[content_type] = []
+                grouped_results[content_type].append(item)
+            
+            # Calculate search statistics
+            total_results = len(similar_content)
+            avg_similarity = sum(item["similarity_score"] for item in similar_content) / total_results if total_results > 0 else 0
+            
+            return {
+                "query": query,
+                "results": similar_content,
+                "grouped_results": grouped_results,
+                "statistics": {
+                    "total_results": total_results,
+                    "average_similarity": round(avg_similarity, 3),
+                    "content_types_found": list(grouped_results.keys()),
+                    "filters_applied": filters or {}
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Semantic search failed: {e}")
+            return {
+                "query": query,
+                "results": [],
+                "grouped_results": {},
+                "statistics": {
+                    "total_results": 0,
+                    "average_similarity": 0,
+                    "content_types_found": [],
+                    "filters_applied": filters or {}
+                },
+                "error": str(e)
+            }
+    
+    async def update_content_embedding(self, content_type: str, content_id: str, 
+                                     updated_content: Dict[str, Any]) -> bool:
+        """Update embedding for modified content"""
+        try:
+            # Generate new content text based on content type
+            if content_type == "project":
+                content_text = f"Project: {updated_content['name']}. Description: {updated_content.get('description', '')}. Status: {updated_content.get('status', '')}. Priority: {updated_content.get('priority', '')}."
+                metadata = {
+                    "name": updated_content["name"],
+                    "status": updated_content.get("status"),
+                    "priority": updated_content.get("priority"),
+                    "budget": updated_content.get("budget")
+                }
+            elif content_type == "resource":
+                skills_text = ", ".join(updated_content.get("skills", []))
+                content_text = f"Resource: {updated_content['name']}. Role: {updated_content.get('role', '')}. Skills: {skills_text}. Location: {updated_content.get('location', '')}."
+                metadata = {
+                    "name": updated_content["name"],
+                    "role": updated_content.get("role"),
+                    "skills": updated_content.get("skills", []),
+                    "location": updated_content.get("location")
+                }
+            else:
+                # Generic content text generation
+                content_text = f"{content_type.title()}: {updated_content.get('name', updated_content.get('title', 'Unknown'))}. {updated_content.get('description', '')}"
+                metadata = {k: v for k, v in updated_content.items() if k in ['name', 'title', 'status', 'priority']}
+            
+            # Store updated embedding
+            await self.store_content_embedding(content_type, content_id, content_text, metadata)
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to update content embedding: {e}")
+            return False
+    
     async def _store_conversation(self, user_id: str, conversation_id: str, 
                                 query: str, response: str, sources: List[Dict], 
-                                confidence_score: float):
+                                confidence_score: float, operation_id: str = None):
         """Store conversation in database"""
         try:
             self.supabase.table("rag_contexts").insert({
@@ -319,7 +650,8 @@ class RAGReporterAgent(AIAgentBase):
                 "query": query,
                 "response": response,
                 "sources": sources,
-                "confidence_score": confidence_score
+                "confidence_score": confidence_score,
+                "operation_id": operation_id
             }).execute()
         except Exception as e:
             logger.error(f"Failed to store conversation: {e}")
@@ -1116,6 +1448,13 @@ class ResourceOptimizerAgent(AIAgentBase):
                     if r.get("current_utilization", 0) <= max_util
                 ]
             
+            if constraints.get("min_availability"):
+                min_avail = constraints["min_availability"]
+                filtered_resources = [
+                    r for r in filtered_resources 
+                    if r.get("availability", 0) >= min_avail
+                ]
+            
             if constraints.get("location"):
                 filtered_resources = [
                     r for r in filtered_resources 
@@ -1336,24 +1675,47 @@ class HallucinationValidator(AIAgentBase):
                 "source_coverage": 0.0
             }
             
+            # Always extract claims first (this can raise exceptions)
+            claims = self._extract_claims(response)
+            
             # Check if response is grounded in sources
             if not sources:
                 validation_results["issues"].append("No sources provided for validation")
                 validation_results["confidence_score"] *= 0.5
-            
-            # Check for specific claims that can be verified
-            claims = self._extract_claims(response)
-            verified_claims = 0
-            
-            for claim in claims:
-                if self._verify_claim_against_sources(claim, sources):
-                    verified_claims += 1
+                validation_results["source_coverage"] = 0.0
+            else:
+                # Check for specific claims that can be verified
+                verified_claims = 0
+                contradictions_found = 0
+                
+                for claim in claims:
+                    verification_result = self._verify_claim_against_sources(claim, sources)
+                    if verification_result:
+                        verified_claims += 1
+                    else:
+                        # Check if this is a contradiction vs just unverified
+                        if self._detect_contradiction(claim, sources):
+                            contradictions_found += 1
+                            validation_results["issues"].append(f"Contradictory claim detected: {claim}")
+                        else:
+                            validation_results["issues"].append(f"Unverified claim: {claim}")
+                
+                # Calculate source coverage more consistently
+                if claims:
+                    validation_results["source_coverage"] = verified_claims / len(claims)
                 else:
-                    validation_results["issues"].append(f"Unverified claim: {claim}")
-            
-            if claims:
-                validation_results["source_coverage"] = verified_claims / len(claims)
-                validation_results["confidence_score"] *= validation_results["source_coverage"]
+                    # If no specific claims extracted, assume moderate coverage if sources exist
+                    validation_results["source_coverage"] = 0.5
+                
+                # Adjust confidence based on verification and contradictions
+                base_confidence = validation_results["source_coverage"]
+                
+                # Penalize contradictions heavily
+                if contradictions_found > 0:
+                    contradiction_penalty = min(0.8, contradictions_found * 0.3)
+                    base_confidence *= (1.0 - contradiction_penalty)
+                
+                validation_results["confidence_score"] = base_confidence
             
             # Flag potential hallucinations
             if validation_results["confidence_score"] < 0.6:
@@ -1371,31 +1733,110 @@ class HallucinationValidator(AIAgentBase):
                 "source_coverage": 0.0
             }
     
+    def _detect_contradiction(self, claim: str, sources: List[Dict]) -> bool:
+        """Detect if a claim contradicts source data"""
+        import re
+        
+        claim_lower = claim.lower()
+        claim_numbers = re.findall(r'\$?[\d,]+(?:\.\d+)?', claim)
+        claim_numbers = [self._normalize_number(num) for num in claim_numbers]
+        
+        # Look for contradictory information in sources
+        for source in sources:
+            source_text = source.get('content_text', '').lower()
+            
+            # Check for overlapping context (same topic)
+            claim_words = set(word for word in claim_lower.split() if len(word) > 3)
+            source_words = set(word for word in source_text.split() if len(word) > 3)
+            overlap = len(claim_words.intersection(source_words))
+            
+            if overlap > 1:  # Some topical overlap
+                source_numbers = re.findall(r'\$?[\d,]+(?:\.\d+)?', source_text)
+                source_numbers = [self._normalize_number(num) for num in source_numbers]
+                
+                # Check for numerical contradictions
+                if claim_numbers and source_numbers:
+                    for claim_num in claim_numbers:
+                        for source_num in source_numbers:
+                            # Significant difference indicates contradiction
+                            if claim_num > 0 and source_num > 0:
+                                diff_ratio = abs(claim_num - source_num) / max(claim_num, source_num)
+                                if diff_ratio >= 0.30:  # 30% or more difference (lowered from 35%)
+                                    return True
+        
+        return False
+    
     def _extract_claims(self, response: str) -> List[str]:
         """Extract factual claims from response"""
-        # Simplified claim extraction - in production, use NLP techniques
+        # Improved claim extraction with more consistent behavior
         sentences = response.split('.')
         claims = []
         
+        # Keywords that indicate factual claims
+        factual_keywords = [
+            'total', 'number', 'percent', 'budget', 'deadline', 'resource',
+            'cost', 'spending', 'allocation', 'utilization', 'performance',
+            'project', 'risk', 'issue', 'milestone', 'completion'
+        ]
+        
         for sentence in sentences:
             sentence = sentence.strip()
-            if sentence and any(keyword in sentence.lower() for keyword in 
-                              ['total', 'number', 'percent', 'budget', 'deadline', 'resource']):
+            if sentence and any(keyword in sentence.lower() for keyword in factual_keywords):
                 claims.append(sentence)
+        
+        # Ensure consistent behavior - if no claims found, treat entire response as one claim
+        if not claims and response.strip():
+            claims = [response.strip()]
         
         return claims
     
     def _verify_claim_against_sources(self, claim: str, sources: List[Dict]) -> bool:
-        """Verify a claim against source data"""
-        # Simplified verification - in production, use semantic similarity
+        """Verify a claim against source data with improved contradiction detection"""
+        if not sources:
+            return False
+            
         claim_lower = claim.lower()
+        
+        # Extract numerical values from claim for contradiction detection
+        import re
+        claim_numbers = re.findall(r'\$?[\d,]+(?:\.\d+)?', claim)
+        claim_numbers = [self._normalize_number(num) for num in claim_numbers]
         
         for source in sources:
             source_text = source.get('content_text', '').lower()
-            if any(word in source_text for word in claim_lower.split() if len(word) > 3):
-                return True
+            
+            # Check for word overlap (basic verification)
+            claim_words = set(word for word in claim_lower.split() if len(word) > 3)
+            source_words = set(word for word in source_text.split() if len(word) > 3)
+            overlap = len(claim_words.intersection(source_words))
+            
+            if overlap > 0:
+                # If there's word overlap, check for numerical contradictions
+                source_numbers = re.findall(r'\$?[\d,]+(?:\.\d+)?', source_text)
+                source_numbers = [self._normalize_number(num) for num in source_numbers]
+                
+                # If both have numbers, check for significant differences
+                if claim_numbers and source_numbers:
+                    for claim_num in claim_numbers:
+                        for source_num in source_numbers:
+                            # If numbers differ by 30% or more, it's likely a contradiction
+                            if claim_num > 0 and source_num > 0:
+                                diff_ratio = abs(claim_num - source_num) / max(claim_num, source_num)
+                                if diff_ratio >= 0.30:  # 30% or more difference (lowered from 35%)
+                                    return False  # Contradiction detected
+                
+                return True  # Word overlap without contradiction
         
         return False
+    
+    def _normalize_number(self, num_str: str) -> float:
+        """Normalize number string to float for comparison"""
+        try:
+            # Remove $ and commas, convert to float
+            cleaned = num_str.replace('$', '').replace(',', '')
+            return float(cleaned)
+        except (ValueError, AttributeError):
+            return 0.0
 
 # Factory function to create AI agents
 def create_ai_agents(supabase_client: Client, openai_api_key: str) -> Dict[str, AIAgentBase]:

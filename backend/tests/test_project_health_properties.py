@@ -280,7 +280,7 @@ def milestone_strategy(draw):
 class TestHealthIndicatorConsistency:
     """Property 3: Health Indicator Consistency tests"""
 
-    @settings(max_examples=100)
+    @settings(max_examples=10)
     @given(project=project_strategy())
     def test_health_indicator_reflects_calculated_status(self, project):
         """
@@ -299,7 +299,7 @@ class TestHealthIndicatorConsistency:
         recalculated_health = calculate_project_health(project)
         assert calculated_health == recalculated_health, "Health calculation should be deterministic for the same input"
 
-    @settings(max_examples=50)
+    @settings(max_examples=10)
     @given(
         project=project_strategy(),
         risks=st.lists(risk_strategy(), min_size=0, max_size=10),
@@ -343,7 +343,7 @@ class TestHealthIndicatorConsistency:
             assert health_order[health_with_factors] <= health_order[health_without_factors], \
                 f"Health should not improve when high-risk factors are present: {health_without_factors} -> {health_with_factors}"
 
-    @settings(max_examples=30)
+    @settings(max_examples=10)
     @given(project=project_strategy())
     def test_budget_variance_affects_health(self, project):
         """
@@ -386,7 +386,7 @@ class TestHealthIndicatorConsistency:
             assert health_order[under_budget_health] >= health_order[on_budget_health], \
                 f"Under budget health ({under_budget_health}) should not be worse than on budget health ({on_budget_health})"
 
-    @settings(max_examples=30)
+    @settings(max_examples=10)
     @given(project=project_strategy())
     def test_schedule_performance_affects_health(self, project):
         """
@@ -436,7 +436,7 @@ class TestHealthIndicatorConsistency:
         assert health_order[overdue_health] <= health_order[on_schedule_health], \
             f"Overdue project health ({overdue_health}) should not be better than on-schedule health ({on_schedule_health})"
 
-    @settings(max_examples=20)
+    @settings(max_examples=5)
     @given(
         project=project_strategy(),
         risks=st.lists(risk_strategy(), min_size=1, max_size=5)

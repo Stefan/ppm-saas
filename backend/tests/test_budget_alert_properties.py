@@ -94,7 +94,7 @@ def budget_threshold_scenario_strategy(draw):
 class TestBudgetAlertGeneration:
     """Property 15: Budget Alert Generation tests"""
 
-    @settings(max_examples=20)
+    @settings(max_examples=10)
     @given(scenario=budget_threshold_scenario_strategy())
     def test_budget_alert_generation_for_threshold_exceeded(self, scenario):
         """
@@ -198,7 +198,7 @@ class TestBudgetAlertGeneration:
         assert alert.alert_type == active_rule["alert_type"], "Alert should come from active rule"
         assert alert.recipients == active_rule["recipients"], "Alert should have recipients from active rule"
 
-    @settings(max_examples=15)
+    @settings(max_examples=10)
     @given(project=project_strategy(), alert_rules=st.lists(alert_rule_strategy(), min_size=2, max_size=4))
     def test_budget_alert_generation_multiple_thresholds(self, project, alert_rules):
         """

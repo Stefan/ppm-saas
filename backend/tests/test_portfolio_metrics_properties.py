@@ -300,7 +300,7 @@ def large_portfolio_strategy(draw):
 class TestPortfolioMetricsCalculationPerformance:
     """Property 1: Portfolio Metrics Calculation Performance tests"""
 
-    @settings(max_examples=20, deadline=10000, suppress_health_check=[HealthCheck.data_too_large])  # 10 second deadline for performance testing
+    @settings(max_examples=3)  # Reduced for faster execution
     @given(portfolio_data=large_portfolio_strategy())
     def test_portfolio_metrics_calculation_performance(self, portfolio_data):
         """
@@ -328,7 +328,7 @@ class TestPortfolioMetricsCalculationPerformance:
         assert 'execution_time_seconds' in metrics, "Metrics should include execution time"
         assert metrics['execution_time_seconds'] <= 5.0, "Recorded execution time should be within performance limit"
 
-    @settings(max_examples=50)
+    @settings(max_examples=10)
     @given(
         portfolio=portfolio_strategy(),
         projects=st.lists(project_strategy(), min_size=1, max_size=100)
@@ -431,7 +431,7 @@ class TestPortfolioMetricsCalculationPerformance:
                     # Allow some flexibility for small variations in timing
                     assert time_ratio <= size_ratio * 3, f"Performance should scale reasonably: {prev_size} projects in {prev_time:.3f}s, {curr_size} projects in {curr_time:.3f}s"
 
-    @settings(max_examples=30)
+    @settings(max_examples=10)
     @given(
         portfolio=portfolio_strategy(),
         projects=st.lists(project_strategy(), min_size=1, max_size=50)

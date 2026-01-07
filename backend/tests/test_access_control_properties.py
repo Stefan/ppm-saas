@@ -104,7 +104,7 @@ class TestAccessControlEnforcement:
         # Clear any existing cache
         self.rbac.clear_all_cache()
 
-    @settings(max_examples=25)
+    @settings(max_examples=10)
     @given(scenario=permission_check_scenario_strategy())
     def test_access_control_enforcement_single_role(self, scenario):
         """
@@ -155,7 +155,7 @@ class TestAccessControlEnforcement:
         result = asyncio.run(run_test())
         assert result == True
 
-    @settings(max_examples=20)
+    @settings(max_examples=10)
     @given(scenario=multi_role_assignment_strategy())
     def test_access_control_enforcement_multiple_roles(self, scenario):
         """

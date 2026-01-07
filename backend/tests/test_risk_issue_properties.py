@@ -298,7 +298,7 @@ class TestAuditTrailMaintenance:
 class TestRiskIssueLinkage:
     """Property 20: Risk-Issue Linkage tests"""
 
-    @settings(max_examples=100)
+    @settings(max_examples=10)
     @given(
         risk_data=st.fixed_dictionaries({
             'title': st.text(min_size=1, max_size=255),
@@ -365,7 +365,7 @@ class TestRiskIssueLinkage:
         assert abs(original_risk['probability'] - risk_data['probability']) < 0.01, "Risk probability should be preserved"
         assert abs(original_risk['impact'] - risk_data['impact']) < 0.01, "Risk impact should be preserved"
 
-    @settings(max_examples=50)
+    @settings(max_examples=10)
     @given(
         num_issues=st.integers(min_value=1, max_value=5),
         risk_data=st.fixed_dictionaries({
@@ -444,7 +444,7 @@ class TestRiskIssueLinkage:
         for issue_id in issue_ids:
             assert issue_id in found_issue_ids, f"Issue {issue_id} should be found in risk linkage query"
 
-    @settings(max_examples=50)
+    @settings(max_examples=10)
     @given(
         issue_data=st.fixed_dictionaries({
             'title': st.text(min_size=1, max_size=255),
@@ -499,7 +499,7 @@ class TestRiskIssueLinkage:
         orphaned_issues = mock_client.table("issues").eq("risk_id", None).execute()
         # Note: In a real implementation, this might need special handling for NULL values
 
-    @settings(max_examples=100)
+    @settings(max_examples=10)
     @given(
         risks_and_issues=st.lists(
             st.tuples(

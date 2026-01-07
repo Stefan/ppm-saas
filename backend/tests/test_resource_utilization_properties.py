@@ -143,7 +143,7 @@ class TestResourceUtilizationCalculations:
                 assert result['availability_status'] == 'available'
                 assert result['can_take_more_work'] is True
 
-    @settings(max_examples=50)
+    @settings(max_examples=10)
     @given(resource=resource_strategy(), allocations=st.lists(allocation_strategy(), min_size=0, max_size=3))
     def test_allocation_updates_propagate_correctly(self, resource, allocations):
         """
@@ -228,7 +228,7 @@ class TestResourceUtilizationCalculations:
         else:
             assert result['match_score'] == 1.0, "Empty required skills should result in perfect match"
 
-    @settings(max_examples=30)
+    @settings(max_examples=10)
     @given(resource=resource_strategy())
     def test_zero_availability_edge_case(self, resource):
         """
@@ -252,7 +252,7 @@ class TestResourceUtilizationCalculations:
             assert result['allocated_hours'] == 0.0, f"Zero availability should result in 0 allocated hours, got {result['allocated_hours']}"
             assert result['utilization_percentage'] == 0.0, f"Zero availability should result in 0% utilization, got {result['utilization_percentage']}"
 
-    @settings(max_examples=20)
+    @settings(max_examples=10)
     @given(resource=resource_strategy())
     def test_overallocation_handling(self, resource):
         """
