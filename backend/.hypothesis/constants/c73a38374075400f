@@ -1,0 +1,4 @@
+# file: /Users/stefan/Projects/orka-ppm/backend/variance_calculation_service.py
+# hypothesis_version: 6.150.0
+
+[-5.0, 5.0, 100, 1000, 3600, '*', '+00:00', '0', '0.01', '1.0', 'USD', 'Z', 'actual_amount', 'actual_count', 'actual_currency', 'actuals', 'calculated_at', 'commitment_amount', 'commitment_count', 'commitment_currency', 'commitments', 'currency_code', 'date', 'exchange_rates', 'financial_variances', 'from_currency', 'id', 'invoice_amount', 'name', 'null', 'on', 'organization_id', 'over', 'over_threshold', 'project', 'project_id', 'project_nr', 'projects', 'rate', 'status', 'to_currency', 'total_actual', 'total_amount', 'total_commitment', 'under', 'under_threshold', 'updated_at', 'variance', 'variance_percentage', 'wbs', 'wbs_description', 'wbs_element']

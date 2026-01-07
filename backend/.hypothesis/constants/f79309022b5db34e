@@ -1,0 +1,4 @@
+# file: /Users/stefan/Projects/orka-ppm/backend/performance_optimized_endpoints.py
+# hypothesis_version: 6.150.0
+
+[2.1, 78.0, 85.0, 88.0, 92.0, 100, 500, 503, '/api/v1/optimized', 'Database unavailable', 'active', 'active_projects', 'actual_cost', 'api', 'at_risk_projects', 'average_health_score', 'budget', 'budget_performance', 'connected', 'count', 'created_at', 'critical_alerts', 'database', 'disconnected', 'error', 'exact', 'green', 'health', 'health_distribution', 'healthy', 'id', 'kpis', 'last_updated', 'metrics', 'name', 'offline', 'online', 'portfolio_id', 'project_success_rate', 'projects', 'quick_stats', 'red', 'resource_efficiency', 'running', 'services', 'status', 'status, health', 'timeline_performance', 'timestamp', 'total_count', 'total_projects', 'yellow']
