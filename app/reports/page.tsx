@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAuth } from '../providers/SupabaseAuthProvider'
 import { MessageCircle, FileText, Download, Loader, Send, Bot, User, AlertTriangle, RefreshCw } from 'lucide-react'
 import AppLayout from '../../components/AppLayout'
@@ -65,11 +65,27 @@ export default function Reports() {
   })
   const [showError, setShowError] = useState(false)
   const [currentError, setCurrentError] = useState<ChatError | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Handle window size detection on client side only
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   const createChatError = (error: unknown, statusCode?: number): ChatError => {
     let errorType: ChatError['errorType'] = 'unknown'
-    let message = 'An unexpected error occurred'
+    let message = 'Ein unerwarteter Fehler ist aufgetreten'
     let retryable = true
+
+    // Log error to console for debugging
+    console.error('AI Chat Error:', error, { statusCode })
 
     if (error instanceof TypeError && error.message.includes('fetch')) {
       errorType = 'network'
@@ -88,6 +104,10 @@ export default function Reports() {
       errorType = 'server'
       message = 'Anfrage fehlgeschlagen. Bitte überprüfen Sie Ihre Eingabe und versuchen Sie es erneut.'
       retryable = false
+    } else if (error instanceof Error) {
+      // Handle other Error types
+      message = `Fehler: ${error.message}`
+      console.error('Detailed error:', error.stack)
     }
 
     return {
@@ -167,10 +187,14 @@ export default function Reports() {
         body: JSON.stringify({
           query: query,
           conversation_id: convId || conversationId
-        })
+        }),
+        // Add timeout to prevent hanging requests
+        signal: AbortSignal.timeout(30000) // 30 second timeout
       })
 
       if (!response.ok) {
+        const errorText = await response.text().catch(() => 'Unknown error')
+        console.error(`HTTP ${response.status}: ${response.statusText}`, errorText)
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
 
@@ -201,7 +225,7 @@ export default function Reports() {
         const statusMessage: ChatMessage = {
           id: (Date.now() + 2).toString(),
           type: 'assistant',
-          content: '⚠️ Note: AI features are currently in mock mode. For full functionality, ensure OpenAI API key is configured.',
+          content: '⚠️ Hinweis: KI-Features sind derzeit im Mock-Modus. Für volle Funktionalität stellen Sie sicher, dass der OpenAI API-Schlüssel konfiguriert ist.',
           timestamp: new Date(),
           confidence: 1.0
         }
@@ -212,7 +236,16 @@ export default function Reports() {
       resetErrorState()
       
     } catch (error: unknown) {
-      const chatError = createChatError(error, error instanceof Error && 'status' in error ? (error as any).status : undefined)
+      // Enhanced error handling with better status code extraction
+      let statusCode: number | undefined
+      
+      if (error instanceof Error && 'status' in error) {
+        statusCode = (error as any).status
+      } else if (error instanceof Response) {
+        statusCode = error.status
+      }
+      
+      const chatError = createChatError(error, statusCode)
       
       // Update error recovery state
       setErrorRecovery(prev => ({
@@ -230,7 +263,7 @@ export default function Reports() {
         const errorMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
           type: 'assistant',
-          content: `${chatError.message} ${chatError.retryable ? 'Sie können es erneut versuchen oder den Support kontaktieren, wenn das Problem weiterhin besteht.' : 'Bitte kontaktieren Sie den Support für Unterstützung.'}`,
+          content: `❌ ${chatError.message} ${chatError.retryable ? 'Sie können es erneut versuchen oder den Support kontaktieren, wenn das Problem weiterhin besteht.' : 'Bitte kontaktieren Sie den Support für Unterstützung.'}`,
           timestamp: new Date(),
           confidence: 0
         }
@@ -484,7 +517,7 @@ export default function Reports() {
               onKeyPress={handleKeyPress}
               placeholder="Fragen Sie nach Ihren Projekten, Ressourcen, Budgets, Risiken oder fordern Sie einen benutzerdefinierten Bericht an..."
               className="textarea-field w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
-              rows={window.innerWidth < 640 ? 2 : 3}
+              rows={isMobile ? 2 : 3}
               disabled={isLoading}
             />
           </div>

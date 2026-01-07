@@ -3,7 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { LogOut, Activity, MessageSquare, Menu, X } from 'lucide-react'
+import { LogOut, Activity, MessageSquare, Menu, X, Users } from 'lucide-react'
 import { useAuth } from '../app/providers/SupabaseAuthProvider'
 
 interface SidebarProps {
@@ -128,6 +128,16 @@ export default function Sidebar({ isOpen = true, onToggle, isMobile = false }: S
                 Performance Monitor
               </Link>
             </li>
+            <li>
+              <Link 
+                href="/admin/users" 
+                className="flex items-center py-3 px-4 rounded hover:bg-gray-700 transition-colors"
+                onClick={handleLinkClick}
+              >
+                <Users className="mr-2 h-4 w-4" />
+                User Management
+              </Link>
+            </li>
           </ul>
           
           <div className="p-4 border-t border-gray-700">
@@ -167,6 +177,12 @@ export default function Sidebar({ isOpen = true, onToggle, isMobile = false }: S
           <Link href="/admin/performance" className="flex items-center py-2 px-4 rounded hover:bg-gray-700 transition-colors">
             <Activity className="mr-2 h-4 w-4" />
             Performance Monitor
+          </Link>
+        </li>
+        <li>
+          <Link href="/admin/users" className="flex items-center py-2 px-4 rounded hover:bg-gray-700 transition-colors">
+            <Users className="mr-2 h-4 w-4" />
+            User Management
           </Link>
         </li>
       </ul>

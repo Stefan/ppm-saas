@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo, lazy, Suspense } from 'react'
 import { useAuth } from '../providers/SupabaseAuthProvider'
 import { 
   DollarSign, TrendingUp, TrendingDown, AlertTriangle, PieChart, BarChart3,
@@ -9,12 +9,54 @@ import {
 } from 'lucide-react'
 import AppLayout from '../../components/AppLayout'
 import { getApiUrl } from '../../lib/api'
-import CommitmentsActualsView from './components/CommitmentsActualsView'
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer,
   PieChart as RechartsPieChart, Pie, Cell, LineChart, Line, Area, AreaChart,
   ComposedChart
 } from 'recharts'
+
+// Memoized Tab Button Component
+const TabButton = React.memo(({ tab, isActive, onClick }: { 
+  tab: { key: string; label: string; icon: any; description: string; highlight?: boolean }, 
+  isActive: boolean, 
+  onClick: () => void 
+}) => {
+  const Icon = tab.icon
+  return (
+    <button
+      onClick={onClick}
+      className={`
+        group relative flex items-center px-4 py-3 rounded-lg font-medium text-sm transition-all duration-100
+        ${isActive 
+          ? 'bg-blue-600 text-white shadow-md' 
+          : tab.highlight 
+            ? 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200' 
+            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+        }
+      `}
+      title={tab.description}
+    >
+      <Icon className={`h-4 w-4 mr-2 ${isActive ? 'text-white' : tab.highlight ? 'text-green-600' : 'text-gray-500'}`} />
+      <span className="whitespace-nowrap">{tab.label}</span>
+      
+      {/* Tooltip */}
+      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-100 pointer-events-none whitespace-nowrap z-10">
+        {tab.description}
+        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+      </div>
+      
+      {/* Active indicator */}
+      {isActive && (
+        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-white rounded-full"></div>
+      )}
+    </button>
+  )
+})
+
+TabButton.displayName = 'TabButton'
+
+// Lazy load heavy components
+const CommitmentsActualsView = lazy(() => import('./components/CommitmentsActualsView'))
 
 interface Project {
   id: string
@@ -181,7 +223,7 @@ export default function Financials() {
   const [uploadResult, setUploadResult] = useState<CSVUploadResult | null>(null)
   const [dragActive, setDragActive] = useState(false)
 
-  // Enhanced analytics data with cost analysis
+  // Enhanced analytics data with cost analysis - optimized with better dependencies
   const analyticsData = useMemo(() => {
     if (!metrics || !budgetVariances.length) return null
 
@@ -253,14 +295,40 @@ export default function Financials() {
     }
   }, [metrics, budgetVariances, projects, financialAlerts])
 
+  // Memoized view mode display name
+  const currentViewLabel = useMemo(() => {
+    switch (viewMode) {
+      case 'overview': return 'Übersicht'
+      case 'detailed': return 'Detailliert'
+      case 'trends': return 'Trends'
+      case 'analysis': return 'Analyse'
+      case 'csv-import': return 'CSV Import'
+      case 'commitments-actuals': return 'Commitments vs Actuals'
+      default: return 'Übersicht'
+    }
+  }, [viewMode])
+
+  // Memoized tab configuration to prevent recreation on every render
+  const tabConfig = useMemo(() => [
+    { key: 'overview', label: 'Übersicht', icon: BarChart3, description: 'Gesamtüberblick und KPIs' },
+    { key: 'detailed', label: 'Detailliert', icon: TrendingUp, description: 'Detaillierte Kategorieanalyse' },
+    { key: 'trends', label: 'Trends', icon: PieChart, description: 'Zeitliche Entwicklung und Prognosen' },
+    { key: 'analysis', label: 'Analyse', icon: Target, description: 'Erweiterte Kostenanalyse' },
+    { key: 'csv-import', label: 'CSV Import', icon: Upload, description: 'Daten importieren', highlight: true },
+    { key: 'commitments-actuals', label: 'Commitments vs Actuals', icon: FileText, description: 'Geplant vs. Ist-Vergleich' }
+  ], [])
+
   useEffect(() => {
     if (session) {
       fetchFinancialData()
-      if (viewMode === 'csv-import') {
-        fetchCSVImportHistory()
-      }
     }
-  }, [session, selectedCurrency, viewMode])
+  }, [session, selectedCurrency])
+
+  useEffect(() => {
+    if (session && viewMode === 'csv-import') {
+      fetchCSVImportHistory()
+    }
+  }, [session, viewMode])
 
   async function fetchFinancialData() {
     setLoading(true)
@@ -678,31 +746,8 @@ export default function Financials() {
             </select>
             
             <button
-              onClick={() => setViewMode(
-                viewMode === 'overview' ? 'detailed' : 
-                viewMode === 'detailed' ? 'trends' : 
-                viewMode === 'trends' ? 'analysis' : 
-                viewMode === 'analysis' ? 'csv-import' : 
-                viewMode === 'csv-import' ? 'commitments-actuals' : 'overview'
-              )}
-              className="flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-            >
-              {viewMode === 'overview' ? <BarChart3 className="h-4 w-4 mr-2" /> : 
-               viewMode === 'detailed' ? <TrendingUp className="h-4 w-4 mr-2" /> : 
-               viewMode === 'trends' ? <PieChart className="h-4 w-4 mr-2" /> :
-               viewMode === 'analysis' ? <Upload className="h-4 w-4 mr-2" /> :
-               viewMode === 'csv-import' ? <Target className="h-4 w-4 mr-2" /> :
-               <Target className="h-4 w-4 mr-2" />}
-              {viewMode === 'overview' ? 'Detailliert' : 
-               viewMode === 'detailed' ? 'Trends' : 
-               viewMode === 'trends' ? 'Analyse' : 
-               viewMode === 'analysis' ? 'CSV Import' : 
-               viewMode === 'csv-import' ? 'Commitments vs Actuals' : 'Übersicht'}
-            </button>
-            
-            <button
               onClick={exportFinancialData}
-              className="flex items-center px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200"
+              className="flex items-center px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
             >
               <Download className="h-4 w-4 mr-2" />
               Export
@@ -710,7 +755,7 @@ export default function Financials() {
             
             <button
               onClick={fetchFinancialData}
-              className="flex items-center px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
+              className="flex items-center px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
@@ -718,11 +763,53 @@ export default function Financials() {
             
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Filter className="h-4 w-4 mr-2" />
               Filters
             </button>
+          </div>
+        </div>
+
+        {/* Modern Navigation Tabs */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-1">
+          <div className="flex flex-wrap gap-1">
+            {tabConfig.map((tab) => (
+              <TabButton
+                key={tab.key}
+                tab={tab}
+                isActive={viewMode === tab.key}
+                onClick={() => setViewMode(tab.key as any)}
+              />
+            ))}
+          </div>
+          
+          {/* Quick Actions Bar */}
+          <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-blue-600 rounded-full mr-2"></div>
+                Aktuelle Ansicht: <span className="font-medium ml-1">{currentViewLabel}</span>
+              </div>
+              {viewMode === 'csv-import' && (
+                <div className="flex items-center text-green-600">
+                  <Upload className="h-3 w-3 mr-1" />
+                  <span className="text-xs">Drag & Drop CSV-Dateien hier</span>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              {viewMode === 'csv-import' && (
+                <div className="flex items-center space-x-1 text-xs text-gray-500">
+                  <CheckCircle className="h-3 w-3 text-green-500" />
+                  <span>Unterstützte Formate: CSV</span>
+                </div>
+              )}
+              <div className="text-xs text-gray-400">
+                Zuletzt aktualisiert: {new Date().toLocaleTimeString('de-DE')}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1722,11 +1809,17 @@ export default function Financials() {
 
         {/* Commitments vs Actuals Dashboard */}
         {viewMode === 'commitments-actuals' && (
-          <CommitmentsActualsView 
-            session={session}
-            selectedCurrency={selectedCurrency}
-            onRefresh={fetchFinancialData}
-          />
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          }>
+            <CommitmentsActualsView 
+              session={session}
+              selectedCurrency={selectedCurrency}
+              onRefresh={fetchFinancialData}
+            />
+          </Suspense>
         )}
 
         {/* CSV Import Header */}
