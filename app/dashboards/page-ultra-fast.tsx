@@ -44,7 +44,7 @@ export default function UltraFastDashboard() {
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
-  // Ultra-fast loading - with fallback to existing endpoints
+  // Ultra-fast loading - only essential data
   useEffect(() => {
     if (session) {
       loadEssentialData()
@@ -58,34 +58,25 @@ export default function UltraFastDashboard() {
     setError(null)
     
     try {
-      // Try optimized endpoint first, fallback to existing endpoints
-      let data
-      try {
-        const response = await fetch(getApiUrl('/optimized/dashboard/quick-stats'), {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          }
-        })
-        
-        if (response.ok) {
-          data = await response.json()
-          setQuickStats(data.quick_stats)
-          setKPIs(data.kpis)
-        } else {
-          throw new Error('Optimized endpoint not available')
+      // Single optimized endpoint call
+      const response = await fetch(getApiUrl('/optimized/dashboard/quick-stats'), {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
         }
-      } catch (optimizedError) {
-        console.log('Using fallback endpoints...')
-        // Fallback to existing endpoints with minimal data
-        data = await loadFallbackData()
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setQuickStats(data.quick_stats)
+        setKPIs(data.kpis)
+        setLastUpdated(new Date())
+        
+        // Load recent projects in background (non-blocking)
+        loadRecentProjects()
+      } else {
+        throw new Error(`API Error: ${response.status}`)
       }
-      
-      setLastUpdated(new Date())
-      
-      // Load recent projects in background (non-blocking)
-      loadRecentProjects()
-      
     } catch (err) {
       console.error('Dashboard load error:', err)
       setError(err instanceof Error ? err.message : 'Failed to load dashboard')
@@ -111,96 +102,21 @@ export default function UltraFastDashboard() {
     }
   }
 
-  // Fallback data loading using existing endpoints
-  const loadFallbackData = async () => {
-    if (!session?.access_token) return { quickStats: null, kpis: null }
-    
-    const [projectsResponse, portfolioResponse] = await Promise.all([
-      fetch(getApiUrl('/projects'), {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        }
-      }),
-      fetch(getApiUrl('/portfolios/metrics'), {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        }
-      }).catch(() => null) // Graceful fallback if metrics endpoint doesn't exist
-    ])
-
-    let projects = []
-    let portfolioMetrics = null
-
-    if (projectsResponse.ok) {
-      projects = await projectsResponse.json()
-    }
-
-    if (portfolioResponse && portfolioResponse.ok) {
-      portfolioMetrics = await portfolioResponse.json()
-    }
-
-    // Calculate stats from projects data
-    const totalProjects = projects.length
-    const activeProjects = projects.filter((p: any) => p.status === 'active').length
-    const healthDistribution = projects.reduce((acc: any, project: any) => {
-      const health = project.health || 'green'
-      acc[health] = (acc[health] || 0) + 1
-      return acc
-    }, { green: 0, yellow: 0, red: 0 })
-
-    const quickStats = {
-      total_projects: totalProjects,
-      active_projects: activeProjects,
-      health_distribution: healthDistribution,
-      critical_alerts: healthDistribution.red || 0,
-      at_risk_projects: healthDistribution.yellow || 0
-    }
-
-    const kpis = portfolioMetrics || {
-      project_success_rate: 85,
-      budget_performance: 92,
-      timeline_performance: 78,
-      average_health_score: 2.1,
-      resource_efficiency: 88,
-      active_projects_ratio: Math.round((activeProjects / Math.max(totalProjects, 1)) * 100)
-    }
-
-    setQuickStats(quickStats)
-    setKPIs(kpis)
-
-    return { quickStats, kpis }
-  }
-
   // Background loading of projects (non-blocking)
   const loadRecentProjects = async () => {
     if (!session?.access_token) return
     
     try {
-      // Try optimized endpoint first
-      let response = await fetch(getApiUrl('/optimized/dashboard/projects-summary?limit=5'), {
+      const response = await fetch(getApiUrl('/optimized/dashboard/projects-summary?limit=5'), {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         }
-      }).catch(() => null)
-      
-      if (!response || !response.ok) {
-        // Fallback to regular projects endpoint
-        response = await fetch(getApiUrl('/projects?limit=5'), {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          }
-        })
-      }
+      })
       
       if (response.ok) {
         const data = await response.json()
-        // Handle both optimized and regular endpoint responses
-        const projects = data.projects || data.slice(0, 5) || []
-        setRecentProjects(projects)
+        setRecentProjects(data.projects || [])
       }
     } catch (err) {
       console.error('Projects load error:', err)
@@ -290,7 +206,7 @@ export default function UltraFastDashboard() {
             <div className="flex items-center">
               <AlertTriangle className="h-5 w-5 text-yellow-400 mr-2" />
               <span className="text-sm text-yellow-800">
-                Using fallback data - {error}
+                Using cached data - {error}
               </span>
             </div>
           </div>

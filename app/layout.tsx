@@ -10,8 +10,8 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'PPM SaaS',
-  description: 'AI-gestützte Cora-Alternative',
+  title: 'Orka PPM',
+  description: 'AI-gestütztes Projekt und Portfolio Management',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

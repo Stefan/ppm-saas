@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { LogOut, Activity } from 'lucide-react'
+import { LogOut, Activity, MessageSquare } from 'lucide-react'
 import { useAuth } from '../app/providers/SupabaseAuthProvider'
 
 export default function Sidebar() {
@@ -37,6 +37,12 @@ export default function Sidebar() {
         <li><Link href="/reports" className="block py-2 px-4 rounded hover:bg-gray-700">AI Reports & Analytics</Link></li>
         <li><Link href="/financials" className="block py-2 px-4 rounded hover:bg-gray-700">Financial Tracking</Link></li>
         <li><Link href="/risks" className="block py-2 px-4 rounded hover:bg-gray-700">Risk/Issue Registers</Link></li>
+        <li>
+          <Link href="/feedback" className="flex items-center py-2 px-4 rounded hover:bg-gray-700">
+            <MessageSquare className="mr-2 h-4 w-4" />
+            Feedback & Ideas
+          </Link>
+        </li>
         <li>
           <Link href="/admin/performance" className="flex items-center py-2 px-4 rounded hover:bg-gray-700">
             <Activity className="mr-2 h-4 w-4" />

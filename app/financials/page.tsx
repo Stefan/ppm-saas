@@ -62,20 +62,87 @@ interface FinancialMetrics {
   currency_distribution: Record<string, number>
 }
 
+interface TrendProjection {
+  month: string
+  projected_spending: number
+  projected_variance: number
+  confidence: number
+}
+
+interface CostAnalysis {
+  category: string
+  current_month: number
+  previous_month: number
+  trend: 'up' | 'down' | 'stable'
+  percentage_change: number
+}
+
+interface BudgetPerformanceMetrics {
+  on_track_projects: number
+  at_risk_projects: number
+  over_budget_projects: number
+  total_savings: number
+  total_overruns: number
+  efficiency_score: number
+}
+
+interface ComprehensiveFinancialReport {
+  report_metadata: {
+    generated_at: string
+    currency: string
+    projects_included: number
+    includes_trends: boolean
+  }
+  summary: {
+    total_budget: number
+    total_actual: number
+    total_variance: number
+    variance_percentage: number
+    currency: string
+  }
+  project_analysis: Array<{
+    project_id: string
+    project_name: string
+    budget: number
+    actual_cost: number
+    variance_amount: number
+    variance_percentage: number
+    utilization_percentage: number
+    status: string
+    health: string
+  }>
+  category_spending: Array<{
+    category: string
+    total_spending: number
+    transaction_count: number
+    average_per_transaction: number
+  }>
+  trend_projections: TrendProjection[]
+  risk_indicators: {
+    projects_over_budget: number
+    projects_at_risk: number
+    critical_projects: number
+    average_utilization: number
+  }
+}
+
 export default function Financials() {
   const { session } = useAuth()
   const [projects, setProjects] = useState<Project[]>([])
   const [budgetVariances, setBudgetVariances] = useState<BudgetVariance[]>([])
   const [financialAlerts, setFinancialAlerts] = useState<FinancialAlert[]>([])
   const [metrics, setMetrics] = useState<FinancialMetrics | null>(null)
+  const [comprehensiveReport, setComprehensiveReport] = useState<ComprehensiveFinancialReport | null>(null)
+  const [costAnalysis, setCostAnalysis] = useState<CostAnalysis[]>([])
+  const [budgetPerformance, setBudgetPerformance] = useState<BudgetPerformanceMetrics | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedCurrency, setSelectedCurrency] = useState('USD')
   const [dateRange, setDateRange] = useState('all')
   const [showFilters, setShowFilters] = useState(false)
-  const [viewMode, setViewMode] = useState<'overview' | 'detailed' | 'trends'>('overview')
+  const [viewMode, setViewMode] = useState<'overview' | 'detailed' | 'trends' | 'analysis'>('overview')
 
-  // Enhanced analytics data
+  // Enhanced analytics data with cost analysis
   const analyticsData = useMemo(() => {
     if (!metrics || !budgetVariances.length) return null
 
@@ -102,7 +169,8 @@ export default function Financials() {
       planned: data.planned,
       actual: data.actual,
       variance: data.variance,
-      variance_percentage: data.planned > 0 ? (data.variance / data.planned * 100) : 0
+      variance_percentage: data.planned > 0 ? (data.variance / data.planned * 100) : 0,
+      efficiency: data.planned > 0 ? ((data.planned - data.actual) / data.planned * 100) : 0
     }))
 
     const projectPerformanceData = budgetVariances.map(variance => {
@@ -113,9 +181,24 @@ export default function Financials() {
         actual: variance.total_actual,
         variance: variance.variance_amount,
         variance_percentage: variance.variance_percentage,
-        health: project?.health || 'unknown'
+        health: project?.health || 'unknown',
+        efficiency_score: variance.total_planned > 0 ? 
+          Math.max(0, 100 - Math.abs(variance.variance_percentage)) : 0
       }
     }).sort((a, b) => Math.abs(b.variance_percentage) - Math.abs(a.variance_percentage))
+
+    // Enhanced budget performance metrics
+    const totalSavings = budgetVariances
+      .filter(v => v.variance_amount < 0)
+      .reduce((sum, v) => sum + Math.abs(v.variance_amount), 0)
+    
+    const totalOverruns = budgetVariances
+      .filter(v => v.variance_amount > 0)
+      .reduce((sum, v) => sum + v.variance_amount, 0)
+
+    const avgEfficiency = projectPerformanceData.length > 0 
+      ? projectPerformanceData.reduce((sum, p) => sum + p.efficiency_score, 0) / projectPerformanceData.length
+      : 0
 
     return {
       budgetStatusData,
@@ -123,7 +206,11 @@ export default function Financials() {
       projectPerformanceData,
       totalProjects: projects.length,
       criticalAlerts: financialAlerts.filter(a => a.alert_level === 'critical').length,
-      warningAlerts: financialAlerts.filter(a => a.alert_level === 'warning').length
+      warningAlerts: financialAlerts.filter(a => a.alert_level === 'warning').length,
+      totalSavings,
+      totalOverruns,
+      avgEfficiency,
+      netVariance: totalOverruns - totalSavings
     }
   }, [metrics, budgetVariances, projects, financialAlerts])
 
@@ -141,7 +228,10 @@ export default function Financials() {
         fetchProjects(),
         fetchBudgetVariances(),
         fetchFinancialAlerts(),
-        fetchFinancialMetrics()
+        fetchFinancialMetrics(),
+        fetchComprehensiveReport(),
+        fetchCostAnalysis(),
+        fetchBudgetPerformance()
       ])
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : 'Unknown error')
@@ -243,13 +333,113 @@ export default function Financials() {
     })
   }
 
+  async function fetchComprehensiveReport() {
+    if (!session?.access_token) return
+    
+    try {
+      const response = await fetch(getApiUrl(`/financial-tracking/comprehensive-report?currency=${selectedCurrency}&include_trends=true`), {
+        headers: {
+          'Authorization': `Bearer ${session?.access_token || ''}`,
+          'Content-Type': 'application/json',
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setComprehensiveReport(data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch comprehensive financial report:', error)
+    }
+  }
+
+  async function fetchCostAnalysis() {
+    if (!session?.access_token) return
+    
+    try {
+      // Simulate cost analysis data - in real implementation would come from backend
+      const mockCostAnalysis: CostAnalysis[] = [
+        {
+          category: 'Development',
+          current_month: 45000,
+          previous_month: 42000,
+          trend: 'up',
+          percentage_change: 7.1
+        },
+        {
+          category: 'Infrastructure',
+          current_month: 12000,
+          previous_month: 15000,
+          trend: 'down',
+          percentage_change: -20.0
+        },
+        {
+          category: 'Marketing',
+          current_month: 8000,
+          previous_month: 8100,
+          trend: 'stable',
+          percentage_change: -1.2
+        },
+        {
+          category: 'Operations',
+          current_month: 18000,
+          previous_month: 16500,
+          trend: 'up',
+          percentage_change: 9.1
+        }
+      ]
+      setCostAnalysis(mockCostAnalysis)
+    } catch (error) {
+      console.error('Failed to fetch cost analysis:', error)
+    }
+  }
+
+  async function fetchBudgetPerformance() {
+    if (!budgetVariances.length) return
+    
+    try {
+      const onTrack = budgetVariances.filter(v => Math.abs(v.variance_percentage) <= 5).length
+      const atRisk = budgetVariances.filter(v => v.variance_percentage > 5 && v.variance_percentage <= 15).length
+      const overBudget = budgetVariances.filter(v => v.variance_percentage > 15).length
+      
+      const totalSavings = budgetVariances
+        .filter(v => v.variance_amount < 0)
+        .reduce((sum, v) => sum + Math.abs(v.variance_amount), 0)
+      
+      const totalOverruns = budgetVariances
+        .filter(v => v.variance_amount > 0)
+        .reduce((sum, v) => sum + v.variance_amount, 0)
+
+      const efficiencyScore = budgetVariances.length > 0 
+        ? budgetVariances.reduce((sum, v) => {
+            const efficiency = v.total_planned > 0 ? 
+              Math.max(0, 100 - Math.abs(v.variance_percentage)) : 0
+            return sum + efficiency
+          }, 0) / budgetVariances.length
+        : 0
+
+      setBudgetPerformance({
+        on_track_projects: onTrack,
+        at_risk_projects: atRisk,
+        over_budget_projects: overBudget,
+        total_savings: totalSavings,
+        total_overruns: totalOverruns,
+        efficiency_score: efficiencyScore
+      })
+    } catch (error) {
+      console.error('Failed to calculate budget performance:', error)
+    }
+  }
+
   const exportFinancialData = () => {
     const exportData = {
       metrics,
       budgetVariances,
       financialAlerts,
+      comprehensiveReport,
       analytics: analyticsData,
       currency: selectedCurrency,
+      view_mode: viewMode,
       exported_at: new Date().toISOString()
     }
     
@@ -257,7 +447,7 @@ export default function Financials() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `financial-report-${new Date().toISOString().split('T')[0]}.json`
+    a.download = `financial-report-${viewMode}-${new Date().toISOString().split('T')[0]}.json`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -326,13 +516,20 @@ export default function Financials() {
             </select>
             
             <button
-              onClick={() => setViewMode(viewMode === 'overview' ? 'detailed' : viewMode === 'detailed' ? 'trends' : 'overview')}
+              onClick={() => setViewMode(
+                viewMode === 'overview' ? 'detailed' : 
+                viewMode === 'detailed' ? 'trends' : 
+                viewMode === 'trends' ? 'analysis' : 'overview'
+              )}
               className="flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
             >
               {viewMode === 'overview' ? <BarChart3 className="h-4 w-4 mr-2" /> : 
                viewMode === 'detailed' ? <TrendingUp className="h-4 w-4 mr-2" /> : 
-               <PieChart className="h-4 w-4 mr-2" />}
-              {viewMode === 'overview' ? 'Detailed' : viewMode === 'detailed' ? 'Trends' : 'Overview'}
+               viewMode === 'trends' ? <PieChart className="h-4 w-4 mr-2" /> :
+               <Target className="h-4 w-4 mr-2" />}
+              {viewMode === 'overview' ? 'Detailed' : 
+               viewMode === 'detailed' ? 'Trends' : 
+               viewMode === 'trends' ? 'Analysis' : 'Overview'}
             </button>
             
             <button
@@ -361,9 +558,9 @@ export default function Financials() {
           </div>
         </div>
 
-        {/* Financial Metrics Dashboard */}
+        {/* Enhanced Financial Metrics Dashboard */}
         {metrics && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -412,6 +609,31 @@ export default function Financials() {
                   </p>
                 </div>
                 <BarChart3 className="h-8 w-8 text-orange-600" />
+              </div>
+            </div>
+
+            {/* New Enhanced KPIs */}
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Efficiency Score</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {analyticsData?.avgEfficiency.toFixed(0) || 0}%
+                  </p>
+                </div>
+                <Zap className="h-8 w-8 text-green-600" />
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Net Variance</p>
+                  <p className={`text-2xl font-bold ${(analyticsData?.netVariance || 0) >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    {(analyticsData?.netVariance || 0) >= 0 ? '+' : ''}{(analyticsData?.netVariance || 0).toLocaleString()} {selectedCurrency}
+                  </p>
+                </div>
+                <PieChart className="h-8 w-8 text-gray-600" />
               </div>
             </div>
           </div>
@@ -495,12 +717,17 @@ export default function Financials() {
           </div>
         )}
 
-        {/* Charts and Analytics */}
-        {analyticsData && (
+        {/* Enhanced Charts and Analytics */}
+        {analyticsData && viewMode === 'overview' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Budget Status Distribution */}
+            {/* Enhanced Budget Status Distribution */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Budget Status Distribution</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Budget Status Distribution</h3>
+                <div className="text-sm text-gray-600">
+                  {analyticsData.totalProjects} total projects
+                </div>
+              </div>
               <ResponsiveContainer width="100%" height={300}>
                 <RechartsPieChart>
                   <Pie
@@ -508,7 +735,7 @@ export default function Financials() {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, value }) => `${name}: ${value}`}
+                    label={({ name, value, percent }) => `${name}: ${value} (${((percent || 0) * 100).toFixed(0)}%)`}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
@@ -522,51 +749,512 @@ export default function Financials() {
               </ResponsiveContainer>
             </div>
 
-            {/* Category Spending Analysis */}
+            {/* Enhanced Category Spending Analysis */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Spending by Category</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Spending by Category</h3>
+                <div className="text-sm text-gray-600">
+                  All amounts in {selectedCurrency}
+                </div>
+              </div>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={analyticsData.categoryData}>
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip formatter={(value, name) => [
                     typeof value === 'number' ? `${value.toLocaleString()} ${selectedCurrency}` : value,
-                    name === 'planned' ? 'Planned' : name === 'actual' ? 'Actual' : 'Variance'
+                    name === 'planned' ? 'Planned' : 
+                    name === 'actual' ? 'Actual' : 
+                    name === 'efficiency' ? 'Efficiency %' : 'Variance'
                   ]} />
                   <Legend />
                   <Bar dataKey="planned" fill="#3B82F6" name="Planned" />
                   <Bar dataKey="actual" fill="#10B981" name="Actual" />
+                  <Bar dataKey="efficiency" fill="#F59E0B" name="Efficiency %" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
 
-            {/* Project Performance */}
+            {/* Enhanced Project Performance with Efficiency Scores */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 lg:col-span-2">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Project Budget Performance</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Project Budget Performance</h3>
+                <div className="flex items-center space-x-4 text-sm text-gray-600">
+                  <span>Top 10 by variance</span>
+                  <span>•</span>
+                  <span>Efficiency scores included</span>
+                </div>
+              </div>
               <ResponsiveContainer width="100%" height={400}>
                 <ComposedChart data={analyticsData.projectPerformanceData.slice(0, 10)}>
                   <XAxis dataKey="name" />
-                  <YAxis />
+                  <YAxis yAxisId="left" />
+                  <YAxis yAxisId="right" orientation="right" />
                   <Tooltip formatter={(value, name) => [
-                    typeof value === 'number' ? `${value.toLocaleString()} ${selectedCurrency}` : value,
-                    name === 'budget' ? 'Budget' : name === 'actual' ? 'Actual' : 'Variance %'
+                    typeof value === 'number' ? 
+                      (name === 'efficiency_score' ? `${value.toFixed(1)}%` : `${value.toLocaleString()} ${selectedCurrency}`) : 
+                      value,
+                    name === 'budget' ? 'Budget' : 
+                    name === 'actual' ? 'Actual' : 
+                    name === 'efficiency_score' ? 'Efficiency Score' : 'Variance %'
                   ]} />
                   <Legend />
-                  <Bar dataKey="budget" fill="#3B82F6" name="Budget" />
-                  <Bar dataKey="actual" fill="#10B981" name="Actual" />
-                  <Line type="monotone" dataKey="variance_percentage" stroke="#EF4444" name="Variance %" />
+                  <Bar yAxisId="left" dataKey="budget" fill="#3B82F6" name="Budget" />
+                  <Bar yAxisId="left" dataKey="actual" fill="#10B981" name="Actual" />
+                  <Line yAxisId="right" type="monotone" dataKey="efficiency_score" stroke="#F59E0B" strokeWidth={3} name="Efficiency Score" />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
           </div>
         )}
 
-        {/* Detailed Budget Variance Table */}
+        {/* Cost Analysis View - New Enhanced Section */}
+        {viewMode === 'analysis' && (
+          <div className="space-y-6">
+            {/* Budget Performance Overview */}
+            {budgetPerformance && (
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Budget Performance Analysis</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">
+                      {budgetPerformance.on_track_projects}
+                    </div>
+                    <div className="text-sm text-green-800">Projects On Track</div>
+                    <div className="text-xs text-green-600 mt-1">±5% variance</div>
+                  </div>
+                  
+                  <div className="bg-yellow-50 p-4 rounded-lg">
+                    <div className="text-2xl font-bold text-yellow-600">
+                      {budgetPerformance.at_risk_projects}
+                    </div>
+                    <div className="text-sm text-yellow-800">Projects At Risk</div>
+                    <div className="text-xs text-yellow-600 mt-1">5-15% variance</div>
+                  </div>
+                  
+                  <div className="bg-red-50 p-4 rounded-lg">
+                    <div className="text-2xl font-bold text-red-600">
+                      {budgetPerformance.over_budget_projects}
+                    </div>
+                    <div className="text-sm text-red-800">Over Budget</div>
+                    <div className="text-xs text-red-600 mt-1">&gt;15% variance</div>
+                  </div>
+                  
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {budgetPerformance.efficiency_score.toFixed(1)}%
+                    </div>
+                    <div className="text-sm text-blue-800">Efficiency Score</div>
+                    <div className="text-xs text-blue-600 mt-1">Portfolio average</div>
+                  </div>
+                </div>
+
+                {/* Savings vs Overruns */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <h4 className="text-md font-medium text-green-800 mb-2">Total Savings</h4>
+                    <div className="text-3xl font-bold text-green-600">
+                      {budgetPerformance.total_savings.toLocaleString()} {selectedCurrency}
+                    </div>
+                    <div className="text-sm text-green-700 mt-1">
+                      From {budgetVariances.filter(v => v.variance_amount < 0).length} under-budget projects
+                    </div>
+                  </div>
+                  
+                  <div className="bg-red-50 p-4 rounded-lg">
+                    <h4 className="text-md font-medium text-red-800 mb-2">Total Overruns</h4>
+                    <div className="text-3xl font-bold text-red-600">
+                      {budgetPerformance.total_overruns.toLocaleString()} {selectedCurrency}
+                    </div>
+                    <div className="text-sm text-red-700 mt-1">
+                      From {budgetVariances.filter(v => v.variance_amount > 0).length} over-budget projects
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Cost Analysis by Category */}
+            {costAnalysis.length > 0 && (
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Cost Analysis by Category</h3>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Cost Trends Chart */}
+                  <div>
+                    <h4 className="text-md font-medium text-gray-800 mb-3">Monthly Cost Trends</h4>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={costAnalysis}>
+                        <XAxis dataKey="category" />
+                        <YAxis />
+                        <Tooltip formatter={(value, name) => [
+                          typeof value === 'number' ? `${value.toLocaleString()} ${selectedCurrency}` : value,
+                          name === 'current_month' ? 'Current Month' : 'Previous Month'
+                        ]} />
+                        <Legend />
+                        <Bar dataKey="current_month" fill="#3B82F6" name="Current Month" />
+                        <Bar dataKey="previous_month" fill="#9CA3AF" name="Previous Month" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  {/* Cost Analysis Table */}
+                  <div>
+                    <h4 className="text-md font-medium text-gray-800 mb-3">Category Performance</h4>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Trend</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Change</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {costAnalysis.map((category, index) => (
+                            <tr key={index} className="hover:bg-gray-50">
+                              <td className="px-4 py-2 text-sm font-medium text-gray-900">{category.category}</td>
+                              <td className="px-4 py-2 text-sm">
+                                <div className="flex items-center">
+                                  {category.trend === 'up' ? (
+                                    <TrendingUp className="h-4 w-4 text-red-500 mr-1" />
+                                  ) : category.trend === 'down' ? (
+                                    <TrendingDown className="h-4 w-4 text-green-500 mr-1" />
+                                  ) : (
+                                    <div className="h-4 w-4 bg-gray-400 rounded-full mr-1"></div>
+                                  )}
+                                  <span className={
+                                    category.trend === 'up' ? 'text-red-600' :
+                                    category.trend === 'down' ? 'text-green-600' : 'text-gray-600'
+                                  }>
+                                    {category.trend}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-2 text-sm">
+                                <span className={
+                                  category.percentage_change > 0 ? 'text-red-600' :
+                                  category.percentage_change < 0 ? 'text-green-600' : 'text-gray-600'
+                                }>
+                                  {category.percentage_change > 0 ? '+' : ''}{category.percentage_change.toFixed(1)}%
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Enhanced Project Efficiency Analysis */}
+            {analyticsData && (
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Project Efficiency Analysis</h3>
+                
+                <ResponsiveContainer width="100%" height={400}>
+                  <ComposedChart data={analyticsData.projectPerformanceData.slice(0, 10)}>
+                    <XAxis dataKey="name" />
+                    <YAxis yAxisId="left" />
+                    <YAxis yAxisId="right" orientation="right" />
+                    <Tooltip formatter={(value, name) => [
+                      typeof value === 'number' ? 
+                        (name === 'efficiency_score' ? `${value.toFixed(1)}%` : `${value.toLocaleString()} ${selectedCurrency}`) : 
+                        value,
+                      name === 'budget' ? 'Budget' : 
+                      name === 'actual' ? 'Actual' : 
+                      name === 'efficiency_score' ? 'Efficiency Score' : name
+                    ]} />
+                    <Legend />
+                    <Bar yAxisId="left" dataKey="budget" fill="#3B82F6" name="Budget" />
+                    <Bar yAxisId="left" dataKey="actual" fill="#10B981" name="Actual" />
+                    <Line yAxisId="right" type="monotone" dataKey="efficiency_score" stroke="#F59E0B" strokeWidth={3} name="Efficiency Score" />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Enhanced Trend Projections */}
+        {viewMode === 'trends' && comprehensiveReport?.trend_projections && (
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Financial Trend Projections</h3>
+              <div className="flex items-center space-x-4 text-sm text-gray-600">
+                <span>Next 6 months forecast</span>
+                <span>•</span>
+                <span>Currency: {selectedCurrency}</span>
+                <span>•</span>
+                <span>Based on current spending patterns</span>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Enhanced Spending Trend Chart with Confidence Bands */}
+              <div>
+                <h4 className="text-md font-medium text-gray-800 mb-3">Projected Spending Trend</h4>
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={comprehensiveReport.trend_projections}>
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip formatter={(value, name) => [
+                      typeof value === 'number' ? `${value.toLocaleString()} ${selectedCurrency}` : value,
+                      name === 'projected_spending' ? 'Projected Spending' : 'Projected Variance'
+                    ]} />
+                    <Legend />
+                    <Area 
+                      type="monotone" 
+                      dataKey="projected_spending" 
+                      stroke="#3B82F6" 
+                      fill="#3B82F6" 
+                      fillOpacity={0.3}
+                      name="Projected Spending"
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="projected_variance" 
+                      stroke="#EF4444" 
+                      strokeWidth={2}
+                      name="Projected Variance"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Enhanced Confidence Levels with Risk Assessment */}
+              <div>
+                <h4 className="text-md font-medium text-gray-800 mb-3">Forecast Confidence & Risk</h4>
+                <ResponsiveContainer width="100%" height={300}>
+                  <ComposedChart data={comprehensiveReport.trend_projections}>
+                    <XAxis dataKey="month" />
+                    <YAxis yAxisId="left" domain={[0, 1]} tickFormatter={(value) => `${(value * 100).toFixed(0)}%`} />
+                    <YAxis yAxisId="right" orientation="right" />
+                    <Tooltip formatter={(value, name) => [
+                      name === 'confidence' ? `${((value as number) * 100).toFixed(1)}%` : 
+                      typeof value === 'number' ? `${value.toLocaleString()} ${selectedCurrency}` : value,
+                      name === 'confidence' ? 'Confidence Level' : 'Risk Amount'
+                    ]} />
+                    <Legend />
+                    <Line 
+                      yAxisId="left"
+                      type="monotone" 
+                      dataKey="confidence" 
+                      stroke="#10B981" 
+                      strokeWidth={3}
+                      dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
+                      name="Confidence Level"
+                    />
+                    <Bar 
+                      yAxisId="right"
+                      dataKey="projected_variance" 
+                      fill="#F59E0B" 
+                      fillOpacity={0.6}
+                      name="Risk Amount"
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Enhanced Risk Indicators from Comprehensive Report */}
+            {comprehensiveReport.risk_indicators && (
+              <div className="mt-6">
+                <h4 className="text-md font-medium text-gray-800 mb-4">Financial Risk Assessment</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                    <div className="text-2xl font-bold text-red-600">
+                      {comprehensiveReport.risk_indicators.projects_over_budget}
+                    </div>
+                    <div className="text-sm text-red-800">Projects Over Budget</div>
+                    <div className="text-xs text-red-600 mt-1">High risk</div>
+                  </div>
+                  
+                  <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                    <div className="text-2xl font-bold text-yellow-600">
+                      {comprehensiveReport.risk_indicators.projects_at_risk}
+                    </div>
+                    <div className="text-sm text-yellow-800">Projects at Risk</div>
+                    <div className="text-xs text-yellow-600 mt-1">Medium risk</div>
+                  </div>
+                  
+                  <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                    <div className="text-2xl font-bold text-orange-600">
+                      {comprehensiveReport.risk_indicators.critical_projects}
+                    </div>
+                    <div className="text-sm text-orange-800">Critical Projects</div>
+                    <div className="text-xs text-orange-600 mt-1">Immediate attention</div>
+                  </div>
+                  
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {comprehensiveReport.risk_indicators.average_utilization.toFixed(1)}%
+                    </div>
+                    <div className="text-sm text-blue-800">Avg. Utilization</div>
+                    <div className="text-xs text-blue-600 mt-1">Portfolio efficiency</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Projection Summary */}
+            <div className="mt-6 bg-gray-50 p-4 rounded-lg">
+              <h4 className="text-md font-medium text-gray-800 mb-2">6-Month Projection Summary</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-600">Expected Total Spending:</span>
+                  <div className="font-semibold text-gray-900">
+                    {comprehensiveReport.trend_projections[5]?.projected_spending.toLocaleString()} {selectedCurrency}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-gray-600">Projected Variance:</span>
+                  <div className={`font-semibold ${
+                    (comprehensiveReport.trend_projections[5]?.projected_variance || 0) >= 0 ? 'text-red-600' : 'text-green-600'
+                  }`}>
+                    {(comprehensiveReport.trend_projections[5]?.projected_variance || 0) >= 0 ? '+' : ''}
+                    {comprehensiveReport.trend_projections[5]?.projected_variance.toLocaleString()} {selectedCurrency}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-gray-600">Confidence Level:</span>
+                  <div className="font-semibold text-gray-900">
+                    {((comprehensiveReport.trend_projections[5]?.confidence || 0) * 100).toFixed(1)}%
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Enhanced Category Analysis */}
+        {viewMode === 'detailed' && comprehensiveReport?.category_spending && (
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Detailed Category Analysis</h3>
+              <div className="flex items-center space-x-4 text-sm text-gray-600">
+                <span>All amounts in {selectedCurrency}</span>
+                <span>•</span>
+                <span>{comprehensiveReport.category_spending.length} categories</span>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Enhanced Category Spending Chart */}
+              <div>
+                <h4 className="text-md font-medium text-gray-800 mb-3">Category Spending Distribution</h4>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={comprehensiveReport.category_spending}>
+                    <XAxis dataKey="category" />
+                    <YAxis />
+                    <Tooltip formatter={(value, name) => [
+                      typeof value === 'number' ? `${value.toLocaleString()} ${selectedCurrency}` : value,
+                      name === 'total_spending' ? 'Total Spending' : 'Avg per Transaction'
+                    ]} />
+                    <Legend />
+                    <Bar dataKey="total_spending" fill="#3B82F6" name="Total Spending" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Enhanced Category Details Table */}
+              <div className="overflow-x-auto">
+                <h4 className="text-md font-medium text-gray-800 mb-3">Category Performance Metrics</h4>
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total ({selectedCurrency})</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Transactions</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Avg/Transaction</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">% of Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {comprehensiveReport.category_spending
+                      .sort((a, b) => b.total_spending - a.total_spending)
+                      .map((category, index) => {
+                        const totalSpending = comprehensiveReport.category_spending.reduce((sum, cat) => sum + cat.total_spending, 0)
+                        const percentage = totalSpending > 0 ? (category.total_spending / totalSpending * 100) : 0
+                        return (
+                          <tr key={index} className="hover:bg-gray-50">
+                            <td className="px-4 py-2 text-sm font-medium text-gray-900">{category.category}</td>
+                            <td className="px-4 py-2 text-sm text-gray-900">
+                              {category.total_spending.toLocaleString()}
+                            </td>
+                            <td className="px-4 py-2 text-sm text-gray-900">{category.transaction_count}</td>
+                            <td className="px-4 py-2 text-sm text-gray-900">
+                              {category.average_per_transaction.toLocaleString()}
+                            </td>
+                            <td className="px-4 py-2 text-sm">
+                              <div className="flex items-center">
+                                <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                  <div 
+                                    className="bg-blue-600 h-2 rounded-full" 
+                                    style={{ width: `${Math.min(percentage, 100)}%` }}
+                                  ></div>
+                                </div>
+                                <span className="text-gray-600">{percentage.toFixed(1)}%</span>
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Category Insights */}
+            <div className="mt-6 bg-blue-50 p-4 rounded-lg">
+              <h4 className="text-md font-medium text-blue-800 mb-2">Category Insights</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="text-blue-600">Highest Spending Category:</span>
+                  <div className="font-semibold text-blue-900">
+                    {comprehensiveReport.category_spending
+                      .sort((a, b) => b.total_spending - a.total_spending)[0]?.category || 'N/A'}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-blue-600">Most Active Category:</span>
+                  <div className="font-semibold text-blue-900">
+                    {comprehensiveReport.category_spending
+                      .sort((a, b) => b.transaction_count - a.transaction_count)[0]?.category || 'N/A'}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-blue-600">Highest Avg Transaction:</span>
+                  <div className="font-semibold text-blue-900">
+                    {comprehensiveReport.category_spending
+                      .sort((a, b) => b.average_per_transaction - a.average_per_transaction)[0]?.category || 'N/A'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Enhanced Budget Variance Table */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Budget Variance Analysis ({budgetVariances.length} projects)
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Budget Variance Analysis ({budgetVariances.length} projects)
+              </h3>
+              <div className="flex items-center space-x-4 text-sm text-gray-600">
+                <span>All amounts in {selectedCurrency}</span>
+                {analyticsData && (
+                  <>
+                    <span>•</span>
+                    <span>Avg Efficiency: {analyticsData.avgEfficiency.toFixed(1)}%</span>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -577,50 +1265,118 @@ export default function Financials() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actual</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Variance</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Variance %</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Efficiency</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Health</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {budgetVariances.map((variance) => {
-                  const project = projects.find(p => p.id === variance.project_id)
-                  return (
-                    <tr key={variance.project_id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
-                          {project?.name || 'Unknown Project'}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {variance.total_planned.toLocaleString()} {variance.currency}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {variance.total_actual.toLocaleString()} {variance.currency}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span className={variance.variance_amount >= 0 ? 'text-red-600' : 'text-green-600'}>
-                          {variance.variance_amount >= 0 ? '+' : ''}{variance.variance_amount.toLocaleString()} {variance.currency}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span className={variance.variance_percentage >= 0 ? 'text-red-600' : 'text-green-600'}>
-                          {variance.variance_percentage >= 0 ? '+' : ''}{variance.variance_percentage.toFixed(1)}%
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          variance.status === 'over_budget' ? 'bg-red-100 text-red-800' :
-                          variance.status === 'under_budget' ? 'bg-green-100 text-green-800' :
-                          'bg-blue-100 text-blue-800'
-                        }`}>
-                          {variance.status.replace('_', ' ')}
-                        </span>
-                      </td>
-                    </tr>
-                  )
-                })}
+                {budgetVariances
+                  .sort((a, b) => Math.abs(b.variance_percentage) - Math.abs(a.variance_percentage))
+                  .map((variance) => {
+                    const project = projects.find(p => p.id === variance.project_id)
+                    const efficiency = variance.total_planned > 0 ? 
+                      Math.max(0, 100 - Math.abs(variance.variance_percentage)) : 0
+                    
+                    return (
+                      <tr key={variance.project_id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">
+                            {project?.name || 'Unknown Project'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {variance.total_planned.toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {variance.total_actual.toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span className={variance.variance_amount >= 0 ? 'text-red-600' : 'text-green-600'}>
+                            {variance.variance_amount >= 0 ? '+' : ''}{variance.variance_amount.toLocaleString()}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span className={variance.variance_percentage >= 0 ? 'text-red-600' : 'text-green-600'}>
+                            {variance.variance_percentage >= 0 ? '+' : ''}{variance.variance_percentage.toFixed(1)}%
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <div className="flex items-center">
+                            <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                              <div 
+                                className={`h-2 rounded-full ${
+                                  efficiency >= 80 ? 'bg-green-500' : 
+                                  efficiency >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                                }`}
+                                style={{ width: `${Math.min(efficiency, 100)}%` }}
+                              ></div>
+                            </div>
+                            <span className={
+                              efficiency >= 80 ? 'text-green-600' : 
+                              efficiency >= 60 ? 'text-yellow-600' : 'text-red-600'
+                            }>
+                              {efficiency.toFixed(0)}%
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            variance.status === 'over_budget' ? 'bg-red-100 text-red-800' :
+                            variance.status === 'under_budget' ? 'bg-green-100 text-green-800' :
+                            'bg-blue-100 text-blue-800'
+                          }`}>
+                            {variance.status.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            project?.health === 'green' ? 'bg-green-100 text-green-800' :
+                            project?.health === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
+                            project?.health === 'red' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {project?.health || 'unknown'}
+                          </span>
+                        </td>
+                      </tr>
+                    )
+                  })}
               </tbody>
             </table>
           </div>
+          
+          {/* Table Summary */}
+          {analyticsData && (
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-600">Total Savings:</span>
+                  <div className="font-semibold text-green-600">
+                    {analyticsData.totalSavings.toLocaleString()} {selectedCurrency}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-gray-600">Total Overruns:</span>
+                  <div className="font-semibold text-red-600">
+                    {analyticsData.totalOverruns.toLocaleString()} {selectedCurrency}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-gray-600">Net Variance:</span>
+                  <div className={`font-semibold ${analyticsData.netVariance >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    {analyticsData.netVariance >= 0 ? '+' : ''}{analyticsData.netVariance.toLocaleString()} {selectedCurrency}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-gray-600">Portfolio Efficiency:</span>
+                  <div className="font-semibold text-blue-600">
+                    {analyticsData.avgEfficiency.toFixed(1)}%
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </AppLayout>

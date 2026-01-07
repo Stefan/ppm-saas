@@ -73,6 +73,7 @@ export default function Risks() {
   const [sortBy, setSortBy] = useState<'risk_score' | 'created_at' | 'due_date'>('risk_score')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [showFilters, setShowFilters] = useState(false)
+  const [showAddModal, setShowAddModal] = useState(false)
 
   // Enhanced analytics data
   const analyticsData = useMemo(() => {
@@ -179,6 +180,44 @@ export default function Risks() {
       setError(error instanceof Error ? error.message : 'Unknown error')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function createRisk(riskData: {
+    project_id: string
+    title: string
+    description?: string
+    category: 'technical' | 'financial' | 'resource' | 'schedule' | 'external'
+    probability: number
+    impact: number
+    mitigation?: string
+    owner_id?: string
+    due_date?: string
+  }) {
+    if (!session?.access_token) throw new Error('Not authenticated')
+    
+    try {
+      const response = await fetch(getApiUrl('/risks/'), {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session?.access_token || ''}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(riskData)
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || `Failed to create risk: ${response.status}`)
+      }
+      
+      const newRisk = await response.json()
+      setRisks(prev => [...prev, newRisk])
+      setShowAddModal(false)
+      return newRisk
+    } catch (error: unknown) {
+      console.error('Error creating risk:', error)
+      throw error instanceof Error ? error : new Error('Unknown error creating risk')
     }
   }
 
@@ -880,7 +919,10 @@ export default function Risks() {
             <h3 className="text-lg font-semibold text-gray-900">
               Risk Register ({filteredRisks.length} risks)
             </h3>
-            <button className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            <button 
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add Risk
             </button>
@@ -974,6 +1016,157 @@ export default function Risks() {
             </table>
           </div>
         </div>
+
+        {/* Add Risk Modal */}
+        {showAddModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Risk</h3>
+              <form onSubmit={async (e) => {
+                e.preventDefault()
+                const formData = new FormData(e.currentTarget)
+                
+                try {
+                  await createRisk({
+                    project_id: formData.get('project_id') as string,
+                    title: formData.get('title') as string,
+                    description: formData.get('description') as string || undefined,
+                    category: formData.get('category') as 'technical' | 'financial' | 'resource' | 'schedule' | 'external',
+                    probability: parseFloat(formData.get('probability') as string) / 100,
+                    impact: parseFloat(formData.get('impact') as string) / 100,
+                    mitigation: formData.get('mitigation') as string || undefined,
+                    owner_id: formData.get('owner') as string || undefined,
+                    due_date: formData.get('due_date') as string || undefined
+                  })
+                } catch (error) {
+                  alert(error instanceof Error ? error.message : 'Failed to create risk')
+                }
+              }} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                  <input
+                    type="text"
+                    name="title"
+                    required
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    name="description"
+                    rows={3}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Project *</label>
+                  <select
+                    name="project_id"
+                    required
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Select a project</option>
+                    <option value="1">Sample Project</option>
+                    <option value="2">Another Project</option>
+                    <option value="3">Third Project</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                  <select
+                    name="category"
+                    required
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Select category</option>
+                    <option value="technical">Technical</option>
+                    <option value="financial">Financial</option>
+                    <option value="resource">Resource</option>
+                    <option value="schedule">Schedule</option>
+                    <option value="external">External</option>
+                  </select>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Probability (%)</label>
+                    <input
+                      type="number"
+                      name="probability"
+                      required
+                      min="0"
+                      max="100"
+                      defaultValue="50"
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Impact (%)</label>
+                    <input
+                      type="number"
+                      name="impact"
+                      required
+                      min="0"
+                      max="100"
+                      defaultValue="50"
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Mitigation Strategy</label>
+                  <textarea
+                    name="mitigation"
+                    rows={2}
+                    placeholder="Describe how this risk will be mitigated..."
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Owner</label>
+                  <input
+                    type="text"
+                    name="owner"
+                    placeholder="Risk owner name"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                  <input
+                    type="date"
+                    name="due_date"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddModal(false)}
+                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  >
+                    Add Risk
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </AppLayout>
   )

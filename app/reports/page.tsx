@@ -2,7 +2,7 @@
 
 import { useAuth } from '../providers/SupabaseAuthProvider'
 import { useState } from 'react'
-import { MessageCircle, FileText, Download, Loader, Send, Bot, User } from 'lucide-react'
+import { MessageCircle, FileText, Download, Loader, Send, Bot, User, AlertTriangle, RefreshCw } from 'lucide-react'
 import AppLayout from '../../components/AppLayout'
 import { getApiUrl } from '../../lib/api'
 
@@ -24,6 +24,22 @@ interface RAGResponse {
   status?: string
 }
 
+interface ChatError {
+  timestamp: Date
+  errorType: 'network' | 'server' | 'timeout' | 'auth' | 'unknown'
+  message: string
+  statusCode?: number
+  retryable: boolean
+}
+
+interface ErrorRecoveryState {
+  lastQuery: string
+  conversationId: string | null
+  retryCount: number
+  maxRetries: number
+  errorHistory: ChatError[]
+}
+
 export default function Reports() {
   const { session } = useAuth()
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -40,19 +56,105 @@ export default function Reports() {
   const [reportFormat, setReportFormat] = useState('text')
   const [showReportOptions, setShowReportOptions] = useState(false)
   const [conversationId, setConversationId] = useState<string | null>(null)
+  const [errorRecovery, setErrorRecovery] = useState<ErrorRecoveryState>({
+    lastQuery: '',
+    conversationId: null,
+    retryCount: 0,
+    maxRetries: 3,
+    errorHistory: []
+  })
+  const [showError, setShowError] = useState(false)
+  const [currentError, setCurrentError] = useState<ChatError | null>(null)
 
-  const handleSendMessage = async () => {
-    if (!currentQuery.trim() || !session?.access_token) return
+  const createChatError = (error: unknown, statusCode?: number): ChatError => {
+    let errorType: ChatError['errorType'] = 'unknown'
+    let message = 'An unexpected error occurred'
+    let retryable = true
 
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      type: 'user',
-      content: currentQuery,
-      timestamp: new Date()
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      errorType = 'network'
+      message = 'Network connection failed. Please check your internet connection.'
+    } else if (statusCode === 401 || statusCode === 403) {
+      errorType = 'auth'
+      message = 'Authentication failed. Please refresh the page and try again.'
+      retryable = false
+    } else if (statusCode === 408 || statusCode === 504) {
+      errorType = 'timeout'
+      message = 'Request timed out. The server is taking too long to respond.'
+    } else if (statusCode && statusCode >= 500) {
+      errorType = 'server'
+      message = 'Server error occurred. Our team has been notified.'
+    } else if (statusCode && statusCode >= 400) {
+      errorType = 'server'
+      message = 'Request failed. Please check your input and try again.'
+      retryable = false
     }
 
-    setMessages(prev => [...prev, userMessage])
-    setCurrentQuery('')
+    return {
+      timestamp: new Date(),
+      errorType,
+      message,
+      statusCode,
+      retryable
+    }
+  }
+
+  const handleRetry = async () => {
+    if (!errorRecovery.lastQuery || errorRecovery.retryCount >= errorRecovery.maxRetries) {
+      return
+    }
+
+    setShowError(false)
+    setCurrentError(null)
+    
+    // Update retry count
+    setErrorRecovery(prev => ({
+      ...prev,
+      retryCount: prev.retryCount + 1
+    }))
+
+    // Retry with exponential backoff
+    const delay = Math.min(1000 * Math.pow(2, errorRecovery.retryCount), 10000)
+    await new Promise(resolve => setTimeout(resolve, delay))
+
+    // Retry the last query
+    await sendMessage(errorRecovery.lastQuery, errorRecovery.conversationId)
+  }
+
+  const resetErrorState = () => {
+    setErrorRecovery(prev => ({
+      ...prev,
+      retryCount: 0,
+      errorHistory: []
+    }))
+    setShowError(false)
+    setCurrentError(null)
+  }
+
+  const suggestAlternatives = (): string[] => {
+    const alternatives = [
+      "Try asking a simpler question",
+      "Check the dashboard for current project status",
+      "Review the financial tracking page for budget information",
+      "Visit the resources page for team allocation details",
+      "Contact support if the issue persists"
+    ]
+
+    // Add specific suggestions based on error history
+    if (errorRecovery.errorHistory.some(e => e.errorType === 'network')) {
+      alternatives.unshift("Check your internet connection")
+    }
+    
+    if (errorRecovery.errorHistory.some(e => e.errorType === 'auth')) {
+      alternatives.unshift("Refresh the page to re-authenticate")
+    }
+
+    return alternatives.slice(0, 3) // Return top 3 suggestions
+  }
+
+  const sendMessage = async (query: string, convId: string | null = null) => {
+    if (!session?.access_token) return
+
     setIsLoading(true)
 
     try {
@@ -63,12 +165,14 @@ export default function Reports() {
           'Authorization': `Bearer ${session?.access_token || ''}`
         },
         body: JSON.stringify({
-          query: currentQuery,
-          conversation_id: conversationId
+          query: query,
+          conversation_id: convId || conversationId
         })
       })
 
-      if (!response.ok) throw new Error('Query failed')
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
 
       const data: RAGResponse = await response.json()
 
@@ -103,19 +207,55 @@ export default function Reports() {
         }
         setMessages(prev => [...prev, statusMessage])
       }
+
+      // Reset error state on successful response
+      resetErrorState()
       
     } catch (error: unknown) {
-      const errorMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        type: 'assistant',
-        content: 'I apologize, but I encountered an error processing your request. Please try again.',
-        timestamp: new Date(),
-        confidence: 0
+      const chatError = createChatError(error, error instanceof Error && 'status' in error ? (error as any).status : undefined)
+      
+      // Update error recovery state
+      setErrorRecovery(prev => ({
+        ...prev,
+        lastQuery: query,
+        conversationId: convId || conversationId,
+        errorHistory: [...prev.errorHistory, chatError]
+      }))
+
+      setCurrentError(chatError)
+      setShowError(true)
+
+      // Don't add error message to chat if it's retryable and we haven't exceeded max retries
+      if (!chatError.retryable || errorRecovery.retryCount >= errorRecovery.maxRetries) {
+        const errorMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          type: 'assistant',
+          content: `${chatError.message} ${chatError.retryable ? 'You can try again or contact support if the issue persists.' : 'Please contact support for assistance.'}`,
+          timestamp: new Date(),
+          confidence: 0
+        }
+        setMessages(prev => [...prev, errorMessage])
       }
-      setMessages(prev => [...prev, errorMessage])
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleSendMessage = async () => {
+    if (!currentQuery.trim() || !session?.access_token) return
+
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      type: 'user',
+      content: currentQuery,
+      timestamp: new Date()
+    }
+
+    setMessages(prev => [...prev, userMessage])
+    const queryToSend = currentQuery
+    setCurrentQuery('')
+
+    await sendMessage(queryToSend)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -191,7 +331,63 @@ export default function Reports() {
         </div>
       )}
 
-      {/* Chat Messages */}
+        {/* Error Recovery Panel */}
+        {showError && currentError && (
+          <div className="bg-red-50 border-l-4 border-red-400 p-4 mx-6 mb-4">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <AlertTriangle className="h-5 w-5 text-red-400" />
+              </div>
+              <div className="ml-3 flex-1">
+                <h3 className="text-sm font-medium text-red-800">
+                  {currentError.errorType === 'network' ? 'Connection Error' :
+                   currentError.errorType === 'auth' ? 'Authentication Error' :
+                   currentError.errorType === 'timeout' ? 'Timeout Error' :
+                   currentError.errorType === 'server' ? 'Server Error' : 'Error'}
+                </h3>
+                <div className="mt-2 text-sm text-red-700">
+                  <p>{currentError.message}</p>
+                  {errorRecovery.retryCount > 0 && (
+                    <p className="mt-1">Retry attempt {errorRecovery.retryCount} of {errorRecovery.maxRetries}</p>
+                  )}
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {currentError.retryable && errorRecovery.retryCount < errorRecovery.maxRetries && (
+                    <button
+                      onClick={handleRetry}
+                      disabled={isLoading}
+                      className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                    >
+                      <RefreshCw className={`h-4 w-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+                      Try Again
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowError(false)}
+                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+                {errorRecovery.retryCount >= errorRecovery.maxRetries && (
+                  <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                    <h4 className="text-sm font-medium text-yellow-800 mb-2">Alternative Actions:</h4>
+                    <ul className="text-sm text-yellow-700 space-y-1">
+                      {suggestAlternatives().map((suggestion, index) => (
+                        <li key={index} className="flex items-start">
+                          <span className="mr-2">•</span>
+                          <span>{suggestion}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
         {messages.map((message) => (
           <div
