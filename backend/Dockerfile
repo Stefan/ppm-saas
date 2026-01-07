@@ -1,6 +1,9 @@
 # Use Python 3.11 slim image
 FROM python:3.11-slim
 
+# Build argument to bust cache when needed
+ARG CACHE_BUST=1
+
 # Set working directory
 WORKDIR /app
 
@@ -18,9 +21,9 @@ RUN apt-get update \
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install Python dependencies with no cache to avoid conflicts
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+    && pip install --no-cache-dir --force-reinstall -r requirements.txt
 
 # Copy application code
 COPY . .

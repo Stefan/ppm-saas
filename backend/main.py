@@ -15,6 +15,9 @@ from enum import Enum
 # Import AI agents
 from ai_agents import create_ai_agents, RAGReporterAgent, ResourceOptimizerAgent, RiskForecasterAgent
 
+# Import CSV import service
+from csv_import_service import CSVImportService, ImportResult, ColumnMapping
+
 # Import performance optimization modules
 from performance_optimization import (
     CacheManager, PerformanceMonitor, BulkOperationManager, limiter, cached,
@@ -135,6 +138,9 @@ app.state.version_manager = version_manager
 
 # Initialize bulk operations service
 bulk_operations_service = BulkOperationsService(supabase, cache_manager) if supabase else None
+
+# Initialize CSV import service
+csv_import_service = CSVImportService(supabase) if supabase else None
 
 # Setup API documentation
 api_doc_generator = setup_api_documentation(app)
@@ -5495,6 +5501,360 @@ except ImportError as e:
     print(f"⚠️ Performance optimized endpoints not available: {e}")
 except Exception as e:
     print(f"⚠️ Error loading performance optimized endpoints: {e}")
+
+# ========== CSV Import Endpoints ==========
+
+@app.post("/csv-import/upload")
+async def upload_csv_file(
+    file: UploadFile,
+    import_type: str = Query(..., regex="^(commitments|actuals)$"),
+    organization_id: str = Query("DEFAULT"),
+    current_user = Depends(require_permission(Permission.financial_create))
+):
+    """Upload and process a CSV file for commitments or actuals data"""
+    try:
+        if not csv_import_service:
+            raise HTTPException(status_code=503, detail="CSV import service unavailable")
+        
+        # Validate file
+        if not file.filename.lower().endswith('.csv'):
+            raise HTTPException(status_code=400, detail="File must be a CSV file")
+        
+        if file.size and file.size > 50 * 1024 * 1024:  # 50MB limit
+            raise HTTPException(status_code=400, detail="File size must be less than 50MB")
+        
+        # Process the CSV file
+        result = await csv_import_service.upload_csv(
+            file=file,
+            import_type=import_type,
+            user_id=current_user["user_id"],
+            organization_id=organization_id
+        )
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"CSV upload error: {e}")
+        raise HTTPException(status_code=500, detail=f"CSV upload failed: {str(e)}")
+
+@app.post("/csv-import/analyze-headers")
+async def analyze_csv_headers(
+    file: UploadFile,
+    import_type: str = Query(..., regex="^(commitments|actuals)$"),
+    current_user = Depends(require_permission(Permission.financial_read))
+):
+    """Analyze CSV headers and suggest column mappings"""
+    try:
+        if not csv_import_service:
+            raise HTTPException(status_code=503, detail="CSV import service unavailable")
+        
+        # Validate file
+        if not file.filename.lower().endswith('.csv'):
+            raise HTTPException(status_code=400, detail="File must be a CSV file")
+        
+        # Get column mapping suggestions
+        suggestions = await csv_import_service.get_column_mapping_suggestions(file, import_type)
+        
+        return {
+            "import_type": import_type,
+            "filename": file.filename,
+            "suggested_mappings": suggestions,
+            "default_mappings": (
+                csv_import_service.default_commitment_mapping if import_type == "commitments"
+                else csv_import_service.default_actual_mapping
+            )
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"CSV header analysis error: {e}")
+        raise HTTPException(status_code=500, detail=f"CSV header analysis failed: {str(e)}")
+
+@app.get("/csv-import/history")
+async def get_import_history(
+    organization_id: str = Query("DEFAULT"),
+    limit: int = Query(50, ge=1, le=100),
+    current_user = Depends(require_permission(Permission.financial_read))
+):
+    """Get CSV import history for the organization"""
+    try:
+        if not csv_import_service:
+            raise HTTPException(status_code=503, detail="CSV import service unavailable")
+        
+        history = await csv_import_service.get_import_history(
+            user_id=current_user["user_id"],
+            organization_id=organization_id,
+            limit=limit
+        )
+        
+        return {
+            "import_history": history,
+            "organization_id": organization_id
+        }
+        
+    except Exception as e:
+        print(f"Import history error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get import history: {str(e)}")
+
+@app.get("/csv-import/template/{import_type}")
+async def download_csv_template(
+    import_type: str,
+    current_user = Depends(require_permission(Permission.financial_read))
+):
+    """Download a CSV template for the specified import type"""
+    try:
+        if import_type not in ['commitments', 'actuals']:
+            raise HTTPException(status_code=400, detail="Import type must be 'commitments' or 'actuals'")
+        
+        # Get default column mappings
+        if import_type == 'commitments':
+            mappings = csv_import_service.default_commitment_mapping if csv_import_service else {}
+        else:
+            mappings = csv_import_service.default_actual_mapping if csv_import_service else {}
+        
+        # Create CSV header row
+        headers = [mapping.csv_column for mapping in mappings.values()]
+        
+        # Create sample data row
+        if import_type == 'commitments':
+            sample_row = [
+                "PO-2024-001",  # PO Number
+                "2024-01-15",   # PO Date
+                "ACME Corp",    # Vendor
+                "ACME Corporation", # Vendor Description
+                "John Smith",   # Requester
+                "PROJECT-001",  # Project
+                "Website Redesign", # Project Description
+                "WBS-001",      # WBS Element
+                "Development Phase", # WBS Description
+                "CC-1000",      # Cost Center
+                "IT Department", # Cost Center Description
+                "10000.00",     # PO Net Amount
+                "1000.00",      # Tax Amount
+                "11000.00",     # Total Amount
+                "Approved",     # PO Status
+                "2024-02-15",   # Delivery Date
+                "USD"           # Currency
+            ]
+        else:  # actuals
+            sample_row = [
+                "FI-2024-001",  # FI Doc No
+                "2024-01-20",   # Posting Date
+                "Invoice",      # Document Type
+                "ACME Corp",    # Vendor
+                "INV-001",      # Vendor Invoice No
+                "PROJECT-001",  # Project Nr
+                "WBS-001",      # WBS
+                "4000",         # GL Account
+                "CC-1000",      # Cost Center
+                "5000.00",      # Invoice Amount
+                "USD",          # Currency
+                "PO-2024-001"   # PO No
+            ]
+        
+        # Create CSV content
+        import io
+        import csv
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(headers)
+        writer.writerow(sample_row)
+        csv_content = output.getvalue()
+        
+        # Return as downloadable file
+        from fastapi.responses import Response
+        return Response(
+            content=csv_content,
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": f"attachment; filename={import_type}_template.csv"
+            }
+        )
+        
+    except Exception as e:
+        print(f"Template download error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate template: {str(e)}")
+
+@app.post("/csv-import/calculate-variances")
+async def calculate_financial_variances(
+    organization_id: str = Query("DEFAULT"),
+    project_id: Optional[str] = Query(None),
+    current_user = Depends(require_permission(Permission.financial_read))
+):
+    """Calculate financial variances between commitments and actuals"""
+    try:
+        if not supabase:
+            raise HTTPException(status_code=503, detail="Database service unavailable")
+        
+        # Call the database function to calculate variances
+        result = supabase.rpc('calculate_financial_variances', {
+            'p_organization_id': organization_id,
+            'p_project_id': project_id
+        }).execute()
+        
+        variances = result.data or []
+        
+        # Get variance summary
+        summary_result = supabase.rpc('get_variance_summary', {
+            'p_organization_id': organization_id
+        }).execute()
+        
+        summary = summary_result.data[0] if summary_result.data else {}
+        
+        return {
+            "variances": variances,
+            "summary": summary,
+            "organization_id": organization_id,
+            "project_id": project_id,
+            "calculated_at": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        print(f"Calculate variances error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to calculate variances: {str(e)}")
+
+@app.get("/csv-import/variances")
+async def get_financial_variances(
+    organization_id: str = Query("DEFAULT"),
+    project_id: Optional[str] = Query(None),
+    status: Optional[str] = Query(None, regex="^(under|on|over)$"),
+    limit: int = Query(100, ge=1, le=500),
+    current_user = Depends(require_permission(Permission.financial_read))
+):
+    """Get financial variances with optional filtering"""
+    try:
+        if not supabase:
+            raise HTTPException(status_code=503, detail="Database service unavailable")
+        
+        # Build query
+        query = supabase.table("financial_variances").select("*")
+        
+        if organization_id != "ALL":
+            query = query.eq("organization_id", organization_id)
+        
+        if project_id:
+            query = query.eq("project_id", project_id)
+        
+        if status:
+            query = query.eq("status", status)
+        
+        # Execute query with limit and ordering
+        result = query.order("variance_percentage", desc=True).limit(limit).execute()
+        
+        variances = result.data or []
+        
+        # Calculate summary statistics
+        total_variances = len(variances)
+        over_budget = len([v for v in variances if v.get('status') == 'over'])
+        under_budget = len([v for v in variances if v.get('status') == 'under'])
+        on_budget = len([v for v in variances if v.get('status') == 'on'])
+        
+        return {
+            "variances": variances,
+            "summary": {
+                "total_variances": total_variances,
+                "over_budget": over_budget,
+                "under_budget": under_budget,
+                "on_budget": on_budget
+            },
+            "filters": {
+                "organization_id": organization_id,
+                "project_id": project_id,
+                "status": status,
+                "limit": limit
+            }
+        }
+        
+    except Exception as e:
+        print(f"Get variances error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get variances: {str(e)}")
+
+@app.get("/csv-import/commitments")
+async def get_commitments(
+    organization_id: str = Query("DEFAULT"),
+    project: Optional[str] = Query(None),
+    vendor: Optional[str] = Query(None),
+    limit: int = Query(100, ge=1, le=500),
+    current_user = Depends(require_permission(Permission.financial_read))
+):
+    """Get commitments data with optional filtering"""
+    try:
+        if not supabase:
+            raise HTTPException(status_code=503, detail="Database service unavailable")
+        
+        # Build query
+        query = supabase.table("commitments").select("*")
+        
+        if organization_id != "ALL":
+            query = query.eq("organization_id", organization_id)
+        
+        if project:
+            query = query.ilike("project", f"%{project}%")
+        
+        if vendor:
+            query = query.ilike("vendor", f"%{vendor}%")
+        
+        # Execute query
+        result = query.order("po_date", desc=True).limit(limit).execute()
+        
+        return {
+            "commitments": result.data or [],
+            "filters": {
+                "organization_id": organization_id,
+                "project": project,
+                "vendor": vendor,
+                "limit": limit
+            }
+        }
+        
+    except Exception as e:
+        print(f"Get commitments error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get commitments: {str(e)}")
+
+@app.get("/csv-import/actuals")
+async def get_actuals(
+    organization_id: str = Query("DEFAULT"),
+    project_nr: Optional[str] = Query(None),
+    vendor: Optional[str] = Query(None),
+    limit: int = Query(100, ge=1, le=500),
+    current_user = Depends(require_permission(Permission.financial_read))
+):
+    """Get actuals data with optional filtering"""
+    try:
+        if not supabase:
+            raise HTTPException(status_code=503, detail="Database service unavailable")
+        
+        # Build query
+        query = supabase.table("actuals").select("*")
+        
+        if organization_id != "ALL":
+            query = query.eq("organization_id", organization_id)
+        
+        if project_nr:
+            query = query.ilike("project_nr", f"%{project_nr}%")
+        
+        if vendor:
+            query = query.ilike("vendor", f"%{vendor}%")
+        
+        # Execute query
+        result = query.order("posting_date", desc=True).limit(limit).execute()
+        
+        return {
+            "actuals": result.data or [],
+            "filters": {
+                "organization_id": organization_id,
+                "project_nr": project_nr,
+                "vendor": vendor,
+                "limit": limit
+            }
+        }
+        
+    except Exception as e:
+        print(f"Get actuals error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get actuals: {str(e)}")
 
 # For deployment - Vercel serverless function handler
 handler = app
