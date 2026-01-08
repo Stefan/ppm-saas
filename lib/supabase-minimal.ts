@@ -6,7 +6,7 @@ const PRODUCTION_SUPABASE_URL = 'https://xceyrfvxooiplbmwavlb.supabase.co'
 const PRODUCTION_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjZXlyZnZ4b29pcGxibXdhdmxiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4Mjg3ODEsImV4cCI6MjA4MjQwNDc4MX0.jIyJlwx2g9xn8OTSaLum6H8BKqknyxB8gYxgEKdfgqo'
 
 // For local development, use environment variable if available, otherwise use production
-const PRODUCTION_API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://orka-ppm.onrender.com'
+const PRODUCTION_API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://orka-ppm.vercel.app/api'
 
 console.log('✅ Creating Supabase client with minimal config - Production Ready')
 console.log('🔧 Force Override Active: Bypassing ALL environment variables')
