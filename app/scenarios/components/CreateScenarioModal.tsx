@@ -52,11 +52,6 @@ export default function CreateScenarioModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!session?.access_token) {
-      setError('Authentication required')
-      return
-    }
 
     if (!formData.name.trim()) {
       setError('Scenario name is required')
@@ -80,7 +75,6 @@ export default function CreateScenarioModal({
       const response = await fetch(getApiUrl('/simulations/what-if'), {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(scenarioData)

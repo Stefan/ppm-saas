@@ -80,10 +80,8 @@ export default function ScenariosPage() {
   const [showComparisonView, setShowComparisonView] = useState(false)
 
   useEffect(() => {
-    if (session) {
-      loadProjects()
-    }
-  }, [session])
+    loadProjects()
+  }, [])
 
   useEffect(() => {
     if (selectedProject) {
@@ -92,12 +90,9 @@ export default function ScenariosPage() {
   }, [selectedProject])
 
   const loadProjects = async () => {
-    if (!session?.access_token) return
-    
     try {
       const response = await fetch(getApiUrl('/projects'), {
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         }
       })
@@ -121,12 +116,9 @@ export default function ScenariosPage() {
   }
 
   const loadProjectScenarios = async (projectId: string) => {
-    if (!session?.access_token) return
-    
     try {
       const response = await fetch(getApiUrl(`/projects/${projectId}/scenarios`), {
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         }
       })
@@ -143,13 +135,12 @@ export default function ScenariosPage() {
   }
 
   const compareScenarios = async () => {
-    if (!session?.access_token || selectedScenarios.length < 2) return
+    if (selectedScenarios.length < 2) return
     
     try {
       const response = await fetch(getApiUrl('/simulations/what-if/compare'), {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(selectedScenarios)
@@ -168,15 +159,12 @@ export default function ScenariosPage() {
   }
 
   const deleteScenario = async (scenarioId: string) => {
-    if (!session?.access_token) return
-    
     if (!confirm('Are you sure you want to delete this scenario?')) return
     
     try {
       const response = await fetch(getApiUrl(`/simulations/what-if/${scenarioId}`), {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         }
       })
