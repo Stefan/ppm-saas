@@ -44,6 +44,22 @@ async def root():
         "timestamp": datetime.now().isoformat()
     }
 
+@app.get("/debug/info")
+async def debug_info():
+    """Debug endpoint to check server status"""
+    return {
+        "status": "running",
+        "server": "simple_server.py",
+        "timestamp": datetime.now().isoformat(),
+        "endpoints": [
+            "/",
+            "/health", 
+            "/projects",
+            "/projects/{id}/scenarios",
+            "/debug/info"
+        ]
+    }
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
