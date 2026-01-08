@@ -4,23 +4,15 @@ services:
     env: python
     region: oregon
     plan: free
-    buildCommand: pip install -r requirements-simple.txt
-    startCommand: uvicorn simple_server:app --host 0.0.0.0 --port $PORT
+    buildCommand: pip install --no-cache-dir -r requirements-simple.txt
+    startCommand: uvicorn simple_server:app --host 0.0.0.0 --port $PORT --workers 1
     envVars:
-      - key: SUPABASE_URL
-        value: https://xceyrfvxooiplbmwavlb.supabase.co
-      - key: SUPABASE_ANON_KEY
-        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjZXlyZnZ4b29pcGxibXdhdmxiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4Mjg3ODEsImV4cCI6MjA4MjQwNDc4MX0.jIyJlwx2g9xn8OTSaLum6H8BKqknyxB8gYxgEKdfgqo
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjZXlyZnZ4b29pcGxibXdhdmxiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjgyODc4MSwiZXhwIjoyMDgyNDA0NzgxfQ.ak3-04l8Fp1CnAg-Rp1s_mHyMnmVNCS9fwH9QWBO4lY
-      - key: SUPABASE_JWT_SECRET
-        value: 1gOt/5k2/ulAmo33xbMm/XFqLD9UBIy1UzCxV+f6VxS4Wo9tZJVARZlggjn1BTGjnc+UuxpDap1+JsfbZ3nZZA==
-      - key: PYTHON_VERSION
-        value: 3.11.0
-      # Pre-startup testing configuration
       - key: ENVIRONMENT
         value: production
-      - key: SKIP_PRE_STARTUP_TESTS
-        value: false
-      - key: BASE_URL
-        value: https://ppm-saas-backend.onrender.com
+      - key: PORT
+        value: 8000
+      # Minimal environment for simple server
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: PYTHONDONTWRITEBYTECODE
+        value: "1"

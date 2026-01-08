@@ -1,44 +1,50 @@
-# Python cache and virtual environment
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-venv/
-env/
-ENV/
+# Ignore everything except what we need for simple server
+*
+!simple_server.py
+!requirements-simple.txt
+!docker-start.sh
 
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS files
+# Ignore development files
+.git
+.gitignore
+.env*
 .DS_Store
-Thumbs.db
-
-# Logs
-*.log
-
-# Test files
-.pytest_cache/
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
 .coverage
-htmlcov/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.venv
+venv/
+.pytest_cache/
+.mypy_cache/
 
-# Local environment files
-.env
-.env.local
-.env.*.local
-
-# Build artifacts
-build/
-dist/
-*.egg-info/
-
-# Documentation
-docs/_build/
-
-# Temporary files
-*.tmp
-*.temp
+# Ignore all other files and directories
+auth/
+config/
+docs/
+migrations/
+models/
+pre_startup_testing/
+routers/
+scripts/
+services/
+temp/
+tests/
+utils/
+venv/
+main.py
+requirements.txt
+*.py
+!simple_server.py

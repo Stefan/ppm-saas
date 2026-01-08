@@ -1,36 +1,33 @@
-# Use Python 3.11 slim image
+# Use Python 3.11 slim image for faster builds
 FROM python:3.11-slim
-
-# Build argument to bust cache when needed
-ARG CACHE_BUST=1
 
 # Set working directory
 WORKDIR /app
 
-# Set environment variables
+# Set environment variables for faster Python execution
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV ENVIRONMENT=production
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Install system dependencies
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        build-essential \
-        curl \
-        coreutils \
-    && rm -rf /var/lib/apt/lists/*
+# Install minimal system dependencies in one layer
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
-# Copy requirements first for better caching
-COPY requirements.txt .
+# Copy only requirements first for better Docker layer caching
+COPY requirements-simple.txt .
 
-# Install Python dependencies with no cache to avoid conflicts
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir --force-reinstall -r requirements.txt
+# Install Python dependencies with optimizations
+RUN pip install --no-cache-dir -r requirements-simple.txt
 
-# Copy application code
-COPY . .
+# Copy only necessary files for simple server
+COPY simple_server.py .
+COPY docker-start.sh .
 
-# Make startup scripts executable
+# Make startup script executable
 RUN chmod +x docker-start.sh
 
 # Create non-root user for security
@@ -41,9 +38,9 @@ USER appuser
 # Expose port
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+# Simplified health check
+HEALTHCHECK --interval=60s --timeout=10s --start-period=10s --retries=2 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Start command using the Docker-optimized startup script
-CMD ["./docker-start.sh"]
+# Direct start command for faster startup
+CMD ["uvicorn", "simple_server:app", "--host", "0.0.0.0", "--port", "8000"]
