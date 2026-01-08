@@ -31,7 +31,7 @@ RUN pip install --no-cache-dir --upgrade pip \
 COPY . .
 
 # Make startup scripts executable
-RUN chmod +x docker-start.sh start.sh start_with_testing.sh
+RUN chmod +x docker-start.sh
 
 # Create non-root user for security
 RUN adduser --disabled-password --gecos '' appuser \
