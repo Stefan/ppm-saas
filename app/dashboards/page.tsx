@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useAuth } from '../providers/SupabaseAuthProvider'
 import AppLayout from '../../components/AppLayout'
-import { getApiUrl } from '../../lib/api'
+import { getApiUrl, apiRequest } from '../../lib/api'
 import VarianceKPIs from './components/VarianceKPIs'
 import VarianceTrends from './components/VarianceTrends'
 import VarianceAlerts from './components/VarianceAlerts'
@@ -64,20 +64,9 @@ export default function UltraFastDashboard() {
       // Try optimized endpoint first, fallback to existing endpoints
       let data
       try {
-        const response = await fetch(getApiUrl('/optimized/dashboard/quick-stats'), {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          }
-        })
-        
-        if (response.ok) {
-          data = await response.json()
-          setQuickStats(data.quick_stats)
-          setKPIs(data.kpis)
-        } else {
-          throw new Error('Optimized endpoint not available')
-        }
+        data = await apiRequest('/optimized/dashboard/quick-stats')
+        setQuickStats(data.quick_stats)
+        setKPIs(data.kpis)
       } catch (optimizedError) {
         console.log('Using fallback endpoints...')
         // Fallback to existing endpoints with minimal data
@@ -178,33 +167,19 @@ export default function UltraFastDashboard() {
 
   // Background loading of projects (non-blocking)
   const loadRecentProjects = async () => {
-    if (!session?.access_token) return
-    
     try {
       // Try optimized endpoint first
-      let response = await fetch(getApiUrl('/optimized/dashboard/projects-summary?limit=5'), {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        }
-      }).catch(() => null)
-      
-      if (!response || !response.ok) {
+      let data
+      try {
+        data = await apiRequest('/optimized/dashboard/projects-summary?limit=5')
+      } catch (optimizedError) {
         // Fallback to regular projects endpoint
-        response = await fetch(getApiUrl('/projects?limit=5'), {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          }
-        })
+        data = await apiRequest('/projects?limit=5')
       }
       
-      if (response.ok) {
-        const data = await response.json()
-        // Handle both optimized and regular endpoint responses
-        const projects = data.projects || data.slice(0, 5) || []
-        setRecentProjects(projects)
-      }
+      // Handle both optimized and regular endpoint responses
+      const projects = data.projects || data.slice(0, 5) || []
+      setRecentProjects(projects)
     } catch (err) {
       console.error('Projects load error:', err)
       // Fail silently - don't block main dashboard
