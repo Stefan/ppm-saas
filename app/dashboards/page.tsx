@@ -64,9 +64,9 @@ export default function UltraFastDashboard() {
       // Try optimized endpoint first, fallback to existing endpoints
       let data
       try {
-        data = await apiRequest('/optimized/dashboard/quick-stats')
-        setQuickStats(data.quick_stats)
-        setKPIs(data.kpis)
+        const response = await apiRequest('/optimized/dashboard/quick-stats') as any
+        setQuickStats(response.quick_stats)
+        setKPIs(response.kpis)
       } catch (optimizedError) {
         console.log('Using fallback endpoints...')
         // Fallback to existing endpoints with minimal data
@@ -168,18 +168,16 @@ export default function UltraFastDashboard() {
   // Background loading of projects (non-blocking)
   const loadRecentProjects = async () => {
     try {
-      // Try optimized endpoint first
-      let data
       try {
-        data = await apiRequest('/optimized/dashboard/projects-summary?limit=5')
+        const response = await apiRequest('/optimized/dashboard/projects-summary?limit=5') as any
+        const projects = response.projects || response.slice(0, 5) || []
+        setRecentProjects(projects)
       } catch (optimizedError) {
         // Fallback to regular projects endpoint
-        data = await apiRequest('/projects?limit=5')
+        const response = await apiRequest('/projects?limit=5') as any
+        const projects = response.projects || response.slice(0, 5) || []
+        setRecentProjects(projects)
       }
-      
-      // Handle both optimized and regular endpoint responses
-      const projects = data.projects || data.slice(0, 5) || []
-      setRecentProjects(projects)
     } catch (err) {
       console.error('Projects load error:', err)
       // Fail silently - don't block main dashboard
