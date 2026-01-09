@@ -216,8 +216,12 @@ class TestTestExecutionOrchestration:
     @pytest.mark.asyncio
     async def test_empty_validator_list(self):
         """Test behavior with no validators (edge case)."""
-        config = ValidationConfiguration()
+        config = ValidationConfiguration(cache_results=False)
         runner = PreStartupTestRunner(config)
+        
+        # Explicitly set empty validator list and mark as explicitly set
+        runner.validators = []
+        runner._validators_explicitly_set = True
         
         # No validators added
         test_results = await runner.run_all_tests()
@@ -232,7 +236,7 @@ class TestTestExecutionOrchestration:
     @pytest.mark.asyncio
     async def test_validator_timeout_handling(self):
         """Test that validator timeouts are handled properly."""
-        config = ValidationConfiguration(timeout_seconds=1)
+        config = ValidationConfiguration(timeout_seconds=1, cache_results=False)
         runner = PreStartupTestRunner(config)
         
         # Create a validator that will timeout
@@ -281,7 +285,7 @@ class TestCriticalFailurePrevention:
         **Validates: Requirements 1.2, 8.2**
         """
         # Arrange
-        config = ValidationConfiguration()
+        config = ValidationConfiguration(cache_results=False)
         runner = PreStartupTestRunner(config)
         
         results = []
@@ -362,7 +366,7 @@ class TestCriticalFailurePrevention:
     @pytest.mark.asyncio
     async def test_critical_failure_identification(self, severity_levels: List[Severity]):
         """Test that critical failures are correctly identified across different severity levels."""
-        config = ValidationConfiguration()
+        config = ValidationConfiguration(cache_results=False)
         runner = PreStartupTestRunner(config)
         
         results = []
@@ -417,7 +421,7 @@ class TestSuccessfulTestCompletion:
         **Validates: Requirements 1.3**
         """
         # Arrange
-        config = ValidationConfiguration()
+        config = ValidationConfiguration(cache_results=False)
         runner = PreStartupTestRunner(config)
         
         results = []
@@ -511,7 +515,8 @@ class TestPerformanceGuarantee:
         # Arrange
         config = ValidationConfiguration(
             timeout_seconds=timeout_seconds,
-            parallel_execution=parallel_execution
+            parallel_execution=parallel_execution,
+            cache_results=False
         )
         runner = PreStartupTestRunner(config)
         
@@ -602,7 +607,7 @@ class TestNonCriticalFailureHandling:
         **Validates: Requirements 8.1**
         """
         # Arrange
-        config = ValidationConfiguration(skip_non_critical=skip_non_critical)
+        config = ValidationConfiguration(skip_non_critical=skip_non_critical, cache_results=False)
         runner = PreStartupTestRunner(config)
         
         results = []
@@ -695,7 +700,7 @@ class TestServiceImpactAnalysis:
         **Validates: Requirements 8.3, 8.4**
         """
         # Arrange
-        config = ValidationConfiguration()
+        config = ValidationConfiguration(cache_results=False)
         runner = PreStartupTestRunner(config)
         
         results = []

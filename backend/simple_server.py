@@ -1510,5 +1510,175 @@ async def get_notifications(unread_only: bool = False, limit: int = 10):
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8002))
+
+# AI Help Chat endpoints
+@app.post("/ai/help/chat")
+async def help_chat(request_data: dict):
+    """AI Help Chat endpoint"""
+    try:
+        return {
+            "id": f"msg_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            "type": "assistant",
+            "content": "Hallo! Ich bin Ihr AI-Assistent für das Orka PPM System. Wie kann ich Ihnen heute helfen?",
+            "timestamp": datetime.now().isoformat(),
+            "context": {
+                "route": request_data.get("context", {}).get("route", "/"),
+                "user_role": "user"
+            }
+        }
+    except Exception as e:
+        return {"error": f"Failed to process chat request: {str(e)}"}
+
+@app.post("/ai/help/language/preference")
+async def set_language_preference(request_data: dict):
+    """Set user language preference"""
+    try:
+        language = request_data.get("language", "en")
+        return {
+            "success": True,
+            "language": language,
+            "message": f"Language preference set to {language}",
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {"error": f"Failed to set language preference: {str(e)}"}
+
+@app.get("/ai/help/language/preference")
+async def get_language_preference():
+    """Get user language preference"""
+    try:
+        return {
+            "language": "de",
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {"error": f"Failed to get language preference: {str(e)}"}
+
+@app.get("/ai/help/languages")
+async def get_supported_languages():
+    """Get supported languages"""
+    try:
+        return {
+            "languages": [
+                {"code": "en", "name": "English", "native_name": "English", "formal_tone": False},
+                {"code": "de", "name": "German", "native_name": "Deutsch", "formal_tone": True},
+                {"code": "fr", "name": "French", "native_name": "Français", "formal_tone": True}
+            ]
+        }
+    except Exception as e:
+        return {"error": f"Failed to get languages: {str(e)}"}
+
+@app.post("/ai/help/context")
+async def update_help_context(request_data: dict):
+    """Update help context"""
+    try:
+        return {
+            "success": True,
+            "context": request_data.get("context", {}),
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {"error": f"Failed to update context: {str(e)}"}
+
+@app.post("/ai/help/feedback")
+async def submit_help_feedback(request_data: dict):
+    """Submit help feedback"""
+    try:
+        return {
+            "success": True,
+            "feedback_id": f"feedback_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            "message": "Feedback submitted successfully",
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {"error": f"Failed to submit feedback: {str(e)}"}
+
+@app.get("/ai/help/tips")
+async def get_proactive_tips():
+    """Get proactive tips"""
+    try:
+        return {
+            "tips": [
+                {
+                    "id": "tip_1",
+                    "type": "feature_discovery",
+                    "title": "Neue Monte Carlo Simulation",
+                    "content": "Probieren Sie die neue Monte Carlo Risiko-Simulation aus, um bessere Projektvorhersagen zu treffen.",
+                    "priority": "medium",
+                    "triggerContext": ["/monte-carlo"],
+                    "actions": [],
+                    "dismissible": True,
+                    "showOnce": False
+                }
+            ],
+            "context": {
+                "route": "/",
+                "user_role": "user"
+            }
+        }
+    except Exception as e:
+        return {"error": f"Failed to get tips: {str(e)}"}
+
+@app.post("/ai/help/language/detect")
+async def detect_language(request_data: dict):
+    """Detect language from text"""
+    try:
+        text = request_data.get("text", "")
+        # Simple language detection based on common words
+        if any(word in text.lower() for word in ["der", "die", "das", "und", "ist", "haben"]):
+            detected_language = "de"
+        elif any(word in text.lower() for word in ["le", "la", "les", "et", "est", "avoir"]):
+            detected_language = "fr"
+        else:
+            detected_language = "en"
+            
+        return {
+            "language": detected_language,
+            "confidence": 0.85,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {"error": f"Failed to detect language: {str(e)}"}
+
+@app.post("/ai/help/translate")
+async def translate_text(request_data: dict):
+    """Translate text"""
+    try:
+        text = request_data.get("text", "")
+        target_language = request_data.get("target_language", "en")
+        
+        # Mock translation - in real implementation, use translation service
+        translations = {
+            "Hello": {"de": "Hallo", "fr": "Bonjour"},
+            "Welcome": {"de": "Willkommen", "fr": "Bienvenue"},
+            "Help": {"de": "Hilfe", "fr": "Aide"}
+        }
+        
+        translated_text = translations.get(text, {}).get(target_language, text)
+        
+        return {
+            "translated_text": translated_text,
+            "source_language": "en",
+            "target_language": target_language,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {"error": f"Failed to translate text: {str(e)}"}
+
+@app.post("/ai/help/translation/cache")
+async def clear_translation_cache():
+    """Clear translation cache"""
+    try:
+        return {
+            "success": True,
+            "message": "Translation cache cleared",
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {"error": f"Failed to clear cache: {str(e)}"}
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.getenv("PORT", 8002))
     print(f"🚀 Starting ORKA-PPM API server on port {port}")
     uvicorn.run(app, host="0.0.0.0", port=port)

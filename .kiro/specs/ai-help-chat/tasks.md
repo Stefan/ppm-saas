@@ -18,7 +18,7 @@ This document outlines the implementation tasks for the AI-powered In-App Help C
     - Add context-aware response generation
     - _Requirements: 2.1, 2.2, 2.5_
 
-  - [x] 2.2 Write unit tests for HelpRAGAgent
+  - [ ] 2.2 Write unit tests for HelpRAGAgent
     - Test query processing with various contexts
     - Test scope validation functionality
     - _Requirements: 2.1, 2.2, 2.5_
@@ -28,7 +28,7 @@ This document outlines the implementation tasks for the AI-powered In-App Help C
     - Add prompt engineering for response filtering
     - _Requirements: 2.2, 10.1, 10.2, 10.3, 10.4, 10.5_
 
-  - [ ] 2.4 Write unit tests for scope validation
+  - [x] 2.4 Write unit tests for scope validation
     - Test boundary enforcement with off-topic queries
     - Test competitor and external tool filtering
     - _Requirements: 2.2, 10.1, 10.2, 10.3, 10.4, 10.5_
@@ -75,7 +75,7 @@ This document outlines the implementation tasks for the AI-powered In-App Help C
     - Create useHelpChat hook for component integration
     - _Requirements: 1.1, 1.4, 1.5_
 
-  - [ ]* 5.3 Write unit tests for context provider
+  - [ ] 5.3 Write unit tests for context provider
     - Test state management and persistence
     - Test context detection functionality
     - _Requirements: 1.1, 1.4, 1.5_
@@ -152,7 +152,7 @@ This document outlines the implementation tasks for the AI-powered In-App Help C
     - Test tip scheduling and dismissal
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 12. Implement Multi-Language Support
+- [-] 12. Implement Multi-Language Support
   - [x] 12.1 Create translation service integration
     - Integrate OpenAI translation services
     - Add language detection and switching

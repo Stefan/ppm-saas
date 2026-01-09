@@ -36,6 +36,7 @@ class PreStartupTestRunner(TestRunner):
         self._validator_registry: Dict[str, Type[BaseValidator]] = {}
         self.reporter = ConsoleTestReporter()
         self._cache_file = ".pre_startup_test_cache.json"
+        self._validators_explicitly_set = False  # Track if validators were explicitly set
         
         # Register all available validators
         self._register_default_validators()
@@ -55,12 +56,14 @@ class PreStartupTestRunner(TestRunner):
         Args:
             base_url: Base URL for API endpoint testing
         """
-        self.validators = [
-            ConfigurationValidator(self.config),
-            DatabaseConnectivityChecker(self.config),
-            AuthenticationValidator(self.config),
-            APIEndpointValidator(self.config, base_url)
-        ]
+        # Only initialize default validators if no validators have been manually added
+        if not self.validators:
+            self.validators = [
+                ConfigurationValidator(self.config),
+                DatabaseConnectivityChecker(self.config),
+                AuthenticationValidator(self.config),
+                APIEndpointValidator(self.config, base_url)
+            ]
     
     def register_validator(self, validator_class: Type[BaseValidator]):
         """Register a validator class for use in testing."""
@@ -69,6 +72,7 @@ class PreStartupTestRunner(TestRunner):
     def add_validator(self, validator: BaseValidator):
         """Add a validator instance to the test runner."""
         self.validators.append(validator)
+        self._validators_explicitly_set = True
     
     async def run_all_tests(self) -> TestResults:
         """
@@ -86,8 +90,8 @@ class PreStartupTestRunner(TestRunner):
             if cached_results:
                 return cached_results
         
-        # Initialize validators if not already done
-        if not self.validators:
+        # Initialize validators if not already done (don't overwrite manually added validators)
+        if not self.validators and not self._validators_explicitly_set:
             self.initialize_validators()
         
         # Run tests based on configuration
@@ -169,17 +173,8 @@ class PreStartupTestRunner(TestRunner):
         # If skip_non_critical is False, check for any failures
         failed_tests = results.get_failed_tests()
         if failed_tests and not self.config.skip_non_critical:
-            # In development mode, allow startup with only medium/low failures
-            if self.config.development_mode:
-                # Only allow if all failures are medium or low severity
-                medium_low_failures = [
-                    result for result in failed_tests
-                    if result.severity in [Severity.MEDIUM, Severity.LOW]
-                ]
-                return len(medium_low_failures) == len(failed_tests)
-            else:
-                # In production mode, block startup for any failures
-                return False
+            # Block startup for any failures when skip_non_critical is False
+            return False
         
         # Allow startup if no failures
         return True
