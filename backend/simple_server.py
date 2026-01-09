@@ -1,37 +1,52 @@
 #!/usr/bin/env python3
 """
-Simplified FastAPI server for development
-Updated: 2026-01-09 - Added comprehensive feedback and admin endpoints
+Optimized FastAPI server for production deployment
+Updated: 2026-01-09 - Performance optimizations added
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from datetime import datetime
 import os
+import asyncio
+from contextlib import asynccontextmanager
 
-# Create FastAPI application
+# Startup/shutdown events
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    print("🚀 Starting ORKA-PPM API server...")
+    yield
+    # Shutdown
+    print("🛑 Shutting down ORKA-PPM API server...")
+
+# Create FastAPI application with optimizations
 app = FastAPI(
     title="ORKA-PPM API",
-    description="Portfolio Project Management API",
-    version="1.0.0"
+    description="Portfolio Project Management API - Optimized",
+    version="1.1.0",
+    lifespan=lifespan,
+    docs_url="/docs" if os.getenv("ENVIRONMENT") != "production" else None,
+    redoc_url="/redoc" if os.getenv("ENVIRONMENT") != "production" else None
 )
 
-# Add CORS middleware
+# Add performance middleware
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+# Add CORS middleware with optimized settings
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://orka-ppm.vercel.app",           # Production frontend
-        "https://ppm-saas.vercel.app",           # Alternative URL
-        "https://ppm-saas-git-main.vercel.app",  # Git branch deployments
-        "https://ppm-saas-*.vercel.app",         # Preview deployments
-        "https://*.vercel.app",                  # All Vercel deployments
-        "http://localhost:3000",                 # Local development
-        "http://127.0.0.1:3000",
-        "https://localhost:3000"
+        "https://orka-ppm.vercel.app",
+        "https://*.vercel.app",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000"
     ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    max_age=3600,  # Cache preflight requests
 )
 
 # Basic endpoints

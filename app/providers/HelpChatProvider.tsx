@@ -244,7 +244,7 @@ export function HelpChatProvider({ children }: HelpChatProviderProps) {
     if (user) {
       syncLanguageWithServer()
     }
-  }, [loadStoredData, detectPageContext, session, user])
+  }, [session?.access_token, user?.id]) // Simplified dependencies
 
   // Sync language preference with server
   const syncLanguageWithServer = useCallback(async () => {
@@ -280,7 +280,7 @@ export function HelpChatProvider({ children }: HelpChatProviderProps) {
     
     // Save last active time
     saveToStorage({ lastActiveTime: new Date() })
-  }, [pathname, detectPageContext, saveToStorage])
+  }, [pathname, user?.role]) // Simplified dependencies
 
   // Session timeout management
   useEffect(() => {
@@ -667,7 +667,7 @@ export function HelpChatProvider({ children }: HelpChatProviderProps) {
     
     // Return cleanup function for when condition is not met
     return () => {}
-  }, [state.currentContext.route, state.proactiveTipsEnabled, user, dismissedTips, getProactiveTips])
+  }, [state.currentContext.route, state.proactiveTipsEnabled, user?.id, dismissedTips.length]) // Simplified dependencies
 
   const exportChatHistory = useCallback((): string => {
     const history = state.messages.map(msg => ({
