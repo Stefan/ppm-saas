@@ -43,9 +43,6 @@ const nextConfig: NextConfig = {
     unoptimized: false,
   },
 
-  // Output configuration for Vercel
-  output: 'standalone',
-
   // Headers for security and performance
   async headers() {
     return [
