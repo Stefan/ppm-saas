@@ -8,11 +8,29 @@ import { useEffect } from 'react'
  */
 export default function PerformanceOptimizer() {
   useEffect(() => {
-    // Remove console logs in production
+    // Remove console logs in production and filter third-party warnings
     if (process.env.NODE_ENV === 'production') {
+      const originalWarn = console.warn
       console.log = () => {}
-      console.warn = () => {}
+      console.warn = (...args) => {
+        // Filter out Vercel's zustand deprecation warning
+        const message = args.join(' ')
+        if (message.includes('Default export is deprecated') && message.includes('zustand')) {
+          return // Ignore this third-party warning
+        }
+        originalWarn.apply(console, args)
+      }
       console.info = () => {}
+    } else {
+      // In development, filter the zustand warning but keep other warnings
+      const originalWarn = console.warn
+      console.warn = (...args) => {
+        const message = args.join(' ')
+        if (message.includes('Default export is deprecated') && message.includes('zustand')) {
+          return // Ignore this third-party warning in development too
+        }
+        originalWarn.apply(console, args)
+      }
     }
 
     // Optimize images loading

@@ -5,5 +5,13 @@
       "src": "package.json",
       "use": "@vercel/next"
     }
-  ]
+  ],
+  "functions": {
+    "app/**": {
+      "includeFiles": "public/**"
+    }
+  },
+  "env": {
+    "DISABLE_VERCEL_ANALYTICS": "1"
+  }
 }

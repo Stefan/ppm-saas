@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
   // Bundle optimization
   experimental: {
     optimizePackageImports: ['lucide-react', 'recharts'],
+    instrumentationHook: false, // Disable Vercel analytics to avoid third-party zustand warnings
   },
   
   // Compiler optimizations
