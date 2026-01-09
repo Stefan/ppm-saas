@@ -28,7 +28,7 @@ body {
 /* Verbesserte Placeholder-Farben für bessere Lesbarkeit */
 input::placeholder,
 textarea::placeholder {
-  color: #6b7280 !important; /* Ausgewogenes Grau - nicht zu hell, nicht zu dunkel */
+  color: #9ca3af !important; /* Helleres Grau - bessere Balance */
   opacity: 1;
 }
 
@@ -36,22 +36,62 @@ textarea::placeholder {
 @media (prefers-color-scheme: dark) {
   input::placeholder,
   textarea::placeholder {
-    color: #9ca3af !important; /* Helleres Grau für Dark Mode */
+    color: #6b7280 !important; /* Dunkleres Grau für Dark Mode */
     opacity: 1;
   }
 }
 
 /* Spezifische Verbesserungen für Eingabefelder */
 .form-input::placeholder {
-  color: #6b7280 !important;
+  color: #9ca3af !important;
   font-weight: 400;
 }
 
 /* Focus-Zustand für bessere UX */
 input:focus::placeholder,
 textarea:focus::placeholder {
-  color: #9ca3af !important;
+  color: #d1d5db !important; /* Noch heller beim Focus */
   transition: color 0.2s ease-in-out;
+}
+
+/* Performance-optimized animations using transform and opacity only */
+.animate-spin {
+  animation: spin 1s linear infinite;
+  will-change: transform;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  will-change: opacity;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+
+/* Optimize transitions to use only transform and opacity */
+.transition-all {
+  transition: transform 0.2s ease-in-out, opacity 0.2s ease-in-out !important;
+}
+
+/* Force hardware acceleration for better performance */
+.hw-accelerate {
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 /* Standardklassen für konsistente Eingabefelder */
@@ -60,7 +100,7 @@ textarea:focus::placeholder {
 }
 
 .input-field::placeholder {
-  color: #6b7280 !important;
+  color: #9ca3af !important; /* Hellerer Platzhalter */
   opacity: 1;
 }
 
@@ -69,7 +109,7 @@ textarea:focus::placeholder {
 }
 
 .textarea-field::placeholder {
-  color: #6b7280 !important;
+  color: #9ca3af !important; /* Hellerer Platzhalter */
   opacity: 1;
 }
 
@@ -85,7 +125,7 @@ input[type="datetime-local"]::placeholder,
 input[type="url"]::placeholder,
 input[type="tel"]::placeholder,
 select::placeholder {
-  color: #6b7280 !important;
+  color: #9ca3af !important; /* Hellerer Platzhalter für alle Typen */
   opacity: 1;
 }
 
@@ -105,13 +145,19 @@ select::placeholder {
 
 /* Enhanced Input Field Styles for Better Readability */
 
-/* Base input field improvements */
+/* Base input field improvements - ALLE INPUT TYPEN */
 .input-field,
 .textarea-field,
 input[type="text"],
 input[type="email"],
 input[type="password"],
 input[type="number"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="url"],
+input[type="tel"],
+input[type="search"],
 select,
 textarea {
   /* Improved sizing and spacing */
@@ -134,13 +180,19 @@ textarea {
   font-weight: 400 !important;
 }
 
-/* Focus states for better accessibility */
+/* Focus states for better accessibility - ALLE INPUT TYPEN */
 .input-field:focus,
 .textarea-field:focus,
 input[type="text"]:focus,
 input[type="email"]:focus,
 input[type="password"]:focus,
 input[type="number"]:focus,
+input[type="date"]:focus,
+input[type="time"]:focus,
+input[type="datetime-local"]:focus,
+input[type="url"]:focus,
+input[type="tel"]:focus,
+input[type="search"]:focus,
 select:focus,
 textarea:focus {
   outline: none !important;
@@ -149,13 +201,19 @@ textarea:focus {
   background-color: #fefefe !important;
 }
 
-/* Hover states */
+/* Hover states - ALLE INPUT TYPEN */
 .input-field:hover,
 .textarea-field:hover,
 input[type="text"]:hover,
 input[type="email"]:hover,
 input[type="password"]:hover,
 input[type="number"]:hover,
+input[type="date"]:hover,
+input[type="time"]:hover,
+input[type="datetime-local"]:hover,
+input[type="url"]:hover,
+input[type="tel"]:hover,
+input[type="search"]:hover,
 select:hover,
 textarea:hover {
   border-color: #9ca3af !important;
@@ -183,7 +241,7 @@ label.required::after {
 .textarea-field::placeholder,
 input::placeholder,
 textarea::placeholder {
-  color: #6b7280 !important; /* Better contrast than default */
+  color: #9ca3af !important; /* Hellerer Kontrast für bessere Lesbarkeit */
   font-size: 15px !important;
   opacity: 1 !important;
 }
@@ -205,7 +263,7 @@ textarea {
   font-family: inherit !important;
 }
 
-/* Responsive improvements */
+/* Responsive improvements - ALLE INPUT TYPEN */
 @media (max-width: 640px) {
   .input-field,
   .textarea-field,
@@ -213,6 +271,12 @@ textarea {
   input[type="email"],
   input[type="password"],
   input[type="number"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  input[type="url"],
+  input[type="tel"],
+  input[type="search"],
   select,
   textarea {
     font-size: 16px !important; /* Prevent zoom on iOS */
@@ -222,4 +286,169 @@ textarea {
   label {
     font-size: 15px !important;
   }
+}
+
+/* Spezielle Verbesserungen für Datum-Eingabefelder */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  /* Bessere Lesbarkeit für Datum-Eingaben */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace !important;
+  font-size: 15px !important;
+  letter-spacing: 0.5px !important;
+  
+  /* Spezielle Farben für bessere Sichtbarkeit */
+  color: #374151 !important; /* Hellerer Text */
+  background-color: #ffffff !important; /* Weißer Hintergrund */
+}
+
+input[type="date"]:focus,
+input[type="time"]:focus,
+input[type="datetime-local"]:focus {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+}
+
+/* Verbesserung der Datum-Platzhalter */
+input[type="date"]:invalid,
+input[type="time"]:invalid,
+input[type="datetime-local"]:invalid {
+  color: #9ca3af !important; /* Hellerer Platzhalter */
+}
+
+/* Bessere Sichtbarkeit der Datum-Steuerelemente - HELLER */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  background-color: transparent !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236b7280'%3e%3cpath fill-rule='evenodd' d='M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z' clip-rule='evenodd'/%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: 16px 16px !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  padding: 6px !important;
+  width: 20px !important;
+  height: 20px !important;
+  opacity: 0.7 !important;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1 !important;
+  background-color: #f3f4f6 !important;
+}
+/* Enhanced Modal and Form Styling */
+.modal-overlay {
+  backdrop-filter: blur(4px);
+}
+
+/* Improved button styling for forms */
+.btn-primary {
+  @apply px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-all duration-200 shadow-sm hover:shadow-md;
+}
+
+.btn-secondary {
+  @apply px-6 py-3 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 font-medium transition-colors;
+}
+
+.btn-danger {
+  @apply px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold transition-all duration-200 shadow-sm hover:shadow-md;
+}
+
+/* Enhanced card styling */
+.card {
+  @apply bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-200 hover:border-gray-300;
+}
+
+.card-header {
+  @apply p-6 border-b border-gray-100;
+}
+
+.card-body {
+  @apply p-6;
+}
+
+/* Status badge improvements */
+.status-badge {
+  @apply px-3 py-1 text-xs font-semibold rounded-full;
+}
+
+/* Form section improvements */
+.form-section {
+  @apply space-y-6;
+}
+
+.form-group {
+  @apply space-y-3;
+}
+
+.form-grid {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-6;
+}
+
+/* Enhanced focus states for better accessibility */
+.input-field:focus-visible,
+.textarea-field:focus-visible,
+select:focus-visible {
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+}
+
+/* Improved mobile responsiveness for forms */
+@media (max-width: 768px) {
+  .modal-content {
+    margin: 1rem !important;
+    max-height: 95vh !important;
+  }
+  
+  .form-grid {
+    @apply grid-cols-1 gap-4;
+  }
+  
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger {
+    @apply w-full;
+  }
+}
+
+/* Loading states */
+.loading-spinner {
+  @apply animate-spin rounded-full border-2 border-gray-300 border-t-blue-600;
+}
+
+/* Enhanced list item styling */
+.list-item {
+  @apply bg-white p-6 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-200 hover:border-gray-300;
+}
+
+.list-item-header {
+  @apply flex items-center space-x-3 mb-3;
+}
+
+.list-item-content {
+  @apply text-gray-700 mb-4 leading-relaxed;
+}
+
+.list-item-meta {
+  @apply flex items-center space-x-6 text-sm text-gray-500;
+}
+
+/* Vote button styling */
+.vote-button {
+  @apply flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors font-medium;
+}
+
+.vote-button-up {
+  @apply text-green-600 hover:bg-green-50;
+}
+
+.vote-button-down {
+  @apply text-red-600 hover:bg-red-50;
+}
+
+.vote-button-neutral {
+  @apply text-gray-600 bg-gray-50;
 }

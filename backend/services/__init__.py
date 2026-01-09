@@ -1,3 +1,3 @@
 # Services module
 
-from .change_notification_system import ChangeNotificationSystem
+# Import services as needed to avoid circular dependencies

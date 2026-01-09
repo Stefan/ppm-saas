@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { SupabaseAuthProvider } from './providers/SupabaseAuthProvider'
 import ErrorBoundary from '../components/ErrorBoundary'
+import PerformanceOptimizer from '../components/PerformanceOptimizer'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -60,6 +61,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="application-name" content="Orka PPM" />
         <meta name="msapplication-TileColor" content="#2563eb" />
         <meta name="msapplication-tap-highlight" content="no" />
+        
+        {/* Performance optimizations */}
+        <link rel="preconnect" href="https://orka-ppm.onrender.com" />
+        <link rel="dns-prefetch" href="https://orka-ppm.onrender.com" />
+        <link rel="preload" href="/icon.svg" as="image" type="image/svg+xml" />
+        
+        {/* Icons */}
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <link rel="icon" type="image/svg+xml" sizes="32x32" href="/favicon-32x32.svg" />
@@ -67,6 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#2563eb" />
       </head>
       <body className="font-sans antialiased" suppressHydrationWarning={true}>
+        <PerformanceOptimizer />
         <ErrorBoundary>
           <SupabaseAuthProvider>
             {children}

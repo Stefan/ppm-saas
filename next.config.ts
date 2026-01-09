@@ -8,6 +8,16 @@ const nextConfig: NextConfig = {
   // Monorepo configuration - trace files from project root
   outputFileTracingRoot: process.cwd(),
   
+  // Bundle optimization
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'recharts'],
+  },
+  
+  // Compiler optimizations
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  
   // Environment variables validation
   env: {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -36,7 +46,7 @@ const nextConfig: NextConfig = {
   // Output configuration for Vercel
   output: 'standalone',
 
-  // Headers for security
+  // Headers for security and performance
   async headers() {
     return [
       {
@@ -54,6 +64,20 @@ const nextConfig: NextConfig = {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin',
           },
+          // Performance headers
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/api/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
         ],
       },
     ];
@@ -70,12 +94,36 @@ const nextConfig: NextConfig = {
   },
 };
 
-// PWA Configuration - simplified for development
+// PWA Configuration - optimized for performance
 const pwaConfig = withPWA({
   dest: 'public',
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development', // Disable PWA in development
+  disable: process.env.NODE_ENV === 'development',
+  runtimeCaching: [
+    {
+      urlPattern: /^https:\/\/orka-ppm\.onrender\.com\/api\//,
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'api-cache',
+        expiration: {
+          maxEntries: 50,
+          maxAgeSeconds: 5 * 60, // 5 minutes
+        },
+      },
+    },
+    {
+      urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'images',
+        expiration: {
+          maxEntries: 100,
+          maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+        },
+      },
+    },
+  ],
 });
 
 export default pwaConfig(nextConfig as any);

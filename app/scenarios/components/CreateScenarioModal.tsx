@@ -184,7 +184,7 @@ export default function CreateScenarioModal({
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="e.g., Budget Increase 20%"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="input-field"
                   required
                 />
               </div>
@@ -198,7 +198,7 @@ export default function CreateScenarioModal({
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Optional description"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="input-field"
                 />
               </div>
             </div>
@@ -223,7 +223,7 @@ export default function CreateScenarioModal({
                     type="date"
                     value={formData.parameter_changes.start_date || ''}
                     onChange={(e) => handleParameterChange('start_date', e.target.value || undefined)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input-field"
                   />
                   {project.start_date && (
                     <p className="text-xs text-gray-500 mt-1">
@@ -240,7 +240,7 @@ export default function CreateScenarioModal({
                     type="date"
                     value={formData.parameter_changes.end_date || ''}
                     onChange={(e) => handleParameterChange('end_date', e.target.value || undefined)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input-field"
                   />
                   {project.end_date && (
                     <p className="text-xs text-gray-500 mt-1">
@@ -268,7 +268,7 @@ export default function CreateScenarioModal({
                   value={formData.parameter_changes.budget || ''}
                   onChange={(e) => handleParameterChange('budget', e.target.value ? parseFloat(e.target.value) : undefined)}
                   placeholder="Enter new budget amount"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="input-field"
                 />
                 {project.budget && (
                   <p className="text-xs text-gray-500 mt-1">

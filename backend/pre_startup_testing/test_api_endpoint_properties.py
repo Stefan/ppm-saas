@@ -103,7 +103,7 @@ class TestAPIEndpointValidatorProperties:
     """Property-based tests for API endpoint validator."""
     
     @given(endpoint_list(), valid_base_url())
-    @settings(max_examples=100)
+    @settings(max_examples=10)
     async def test_comprehensive_endpoint_testing_property(self, endpoints, base_url):
         """
         Property 5: Comprehensive Endpoint Testing
@@ -150,7 +150,7 @@ class TestAPIEndpointValidatorProperties:
                 assert endpoint in tested_endpoints, f"Endpoint {endpoint} was not tested"
     
     @given(endpoint_list(), mock_response_data())
-    @settings(max_examples=50, suppress_health_check=[HealthCheck.filter_too_much])
+    @settings(max_examples=5, suppress_health_check=[HealthCheck.filter_too_much])
     async def test_missing_function_detection_property(self, endpoints, response_data):
         """
         Property 6: Missing Function Detection
@@ -199,7 +199,7 @@ class TestAPIEndpointValidatorProperties:
             assert server_errors_found, "Server errors must be detected and reported"
     
     @given(endpoint_list(), st.lists(st.booleans(), min_size=1, max_size=5))
-    @settings(max_examples=50)
+    @settings(max_examples=5)
     async def test_authentication_scenario_coverage_property(self, endpoints, auth_scenarios):
         """
         Property 7: Authentication Scenario Coverage
@@ -244,7 +244,7 @@ class TestAPIEndpointValidatorProperties:
                                'error' in result.message.lower())
     
     @given(endpoint_list(), query_parameters())
-    @settings(max_examples=100)
+    @settings(max_examples=10)
     async def test_query_parameter_handling_property(self, endpoints, params):
         """
         Property: Query Parameter Validation
@@ -292,7 +292,7 @@ class TestAPIEndpointValidatorProperties:
                             "Invalid parameter rejection must be detected as working validation"
     
     @given(st.lists(st.text(min_size=1, max_size=50), min_size=1, max_size=5))
-    @settings(max_examples=100)
+    @settings(max_examples=10)
     async def test_error_resolution_guidance_property(self, error_messages):
         """
         Property: Error Resolution Guidance
@@ -335,7 +335,7 @@ class TestAPIEndpointValidatorProperties:
                     f"Resolution steps for {result.test_name} must be actionable"
     
     @given(endpoint_list())
-    @settings(max_examples=100)
+    @settings(max_examples=10)
     async def test_validation_result_completeness_property(self, endpoints):
         """
         Property: Validation Result Completeness

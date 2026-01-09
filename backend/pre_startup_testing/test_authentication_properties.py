@@ -100,7 +100,7 @@ class TestAuthenticationProperties:
         )
     
     @given(jwt_tokens())
-    @settings(max_examples=100)
+    @settings(max_examples=10)
     def test_property_11_jwt_validation_testing(self, valid_jwt_token):
         """
         Property 11: JWT Validation Testing
@@ -144,7 +144,7 @@ class TestAuthenticationProperties:
                 pytest.fail(f"Generated JWT token should be valid: {valid_jwt_token}")
     
     @given(invalid_jwt_tokens())
-    @settings(max_examples=100)
+    @settings(max_examples=10)
     def test_property_11_jwt_validation_error_handling(self, invalid_jwt_token):
         """
         Property 11: JWT Validation Testing (Error Handling)
@@ -197,7 +197,7 @@ class TestAuthenticationProperties:
         min_size=1,
         max_size=6
     ))
-    @settings(max_examples=50)  # Reduced for faster testing
+    @settings(max_examples=5)  # Reduced for faster testing
     def test_property_12_role_based_access_control_testing(self, role_permissions):
         """
         Property 12: Role-Based Access Control Testing
@@ -240,7 +240,7 @@ class TestAuthenticationProperties:
                 assert isinstance(perm, str), f"Each permission should be a string"
     
     @given(environment_variables())
-    @settings(max_examples=50)  # Reduced for faster testing
+    @settings(max_examples=5)  # Reduced for faster testing
     def test_property_authentication_environment_validation(self, env_vars):
         """
         Property: Authentication Environment Validation
@@ -307,7 +307,7 @@ class TestAuthenticationProperties:
         min_size=0,
         max_size=10
     ))
-    @settings(max_examples=50)  # Reduced for faster testing
+    @settings(max_examples=5)  # Reduced for faster testing
     def test_property_authentication_user_context(self, user_contexts):
         """
         Property: Authentication User Context

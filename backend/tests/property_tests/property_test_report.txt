@@ -1,0 +1,62 @@
+
+================================================================================
+PROPERTY-BASED TEST REPORT - INTEGRATED CHANGE MANAGEMENT SYSTEM
+================================================================================
+
+SUMMARY:
+--------
+Total Test Files: 9
+Passed: 3
+Failed: 6
+Success Rate: 33.3%
+Total Duration: 32.39 seconds
+
+PROPERTY VALIDATION RESULTS:
+---------------------------
+
+test_audit_system_properties.py: ❌ FAILED (2.53s)
+  Error Details: ============================= test session starts ==============================
+platform darwin -- Python 3.14.2, pytest-9.0.2, pluggy-1.6.0 -- /Library/Frameworks/Python.framework/Versions/3.14/bin/...
+
+test_runner_orchestration_properties.py: ❌ FAILED (0.55s)
+  Error Details: ============================= test session starts ==============================
+platform darwin -- Python 3.14.2, pytest-9.0.2, pluggy-1.6.0 -- /Library/Frameworks/Python.framework/Versions/3.14/bin/...
+
+test_audit_system.py: ❌ FAILED (11.02s)
+  ❌ Property 16: Audit Trail Completeness
+  ❌ Property 17: Compliance Data Integrity
+  Error Details: ============================= test session starts ==============================
+platform darwin -- Python 3.14.2, pytest-9.0.2, pluggy-1.6.0 -- /Library/Frameworks/Python.framework/Versions/3.14/bin/...
+
+test_emergency_processes.py: ❌ FAILED (4.61s)
+  ❌ Property 14: Emergency Process Integrity
+  ❌ Property 15: Post-Implementation Compliance
+  Error Details: ============================= test session starts ==============================
+platform darwin -- Python 3.14.2, pytest-9.0.2, pluggy-1.6.0 -- /Library/Frameworks/Python.framework/Versions/3.14/bin/...
+
+test_approval_workflows_properties.py: ✅ PASSED (0.74s)
+
+test_change_request_lifecycle.py: ✅ PASSED (3.13s)
+  ✅ Property 1: Change Request State Consistency
+
+test_approval_workflows.py: ❌ FAILED (1.87s)
+  ❌ Property 4: Approval Workflow Integrity
+  ❌ Property 5: Authority Validation Consistency
+  Error Details: ============================= test session starts ==============================
+platform darwin -- Python 3.14.2, pytest-9.0.2, pluggy-1.6.0 -- /Library/Frameworks/Python.framework/Versions/3.14/bin/...
+
+test_emergency_processes_properties.py: ❌ FAILED (7.18s)
+  Error Details: ============================= test session starts ==============================
+platform darwin -- Python 3.14.2, pytest-9.0.2, pluggy-1.6.0 -- /Library/Frameworks/Python.framework/Versions/3.14/bin/...
+
+test_change_request_lifecycle_properties.py: ✅ PASSED (0.78s)
+
+================================================================================
+
+⚠️  6 PROPERTY TEST(S) FAILED ⚠️
+
+The system has validation issues that must be addressed before deployment.
+Please review the failed tests and fix the underlying issues to ensure
+system correctness and compliance.
+
+================================================================================

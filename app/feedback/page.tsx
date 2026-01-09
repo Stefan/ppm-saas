@@ -123,7 +123,9 @@ export default function Feedback() {
       if (featureFilters.status) params.append('status_filter', featureFilters.status)
       if (featureFilters.priority) params.append('priority_filter', featureFilters.priority)
       
-      const response = await fetch(getApiUrl(`/feedback/features?${params}`), {
+      // Only append the '?' and params if there are actually parameters
+      const queryString = params.toString() ? `?${params.toString()}` : ''
+      const response = await fetch(getApiUrl(`/feedback/features${queryString}`), {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
@@ -133,9 +135,13 @@ export default function Feedback() {
       if (response.ok) {
         const data = await response.json()
         setFeatures(data)
+      } else {
+        console.error(`Failed to fetch features: ${response.status} ${response.statusText}`)
+        setError('Failed to load feature requests')
       }
     } catch (error) {
       console.error('Failed to fetch features:', error)
+      setError('Failed to load feature requests')
     }
   }
 
@@ -147,7 +153,9 @@ export default function Feedback() {
       if (bugFilters.status) params.append('status_filter', bugFilters.status)
       if (bugFilters.priority) params.append('priority_filter', bugFilters.priority)
       
-      const response = await fetch(getApiUrl(`/feedback/bugs?${params}`), {
+      // Only append the '?' and params if there are actually parameters
+      const queryString = params.toString() ? `?${params.toString()}` : ''
+      const response = await fetch(getApiUrl(`/feedback/bugs${queryString}`), {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
@@ -157,9 +165,13 @@ export default function Feedback() {
       if (response.ok) {
         const data = await response.json()
         setBugs(data)
+      } else {
+        console.error(`Failed to fetch bugs: ${response.status} ${response.statusText}`)
+        setError('Failed to load bug reports')
       }
     } catch (error) {
       console.error('Failed to fetch bugs:', error)
+      setError('Failed to load bug reports')
     }
   }
 
@@ -167,7 +179,12 @@ export default function Feedback() {
     if (!session?.access_token) return
     
     try {
-      const response = await fetch(getApiUrl('/notifications?unread_only=true&limit=10'), {
+      const params = new URLSearchParams({
+        unread_only: 'true',
+        limit: '10'
+      })
+      
+      const response = await fetch(getApiUrl(`/notifications?${params}`), {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
@@ -318,17 +335,17 @@ export default function Feedback() {
             
             <button
               onClick={() => setShowFeatureForm(true)}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-colors shadow-sm"
             >
-              <Lightbulb className="h-4 w-4 mr-2" />
+              <Lightbulb className="h-5 w-5 mr-2" />
               Suggest Feature
             </button>
             
             <button
               onClick={() => setShowBugForm(true)}
-              className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              className="flex items-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold transition-colors shadow-sm"
             >
-              <Bug className="h-4 w-4 mr-2" />
+              <Bug className="h-5 w-5 mr-2" />
               Report Bug
             </button>
           </div>
@@ -384,15 +401,18 @@ export default function Feedback() {
         {activeTab === 'features' && (
           <div className="space-y-6">
             {/* Filters */}
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Filter Feature Requests</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <Filter className="h-5 w-5 mr-2 text-blue-600" />
+                Filter Feature Requests
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Status</label>
                   <select
                     value={featureFilters.status}
                     onChange={(e) => setFeatureFilters(prev => ({ ...prev, status: e.target.value }))}
-                    className="w-full"
+                    className="input-field"
                   >
                     <option value="">All Statuses</option>
                     <option value="submitted">Submitted</option>
@@ -404,11 +424,11 @@ export default function Feedback() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Priority</label>
                   <select
                     value={featureFilters.priority}
                     onChange={(e) => setFeatureFilters(prev => ({ ...prev, priority: e.target.value }))}
-                    className="w-full"
+                    className="input-field"
                   >
                     <option value="">All Priorities</option>
                     <option value="low">Low Priority</option>
@@ -420,7 +440,7 @@ export default function Feedback() {
                 <div className="flex items-end">
                   <button
                     onClick={fetchFeatures}
-                    className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+                    className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-colors shadow-sm"
                   >
                     Apply Filters
                   </button>
@@ -431,35 +451,35 @@ export default function Feedback() {
             {/* Feature List */}
             <div className="space-y-4">
               {features.map((feature) => (
-                <div key={feature.id} className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                <div key={feature.id} className="bg-white p-6 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-200 hover:border-gray-300">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
+                      <div className="flex items-center space-x-3 mb-3">
                         <h3 className="text-lg font-semibold text-gray-900">{feature.title}</h3>
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(feature.status)}`}>
+                        <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(feature.status)}`}>
                           {feature.status.replace('_', ' ')}
                         </span>
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(feature.priority)}`}>
+                        <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getPriorityColor(feature.priority)}`}>
                           {feature.priority}
                         </span>
                       </div>
                       
-                      <p className="text-gray-600 mb-3">{feature.description}</p>
+                      <p className="text-gray-700 mb-4 leading-relaxed">{feature.description}</p>
                       
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
+                      <div className="flex items-center space-x-6 text-sm text-gray-500">
                         <span className="flex items-center">
-                          <User className="h-4 w-4 mr-1" />
+                          <User className="h-4 w-4 mr-2" />
                           {feature.submitted_by}
                         </span>
                         <span className="flex items-center">
-                          <Calendar className="h-4 w-4 mr-1" />
+                          <Calendar className="h-4 w-4 mr-2" />
                           {new Date(feature.created_at).toLocaleDateString()}
                         </span>
                         {feature.tags.length > 0 && (
-                          <div className="flex items-center space-x-1">
+                          <div className="flex items-center space-x-2">
                             <Tag className="h-4 w-4" />
                             {feature.tags.map((tag, index) => (
-                              <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                              <span key={index} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-md font-medium">
                                 {tag}
                               </span>
                             ))}
@@ -468,26 +488,26 @@ export default function Feedback() {
                       </div>
                     </div>
                     
-                    <div className="flex items-center space-x-2 ml-4">
+                    <div className="flex items-center space-x-2 ml-6">
                       <button
                         onClick={() => voteOnFeature(feature.id, 'upvote')}
-                        className="flex items-center space-x-1 px-3 py-2 text-green-600 hover:bg-green-50 rounded-md"
+                        className="flex items-center space-x-2 px-4 py-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                       >
                         <ThumbsUp className="h-4 w-4" />
-                        <span>{feature.upvotes}</span>
+                        <span className="font-medium">{feature.upvotes}</span>
                       </button>
                       
                       <button
                         onClick={() => voteOnFeature(feature.id, 'downvote')}
-                        className="flex items-center space-x-1 px-3 py-2 text-red-600 hover:bg-red-50 rounded-md"
+                        className="flex items-center space-x-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                       >
                         <ThumbsDown className="h-4 w-4" />
-                        <span>{feature.downvotes}</span>
+                        <span className="font-medium">{feature.downvotes}</span>
                       </button>
                       
-                      <div className="flex items-center space-x-1 px-3 py-2 text-gray-600">
+                      <div className="flex items-center space-x-2 px-4 py-2 text-gray-600 bg-gray-50 rounded-lg">
                         <TrendingUp className="h-4 w-4" />
-                        <span>{feature.votes}</span>
+                        <span className="font-medium">{feature.votes}</span>
                       </div>
                     </div>
                   </div>
@@ -501,15 +521,18 @@ export default function Feedback() {
         {activeTab === 'bugs' && (
           <div className="space-y-6">
             {/* Filters */}
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Filter Bug Reports</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <Filter className="h-5 w-5 mr-2 text-red-600" />
+                Filter Bug Reports
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Status</label>
                   <select
                     value={bugFilters.status}
                     onChange={(e) => setBugFilters(prev => ({ ...prev, status: e.target.value }))}
-                    className="w-full"
+                    className="input-field"
                   >
                     <option value="">All Statuses</option>
                     <option value="submitted">Submitted</option>
@@ -521,11 +544,11 @@ export default function Feedback() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Priority</label>
                   <select
                     value={bugFilters.priority}
                     onChange={(e) => setBugFilters(prev => ({ ...prev, priority: e.target.value }))}
-                    className="w-full"
+                    className="input-field"
                   >
                     <option value="">All Priorities</option>
                     <option value="low">Low Priority</option>
@@ -538,7 +561,7 @@ export default function Feedback() {
                 <div className="flex items-end">
                   <button
                     onClick={fetchBugs}
-                    className="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors"
+                    className="w-full px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold transition-colors shadow-sm"
                   >
                     Apply Filters
                   </button>
@@ -549,34 +572,34 @@ export default function Feedback() {
             {/* Bug List */}
             <div className="space-y-4">
               {bugs.map((bug) => (
-                <div key={bug.id} className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                <div key={bug.id} className="bg-white p-6 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-200 hover:border-gray-300">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
+                      <div className="flex items-center space-x-3 mb-3">
                         <h3 className="text-lg font-semibold text-gray-900">{bug.title}</h3>
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(bug.status)}`}>
+                        <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(bug.status)}`}>
                           {bug.status.replace('_', ' ')}
                         </span>
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(bug.priority)}`}>
+                        <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getPriorityColor(bug.priority)}`}>
                           {bug.priority}
                         </span>
-                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
+                        <span className="px-3 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
                           {bug.category}
                         </span>
                       </div>
                       
-                      <p className="text-gray-600 mb-3">{bug.description}</p>
+                      <p className="text-gray-700 mb-4 leading-relaxed">{bug.description}</p>
                       
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
+                      <div className="flex items-center space-x-6 text-sm text-gray-500">
                         <span className="flex items-center">
-                          <User className="h-4 w-4 mr-1" />
+                          <User className="h-4 w-4 mr-2" />
                           {bug.submitted_by}
                         </span>
                         <span className="flex items-center">
-                          <Calendar className="h-4 w-4 mr-1" />
+                          <Calendar className="h-4 w-4 mr-2" />
                           {new Date(bug.created_at).toLocaleDateString()}
                         </span>
-                        <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                        <span className="px-3 py-1 bg-orange-50 text-orange-700 text-xs rounded-md font-medium">
                           {bug.severity} severity
                         </span>
                       </div>
@@ -590,21 +613,24 @@ export default function Feedback() {
 
         {/* Feature Request Form Modal */}
         {showFeatureForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Suggest a Feature</h2>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Suggest a Feature</h2>
+                  <p className="text-gray-600 mt-1">Help us improve the platform with your ideas</p>
+                </div>
                 <button
                   onClick={() => setShowFeatureForm(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <X className="h-6 w-6" />
                 </button>
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 required">Feature Title</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3 required">Feature Title</label>
                   <input
                     type="text"
                     value={featureForm.title}
@@ -616,43 +642,43 @@ export default function Feedback() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 required">Detailed Description</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3 required">Detailed Description</label>
                   <textarea
                     value={featureForm.description}
                     onChange={(e) => setFeatureForm(prev => ({ ...prev, description: e.target.value }))}
-                    rows={4}
+                    rows={5}
                     className="textarea-field w-full"
                     placeholder="Explain the feature in detail and why it would be valuable to you and other users"
                     required
                   />
-                  <p className="text-sm text-gray-500 mt-1">Please be as specific as possible to help us understand your needs</p>
+                  <p className="text-sm text-gray-500 mt-2">Please be as specific as possible to help us understand your needs</p>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Priority Level</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Priority Level</label>
                   <select
                     value={featureForm.priority}
                     onChange={(e) => setFeatureForm(prev => ({ ...prev, priority: e.target.value }))}
-                    className="w-full"
+                    className="input-field w-full"
                   >
                     <option value="low">Low - Nice to have</option>
                     <option value="medium">Medium - Would improve workflow</option>
                     <option value="high">High - Important for productivity</option>
                   </select>
-                  <p className="text-sm text-gray-500 mt-1">How important is this feature to your work?</p>
+                  <p className="text-sm text-gray-500 mt-2">How important is this feature to your work?</p>
                 </div>
                 
-                <div className="flex justify-end space-x-3">
+                <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200">
                   <button
                     onClick={() => setShowFeatureForm(false)}
-                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                    className="px-6 py-3 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 font-medium transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={submitFeatureRequest}
                     disabled={!featureForm.title || !featureForm.description}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors shadow-sm"
                   >
                     Submit Feature Request
                   </button>
@@ -664,21 +690,24 @@ export default function Feedback() {
 
         {/* Bug Report Form Modal */}
         {showBugForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-screen overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Report a Bug</h2>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Report a Bug</h2>
+                  <p className="text-gray-600 mt-1">Help us fix issues by providing detailed information</p>
+                </div>
                 <button
                   onClick={() => setShowBugForm(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <X className="h-6 w-6" />
                 </button>
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 required">Bug Title</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3 required">Bug Title</label>
                   <input
                     type="text"
                     value={bugForm.title}
@@ -690,37 +719,37 @@ export default function Feedback() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 required">Bug Description</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3 required">Bug Description</label>
                   <textarea
                     value={bugForm.description}
                     onChange={(e) => setBugForm(prev => ({ ...prev, description: e.target.value }))}
-                    rows={3}
+                    rows={4}
                     className="textarea-field w-full"
                     placeholder="Describe what went wrong and what you expected to happen"
                     required
                   />
-                  <p className="text-sm text-gray-500 mt-1">Include any error messages you saw</p>
+                  <p className="text-sm text-gray-500 mt-2">Include any error messages you saw</p>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Steps to Reproduce</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Steps to Reproduce</label>
                   <textarea
                     value={bugForm.steps_to_reproduce}
                     onChange={(e) => setBugForm(prev => ({ ...prev, steps_to_reproduce: e.target.value }))}
-                    rows={3}
+                    rows={4}
                     className="textarea-field w-full"
                     placeholder="1. Go to...&#10;2. Click on...&#10;3. Bug occurs when..."
                   />
-                  <p className="text-sm text-gray-500 mt-1">Help us reproduce the issue by listing the exact steps</p>
+                  <p className="text-sm text-gray-500 mt-2">Help us reproduce the issue by listing the exact steps</p>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Priority Level</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">Priority Level</label>
                     <select
                       value={bugForm.priority}
                       onChange={(e) => setBugForm(prev => ({ ...prev, priority: e.target.value }))}
-                      className="w-full"
+                      className="input-field w-full"
                     >
                       <option value="low">Low - Minor inconvenience</option>
                       <option value="medium">Medium - Affects workflow</option>
@@ -730,11 +759,11 @@ export default function Feedback() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Severity Level</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">Severity Level</label>
                     <select
                       value={bugForm.severity}
                       onChange={(e) => setBugForm(prev => ({ ...prev, severity: e.target.value }))}
-                      className="w-full"
+                      className="input-field w-full"
                     >
                       <option value="minor">Minor - Small visual issue</option>
                       <option value="major">Major - Feature not working</option>
@@ -744,11 +773,11 @@ export default function Feedback() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Bug Category</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">Bug Category</label>
                     <select
                       value={bugForm.category}
                       onChange={(e) => setBugForm(prev => ({ ...prev, category: e.target.value }))}
-                      className="w-full"
+                      className="input-field w-full"
                     >
                       <option value="ui">User Interface</option>
                       <option value="functionality">Core Functionality</option>
@@ -760,17 +789,17 @@ export default function Feedback() {
                   </div>
                 </div>
                 
-                <div className="flex justify-end space-x-3">
+                <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
                   <button
                     onClick={() => setShowBugForm(false)}
-                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                    className="px-6 py-3 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 font-medium transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={submitBugReport}
                     disabled={!bugForm.title || !bugForm.description}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+                    className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors shadow-sm"
                   >
                     Submit Bug Report
                   </button>

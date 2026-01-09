@@ -109,9 +109,11 @@ function getMockData(endpoint: string): any {
   return MOCK_DATA[endpoint as keyof typeof MOCK_DATA] || null
 }
 
-// API configuration with fallbacks - Force correct production URL
+// API configuration with fallbacks - Use local development server
 export const API_CONFIG = {
-  baseURL: 'https://orka-ppm.onrender.com', // Hardcoded for immediate fix
+  baseURL: process.env.NODE_ENV === 'production' 
+    ? 'https://orka-ppm.onrender.com' 
+    : 'http://localhost:8001', // Local development server
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

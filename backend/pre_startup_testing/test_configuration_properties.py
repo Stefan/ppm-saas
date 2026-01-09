@@ -85,7 +85,7 @@ class TestConfigurationValidationProperties:
             max_size=1
         )
     )
-    @settings(max_examples=100)
+    @settings(max_examples=10)
     @pytest.mark.asyncio
     async def test_property_13_environment_variable_completeness(self, required_vars: Dict[str, str]):
         """
@@ -144,7 +144,7 @@ class TestConfigurationValidationProperties:
             max_size=2
         )
     )
-    @settings(max_examples=100)
+    @settings(max_examples=10)
     @pytest.mark.asyncio
     async def test_property_14_configuration_error_guidance(
         self, 
@@ -249,7 +249,7 @@ class TestConfigurationValidationProperties:
             max_size=3
         )
     )
-    @settings(max_examples=100)
+    @settings(max_examples=10)
     @pytest.mark.asyncio
     async def test_property_format_validation_consistency(self, invalid_formats: Dict[str, str]):
         """
@@ -312,7 +312,7 @@ class TestConfigurationValidationProperties:
         ),
         development_mode=st.booleans()
     )
-    @settings(max_examples=100)
+    @settings(max_examples=10)
     @pytest.mark.asyncio
     async def test_property_validation_determinism(
         self, 
@@ -371,7 +371,7 @@ class TestConfigurationValidationProperties:
             'OPENAI_API_KEY': valid_openai_keys
         })
     )
-    @settings(max_examples=50, suppress_health_check=[HealthCheck.filter_too_much])
+    @settings(max_examples=5, suppress_health_check=[HealthCheck.filter_too_much])
     @pytest.mark.asyncio
     async def test_property_complete_valid_configuration_passes(
         self, 

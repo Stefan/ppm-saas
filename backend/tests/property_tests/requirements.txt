@@ -1,0 +1,6 @@
+# Requirements for property-based testing
+pytest>=7.4.0
+hypothesis>=6.88.0
+pytest-asyncio>=0.21.0
+pydantic>=2.0.0
+fastapi>=0.100.0

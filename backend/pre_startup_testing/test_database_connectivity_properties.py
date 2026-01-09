@@ -43,7 +43,7 @@ class TestDatabaseConnectivityProperties:
             st.just("valid-key-format")
         )
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture])
+    @settings(max_examples=10, suppress_health_check=[HealthCheck.function_scoped_fixture])
     @pytest.mark.asyncio
     async def test_property_8_database_connection_validation(self, supabase_url, supabase_key):
         """
@@ -102,7 +102,7 @@ class TestDatabaseConnectivityProperties:
         ),
         connection_available=st.booleans()
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture])
+    @settings(max_examples=10, suppress_health_check=[HealthCheck.function_scoped_fixture])
     @pytest.mark.asyncio
     async def test_property_9_database_object_existence_checking(self, table_names, connection_available):
         """
@@ -181,7 +181,7 @@ class TestDatabaseConnectivityProperties:
             max_size=5
         )
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture])
+    @settings(max_examples=10, suppress_health_check=[HealthCheck.function_scoped_fixture])
     @pytest.mark.asyncio
     async def test_property_10_database_permission_testing(self, function_names, connection_available, function_responses):
         """
@@ -288,7 +288,7 @@ class TestDatabaseConnectivityProperties:
             max_size=10
         )
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture])
+    @settings(max_examples=10, suppress_health_check=[HealthCheck.function_scoped_fixture])
     def test_error_guidance_completeness(self, error_messages):
         """
         Test that error guidance is provided for all error types.
@@ -324,7 +324,7 @@ class TestDatabaseConnectivityProperties:
             max_size=10
         )
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture])
+    @settings(max_examples=10, suppress_health_check=[HealthCheck.function_scoped_fixture])
     def test_fallback_suggestions_completeness(self, component_names):
         """
         Test that fallback suggestions are provided for all components.

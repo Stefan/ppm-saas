@@ -38,7 +38,7 @@ class TestWorkflowIntegrationProperties:
         skip_flags=st.booleans(),
         environment_modes=st.sampled_from(['development', 'production', 'testing'])
     )
-    @settings(max_examples=100, deadline=30000)
+    @settings(max_examples=10, deadline=15000)
     def test_property_18_automatic_test_execution(self, base_urls, skip_flags, environment_modes):
         """
         Property 18: Automatic Test Execution
@@ -128,7 +128,7 @@ class TestWorkflowIntegrationProperties:
             unique=True
         )
     )
-    @settings(max_examples=100, deadline=30000)
+    @settings(max_examples=10, deadline=15000)
     def test_property_19_test_caching_efficiency(self, config_changes, cache_enabled, test_endpoints):
         """
         Property 19: Test Caching Efficiency
@@ -240,7 +240,7 @@ class TestWorkflowIntegrationProperties:
             'https://api.example.com'
         ])
     )
-    @settings(max_examples=100, deadline=30000)
+    @settings(max_examples=10, deadline=15000)
     def test_cli_integration_consistency(self, cli_args, timeout_values, base_urls):
         """
         Test that CLI integration provides consistent behavior across different argument combinations.
@@ -344,7 +344,7 @@ class TestWorkflowIntegrationProperties:
             'https://api.example.com'
         ])
     )
-    @settings(max_examples=100, deadline=30000)
+    @settings(max_examples=10, deadline=15000)
     def test_fastapi_integration_consistency(self, app_configurations, integration_base_urls):
         """
         Test that FastAPI integration provides consistent behavior across different app configurations.

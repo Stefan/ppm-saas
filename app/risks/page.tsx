@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { useAuth } from '../providers/SupabaseAuthProvider'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, ScatterChart, Scatter, Area, AreaChart } from 'recharts'
 import AppLayout from '../../components/AppLayout'
-import { AlertTriangle, Shield, TrendingUp, Activity, Clock, User, Calendar, Target, Filter, Download, RefreshCw, BarChart3, Plus, Search, SortAsc, SortDesc } from 'lucide-react'
+import { AlertTriangle, Shield, TrendingUp, Activity, Clock, User, Calendar, Target, Filter, Download, RefreshCw, BarChart3, Plus, Search, SortAsc, SortDesc, Zap } from 'lucide-react'
 import { getApiUrl } from '../../lib/api'
 
 interface Risk {
@@ -66,6 +66,7 @@ export default function Risks() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [showFilters, setShowFilters] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showMonteCarloModal, setShowMonteCarloModal] = useState(false)
 
   // Enhanced analytics data
   const analyticsData = useMemo(() => {
@@ -562,6 +563,15 @@ export default function Risks() {
             </button>
             
             <button
+              onClick={() => setShowMonteCarloModal(true)}
+              disabled={filteredRisks.length === 0}
+              className="flex items-center px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Zap className="h-4 w-4 mr-2" />
+              Monte Carlo
+            </button>
+            
+            <button
               onClick={exportRiskData}
               className="flex items-center px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200"
             >
@@ -1009,6 +1019,107 @@ export default function Risks() {
             </table>
           </div>
         </div>
+
+        {/* Monte Carlo Analysis Modal */}
+        {showMonteCarloModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Monte Carlo Risk Analysis</h3>
+              
+              <div className="space-y-4">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-2">Analysis Overview</h4>
+                  <p className="text-sm text-blue-800">
+                    Run statistical simulation on {filteredRisks.length} selected risks to analyze 
+                    probability distributions and potential cost/schedule impacts.
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Simulation Iterations
+                    </label>
+                    <select className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                      <option value="10000">10,000 (Recommended)</option>
+                      <option value="50000">50,000 (High Precision)</option>
+                      <option value="100000">100,000 (Maximum Precision)</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Analysis Type
+                    </label>
+                    <select className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                      <option value="cost">Cost Impact Analysis</option>
+                      <option value="schedule">Schedule Impact Analysis</option>
+                      <option value="both">Combined Analysis</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Risk Selection</h4>
+                  <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-md p-3">
+                    {filteredRisks.slice(0, 10).map((risk) => (
+                      <div key={risk.id} className="flex items-center justify-between py-2">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            defaultChecked
+                            className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <div>
+                            <span className="text-sm font-medium text-gray-900">{risk.title}</span>
+                            <div className="text-xs text-gray-500">
+                              Risk Score: {(risk.risk_score * 100).toFixed(0)}%
+                            </div>
+                          </div>
+                        </div>
+                        <span className={`px-2 py-1 text-xs rounded-full ${getRiskLevelBg(risk.risk_score)}`}>
+                          {risk.category}
+                        </span>
+                      </div>
+                    ))}
+                    {filteredRisks.length > 10 && (
+                      <div className="text-sm text-gray-500 text-center py-2">
+                        ... and {filteredRisks.length - 10} more risks
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="bg-yellow-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-yellow-900 mb-2">Estimated Analysis Time</h4>
+                  <p className="text-sm text-yellow-800">
+                    Approximately {Math.ceil(filteredRisks.length * 0.5)} seconds for {filteredRisks.length} risks
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3 pt-6 mt-6 border-t border-gray-200">
+                <button
+                  onClick={() => setShowMonteCarloModal(false)}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowMonteCarloModal(false)
+                    // Redirect to Monte Carlo page with risk data
+                    window.location.href = '/monte-carlo?risks=' + encodeURIComponent(JSON.stringify(filteredRisks.slice(0, 10)))
+                  }}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+                >
+                  <Zap className="h-4 w-4 mr-2 inline" />
+                  Run Analysis
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Add Risk Modal */}
         {showAddModal && (
