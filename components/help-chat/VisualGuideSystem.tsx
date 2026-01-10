@@ -281,6 +281,8 @@ export function VisualGuideSystem({
                 src={currentStep.screenshot}
                 alt={`Step ${currentStepIndex + 1}: ${currentStep.title}`}
                 className="w-full h-full object-contain"
+                style={{ aspectRatio: '16/9', minHeight: '400px' }}
+                loading="lazy"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement
                   target.style.display = 'none'

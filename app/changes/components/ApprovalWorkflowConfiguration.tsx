@@ -126,14 +126,14 @@ export default function ApprovalWorkflowConfiguration() {
   
   // Modal states
   const [showRuleModal, setShowRuleModal] = useState(false)
-  const [showAuthorityModal, setShowAuthorityModal] = useState(false)
-  const [showTemplateModal, setShowTemplateModal] = useState(false)
+  const [_showAuthorityModal, setShowAuthorityModal] = useState(false)
+  const [_showTemplateModal, setShowTemplateModal] = useState(false)
   const [editingItem, setEditingItem] = useState<any>(null)
   
   // Form states
   const [ruleForm, setRuleForm] = useState<Partial<ApprovalRule>>({})
-  const [authorityForm, setAuthorityForm] = useState<Partial<ApprovalAuthorityMatrix>>({})
-  const [templateForm, setTemplateForm] = useState<Partial<WorkflowTemplate>>({})
+  const [_authorityForm, setAuthorityForm] = useState<Partial<ApprovalAuthorityMatrix>>({})
+  const [_templateForm, _setTemplateForm] = useState<Partial<WorkflowTemplate>>({})
   
   const [expandedRules, setExpandedRules] = useState<Set<string>>(new Set())
   const [expandedAuthorities, setExpandedAuthorities] = useState<Set<string>>(new Set())
@@ -436,27 +436,27 @@ export default function ApprovalWorkflowConfiguration() {
     setShowAuthorityModal(true)
   }
 
-  const handleSaveAuthority = async () => {
-    try {
-      if (editingItem) {
-        // Update existing authority
-        setAuthorityMatrix(prev => prev.map(auth => 
-          auth.id === editingItem.id ? { ...auth, ...authorityForm } : auth
-        ))
-      } else {
-        // Create new authority
-        const newAuthority: ApprovalAuthorityMatrix = {
-          ...authorityForm as ApprovalAuthorityMatrix,
-          id: `auth-${Date.now()}`
-        }
-        setAuthorityMatrix(prev => [...prev, newAuthority])
-      }
-      setShowAuthorityModal(false)
-      setAuthorityForm({})
-    } catch (error) {
-      console.error('Error saving authority:', error)
-    }
-  }
+  // const _handleSaveAuthority = async () => {
+  //   try {
+  //     if (editingItem) {
+  //       // Update existing authority
+  //       setAuthorityMatrix(prev => prev.map(auth => 
+  //         auth.id === editingItem.id ? { ...auth, ...authorityForm } : auth
+  //       ))
+  //     } else {
+  //       // Create new authority
+  //       const newAuthority: ApprovalAuthorityMatrix = {
+  //         ...authorityForm as ApprovalAuthorityMatrix,
+  //         id: `auth-${Date.now()}`
+  //       }
+  //       setAuthorityMatrix(prev => [...prev, newAuthority])
+  //     }
+  //     setShowAuthorityModal(false)
+  //     setAuthorityForm({})
+  //   } catch (error) {
+  //     console.error('Error saving authority:', error)
+  //   }
+  // }
 
   const handleDeleteAuthority = async (authorityId: string) => {
     if (confirm('Are you sure you want to delete this authority configuration?')) {

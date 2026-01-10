@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { aiPerformanceMonitor } from '../../../lib/ai-performance-utils'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const healthStatus = {
       status: 'healthy',

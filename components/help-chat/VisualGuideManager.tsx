@@ -448,6 +448,10 @@ function GuideCard({ guide, view, onSelect, onDelete, onRefresh }: GuideCardProp
               src={guide.steps[0].screenshot}
               alt={guide.title}
               className="w-full h-full object-cover rounded-md"
+              width={isGrid ? "100%" : "64"}
+              height={isGrid ? "128" : "64"}
+              style={{ aspectRatio: isGrid ? '16/9' : '1/1' }}
+              loading="lazy"
             />
           ) : (
             <Camera className={cn(

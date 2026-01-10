@@ -93,7 +93,7 @@ export default function ChangeRequestDetail({
     <LoadingState
       state={isLoading ? 'loading' : isError ? 'error' : changeRequest ? 'success' : 'error'}
       message="Loading change request details..."
-      error={error || (!changeRequest ? 'Change request not found' : undefined)}
+      error={error || (!changeRequest ? 'Change request not found' : '')}
       fallback={
         <div className="text-center py-12">
           <AlertCircle className="mx-auto h-12 w-12 text-gray-400" />

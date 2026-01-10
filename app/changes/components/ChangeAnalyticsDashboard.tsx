@@ -5,7 +5,7 @@ import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Cart
 import { TrendingUp, Users, AlertTriangle, Activity, BarChart3, Download, RefreshCw, Info, Clock, CheckCircle, Filter, FileText, Zap } from 'lucide-react'
 import PerformanceMonitoringInterface from './PerformanceMonitoringInterface'
 import { ChangeAnalytics, mockDataService } from '../lib/mockData'
-import { useAsyncData, LoadingState, SkeletonChart } from '../lib/loadingStates'
+import { useAsyncData, SkeletonChart } from '../lib/loadingStates'
 
 interface ChangeAnalyticsDashboardProps {
   projectId?: string
@@ -259,7 +259,7 @@ export default function ChangeAnalyticsDashboard({
                         fill="#8884d8"
                         dataKey="value"
                       >
-                        {statusData.map((entry, index) => (
+                        {statusData.map((_entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
@@ -297,7 +297,7 @@ export default function ChangeAnalyticsDashboard({
                         fill="#8884d8"
                         dataKey="value"
                       >
-                        {priorityData.map((entry, index) => (
+                        {priorityData.map((_entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>

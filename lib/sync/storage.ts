@@ -1,106 +1,111 @@
 /**
- * Shared in-memory storage for cross-device sync
- * In production, this would be replaced with a database
+ * Sync Storage Module
+ * Handles user preferences and cross-device synchronization
  */
 
-export interface DeviceInfo {
-  id: string
-  name: string
-  type: 'desktop' | 'mobile' | 'tablet'
-  platform: string
-  lastSeen: Date
-  isActive: boolean
-}
-
-export interface UserPreferences {
+interface UserPreferences {
   userId: string
-  theme: 'light' | 'dark' | 'system'
+  theme: 'light' | 'dark' | 'auto'
   language: string
-  dashboardLayout: {
-    layout: 'grid' | 'masonry' | 'list'
-    widgets: any[]
-  }
   notifications: {
     email: boolean
     push: boolean
     desktop: boolean
   }
+  dashboard: {
+    layout: 'grid' | 'list'
+    widgets: string[]
+  }
   accessibility: {
     highContrast: boolean
-    largeText: boolean
     reducedMotion: boolean
+    fontSize: 'small' | 'medium' | 'large'
   }
-  lastUpdated: Date
+  lastSync: string
+  createdAt: string
+  updatedAt: string
 }
 
-export interface SessionState {
-  userId: string
-  deviceId: string
-  currentPage: string
-  scrollPosition: { [key: string]: number }
-  formData: { [key: string]: any }
-  openModals: string[]
-  selectedItems: { [key: string]: string[] }
-  filters: { [key: string]: any }
-  searchQueries: { [key: string]: string }
-  lastActivity: Date
-  sessionId: string
+// In-memory storage for development (replace with database in production)
+const userPreferencesStore = new Map<string, UserPreferences>()
+
+export const userPreferences = {
+  get: (userId: string): UserPreferences | undefined => {
+    return userPreferencesStore.get(userId)
+  },
+  
+  set: (userId: string, preferences: UserPreferences): void => {
+    userPreferencesStore.set(userId, preferences)
+  },
+  
+  update: (userId: string, updates: Partial<UserPreferences>): UserPreferences | null => {
+    const existing = userPreferencesStore.get(userId)
+    if (!existing) return null
+    
+    const updated = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date().toISOString()
+    }
+    
+    userPreferencesStore.set(userId, updated)
+    return updated
+  },
+  
+  delete: (userId: string): boolean => {
+    return userPreferencesStore.delete(userId)
+  },
+  
+  clear: (): void => {
+    userPreferencesStore.clear()
+  }
 }
 
-export interface OfflineChange {
-  id: string
-  userId: string
-  deviceId: string
-  type: 'create' | 'update' | 'delete'
-  entity: string
-  entityId: string
-  data: any
-  timestamp: Date
-  synced: boolean
-}
-
-// Shared in-memory storage
-export const registeredDevices = new Map<string, DeviceInfo[]>()
-export const userPreferences = new Map<string, UserPreferences>()
-export const sessionStates = new Map<string, SessionState>()
-export const offlineChanges = new Map<string, OfflineChange[]>()
-
-// Helper functions
-export function getDefaultPreferences(userId: string): UserPreferences {
+export const getDefaultPreferences = (userId: string): UserPreferences => {
+  const now = new Date().toISOString()
+  
   return {
     userId,
-    theme: 'system',
+    theme: 'auto',
     language: 'en',
-    dashboardLayout: {
-      layout: 'grid',
-      widgets: []
-    },
     notifications: {
       email: true,
       push: true,
-      desktop: true
+      desktop: false
+    },
+    dashboard: {
+      layout: 'grid',
+      widgets: ['quick-stats', 'recent-projects', 'alerts', 'performance']
     },
     accessibility: {
       highContrast: false,
-      largeText: false,
-      reducedMotion: false
+      reducedMotion: false,
+      fontSize: 'medium'
     },
-    lastUpdated: new Date()
+    lastSync: now,
+    createdAt: now,
+    updatedAt: now
   }
 }
 
-export function getDefaultSessionState(userId: string): SessionState {
-  return {
-    userId,
-    deviceId: '',
-    currentPage: '/',
-    scrollPosition: {},
-    formData: {},
-    openModals: [],
-    selectedItems: {},
-    filters: {},
-    searchQueries: {},
-    lastActivity: new Date(),
-    sessionId: `session_${Date.now()}`
+export const syncPreferences = async (userId: string, preferences: UserPreferences): Promise<boolean> => {
+  try {
+    // In a real implementation, this would sync with a database or external service
+    userPreferences.set(userId, {
+      ...preferences,
+      lastSync: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    })
+    
+    return true
+  } catch (error) {
+    console.error('Failed to sync preferences:', error)
+    return false
   }
+}
+
+export default {
+  userPreferences,
+  getDefaultPreferences,
+  syncPreferences
 }

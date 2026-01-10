@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Mock dashboard data to prevent "Failed to fetch" errors
     const mockData = {

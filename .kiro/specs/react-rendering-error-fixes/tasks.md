@@ -132,7 +132,21 @@ This implementation plan systematically addresses React rendering errors in the 
   - **Files Created**: `components/ui/LayoutStabilizer.tsx`
   - _Requirements: 1.1, 1.2_
 
-- [ ] 2.6 Scan for Similar React Rendering Issues
+- [x] 2.6 Fix Help Button Positioning and Icon
+  - ✅ **COMPLETED**: Fixed help button positioning and updated icon to show sidebar toggle functionality
+  - **Root Cause**: Help button was using generic message/help icons instead of panel toggle icons that indicate sidebar functionality
+  - **Solution**: Updated icons to use proper sidebar toggle indicators
+  - **Changes Made**:
+    - Updated main HelpChatToggle to use `PanelRightOpen` when closed and `PanelRightClose` when open
+    - Updated compact HelpChatToggle to use the same panel toggle icons
+    - Removed rotation animation as the new icons are more intuitive without rotation
+    - Maintained existing positioning on right side with `fixed bottom-6 right-6`
+    - Preserved notification badge and accessibility features
+  - **Testing**: Development server compiles successfully, help button shows proper toggle icons
+  - **Files Modified**: `components/HelpChatToggle.tsx`
+  - _Requirements: 1.1, 1.2_
+
+- [ ] 2.7 Scan for Similar React Rendering Issues
   - Scan codebase for similar component rendering patterns that could cause errors
   - Identify components that might render objects directly instead of invoking them
   - Add linting rules to prevent invalid React children patterns

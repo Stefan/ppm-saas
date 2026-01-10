@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { query, context, sessionId } = body
+    const { query, context: _context, sessionId } = body
     
     // Mock AI response for help queries
     const mockResponse = {

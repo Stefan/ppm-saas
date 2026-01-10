@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { MessageSquare, HelpCircle, Lightbulb, X } from 'lucide-react'
+import { MessageSquare, HelpCircle, Lightbulb, X, PanelRightOpen, PanelRightClose } from 'lucide-react'
 import { useHelpChat } from '../hooks/useHelpChat'
 import { useMediaQuery } from '../hooks/useMediaQuery'
 import { cn } from '../lib/utils/design-system'
@@ -281,15 +281,14 @@ export function HelpChatToggle({ className }: HelpChatToggleProps) {
           >
             {/* Main icon with rotation animation */}
             <div className={cn(
-              'relative transition-transform duration-200',
-              state.isOpen && 'rotate-180'
+              'relative transition-transform duration-200'
             )}>
               {state.isOpen ? (
-                <X className="h-6 w-6" aria-hidden="true" />
+                <PanelRightClose className="h-6 w-6" aria-hidden="true" />
               ) : hasUnreadTips ? (
                 <Lightbulb className="h-6 w-6" aria-hidden="true" />
               ) : (
-                <MessageSquare className="h-6 w-6" aria-hidden="true" />
+                <PanelRightOpen className="h-6 w-6" aria-hidden="true" />
               )}
               
               {/* Notification badge */}
@@ -471,10 +470,12 @@ export function HelpChatToggleCompact({ className }: HelpChatToggleProps) {
         aria-describedby={hasUnreadTips ? 'compact-tips-status' : undefined}
         title={getToggleButtonText()}
       >
-        {hasUnreadTips ? (
+        {state.isOpen ? (
+          <PanelRightClose className="h-5 w-5" aria-hidden="true" />
+        ) : hasUnreadTips ? (
           <Lightbulb className="h-5 w-5" aria-hidden="true" />
         ) : (
-          <HelpCircle className="h-5 w-5" aria-hidden="true" />
+          <PanelRightOpen className="h-5 w-5" aria-hidden="true" />
         )}
         
         {/* Notification dot */}
