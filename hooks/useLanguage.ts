@@ -104,7 +104,7 @@ export function useLanguage(): UseLanguageReturn {
       setError(null)
 
       // Validate language is supported
-      if (supportedLanguages.length > 0) {
+      if (Array.isArray(supportedLanguages) && supportedLanguages.length > 0) {
         const isSupported = supportedLanguages.some(lang => lang.code === language)
         if (!isSupported) {
           throw new Error(`Unsupported language: ${language}`)
@@ -214,6 +214,9 @@ export function useLanguage(): UseLanguageReturn {
   }, [])
 
   const getLanguageName = useCallback((code: string): string => {
+    if (!Array.isArray(supportedLanguages) || supportedLanguages.length === 0) {
+      return code
+    }
     const language = supportedLanguages.find(lang => lang.code === code)
     return language?.native_name || language?.name || code
   }, [supportedLanguages])

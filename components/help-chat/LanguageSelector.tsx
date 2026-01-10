@@ -74,7 +74,9 @@ export function LanguageSelector({
     }
   }
 
-  const currentLanguageData = supportedLanguages.find(lang => lang.code === currentLanguage)
+  const currentLanguageData = Array.isArray(supportedLanguages) 
+    ? supportedLanguages.find(lang => lang.code === currentLanguage)
+    : undefined
   const displayName = currentLanguageData?.native_name || getLanguageName(currentLanguage)
 
   if (compact) {
@@ -91,7 +93,7 @@ export function LanguageSelector({
           <ChevronDownIcon className={`h-3 w-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
 
-        {isOpen && (
+        {isOpen && Array.isArray(supportedLanguages) && supportedLanguages.length > 0 && (
           <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
             <div className="py-1">
               {supportedLanguages.map((language) => (
@@ -146,7 +148,7 @@ export function LanguageSelector({
         <ChevronDownIcon className={`h-4 w-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
-      {isOpen && (
+      {isOpen && Array.isArray(supportedLanguages) && supportedLanguages.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50">
           <div className="py-1 max-h-60 overflow-y-auto">
             {supportedLanguages.map((language) => (

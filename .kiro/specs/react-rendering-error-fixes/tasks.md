@@ -79,25 +79,36 @@ This implementation plan systematically addresses React rendering errors in the 
   - Test component rendering in Monte Carlo Analysis page context
   - _Requirements: 1.1, 1.2_
 
-- [ ] 2.2 Implement React Children Validation
+- [x] 2.2 Implement React Children Validation
   - Add PropTypes or TypeScript validation for component children
   - Create utility functions to validate React children before rendering
   - Add development-time warnings for invalid children patterns
   - Implement safe children rendering helpers
   - _Requirements: 1.3, 1.4_
 
-- [ ] 2.3 Scan for Similar React Rendering Issues
+- [x] 2.3 Fix LanguageSelector React Error
+  - ✅ **COMPLETED**: Fixed "supportedLanguages.find is not a function" error in LanguageSelector component
+  - **Root Cause**: `supportedLanguages` could be undefined/null during initialization or error states, but component was calling `.find()` method without validation
+  - **Solution**: Added defensive programming with `Array.isArray()` checks before calling array methods
+  - **Changes Made**:
+    - Added `Array.isArray(supportedLanguages)` check before calling `.find()` in `currentLanguageData` assignment
+    - Added array validation before rendering dropdown menus (both compact and full versions)
+    - Enhanced `setLanguage` function to validate `supportedLanguages` is a valid array before validation
+    - Added defensive check in `getLanguageName` function to handle invalid/empty arrays
+  - **Testing**: Development server runs successfully, Monte Carlo page loads without errors
+  - **Files Modified**: `components/help-chat/LanguageSelector.tsx`, `hooks/useLanguage.ts`
+  - _Requirements: 1.1, 1.2_
+
+- [ ] 2.4 Scan for Similar React Rendering Issues
   - Scan codebase for similar component rendering patterns that could cause errors
   - Identify components that might render objects directly instead of invoking them
   - Add linting rules to prevent invalid React children patterns
   - Create automated tests for common React rendering mistakes
   - _Requirements: 1.1, 1.5_
 
-- [ ] 2.4 Write property test for React children validation
+- [ ] 2.5 Write property test for React children validation
   - **Property 11: React Children Validation**
   - **Validates: Requirements 1.1, 1.2, 1.3**
-
-- [ ] 3. Systematic Codebase Analysis and Pattern Detection
   - Analyze all React components and pages for unsafe property access
   - Identify direct property access without optional chaining
   - Detect array method calls without validation
