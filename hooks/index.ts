@@ -15,6 +15,16 @@ export { usePrevious } from './usePrevious'
 export { useToggle } from './useToggle'
 export { useWindowSize } from './useWindowSize'
 
+// Performance monitoring hooks
+export {
+  useComponentPerformance,
+  usePageLoadPerformance,
+  useApiPerformanceMonitoring,
+  useMemoryMonitoring,
+  useInteractionPerformance,
+  useDashboardPerformance
+} from './usePerformanceMonitoring'
+
 // Help chat hooks
 export { 
   useHelpChat,
