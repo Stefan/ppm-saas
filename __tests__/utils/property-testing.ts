@@ -50,13 +50,6 @@ export const generators = {
   devicePixelRatio: fc.constantFrom(1, 1.5, 2, 2.5, 3),
   orientation: fc.constantFrom('portrait', 'landscape'),
   
-  // Accessibility
-  ariaRole: fc.constantFrom(
-    'button', 'link', 'textbox', 'checkbox', 'radio', 'combobox', 
-    'listbox', 'option', 'tab', 'tabpanel', 'dialog', 'alertdialog',
-    'main', 'navigation', 'banner', 'contentinfo', 'complementary', 'search'
-  ),
-  
   // Touch gestures
   touchGesture: fc.constantFrom('tap', 'swipe', 'pinch', 'longpress', 'drag'),
   swipeDirection: fc.constantFrom('left', 'right', 'up', 'down'),
@@ -203,18 +196,6 @@ export const formValidationGenerator = fc.record({
 })
 
 /**
- * Accessibility state generator
- */
-export const accessibilityStateGenerator = fc.record({
-  screenReader: fc.boolean(),
-  keyboardOnly: fc.boolean(),
-  highContrast: fc.boolean(),
-  reducedMotion: fc.boolean(),
-  fontSize: generators.fontSize,
-  colorBlindness: fc.constantFrom('none', 'protanopia', 'deuteranopia', 'tritanopia')
-})
-
-/**
  * Network condition generator
  */
 export const networkConditionGenerator = fc.record({
@@ -306,50 +287,6 @@ export function createResponsivePropertyTest<P>(
       
       try {
         await testFn(props, container, viewport)
-      } finally {
-        unmount()
-      }
-    }
-  )
-}
-
-/**
- * Helper to create accessibility property tests
- */
-export function createAccessibilityPropertyTest<P>(
-  component: (props: P) => ReactElement,
-  propsGenerator: fc.Arbitrary<P>,
-  testFn: (props: P, element: HTMLElement, a11yState: any) => void | Promise<void>,
-  config: PropertyTestConfig = defaultPropertyConfig
-) {
-  return fc.property(
-    fc.record({
-      props: propsGenerator,
-      a11yState: accessibilityStateGenerator
-    }),
-    async ({ props, a11yState }) => {
-      const { render } = await import('@testing-library/react')
-      
-      // Mock accessibility preferences
-      Object.defineProperty(window, 'matchMedia', {
-        writable: true,
-        value: jest.fn().mockImplementation(query => ({
-          matches: query.includes('prefers-reduced-motion') ? a11yState.reducedMotion :
-                   query.includes('prefers-contrast') ? a11yState.highContrast : false,
-          media: query,
-          onchange: null,
-          addListener: jest.fn(),
-          removeListener: jest.fn(),
-          addEventListener: jest.fn(),
-          removeEventListener: jest.fn(),
-          dispatchEvent: jest.fn(),
-        }))
-      })
-      
-      const { container, unmount } = render(component(props))
-      
-      try {
-        await testFn(props, container, a11yState)
       } finally {
         unmount()
       }

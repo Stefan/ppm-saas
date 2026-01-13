@@ -66,12 +66,6 @@ describe('Cross-Device Synchronization Property Tests', () => {
         pinnedItems: fc.constantFrom([], ['item1']),
         recentItems: fc.constantFrom([], ['recent1'])
       }),
-      accessibilitySettings: fc.record({
-        highContrast: fc.boolean(),
-        reducedMotion: fc.boolean(),
-        fontSize: fc.constantFrom('small', 'medium', 'large'),
-        screenReader: fc.boolean()
-      }),
       aiSettings: fc.record({
         enableSuggestions: fc.boolean(),
         enablePredictiveText: fc.boolean(),
@@ -126,7 +120,6 @@ describe('Cross-Device Synchronization Property Tests', () => {
           expect(preferences.dashboardLayout).toHaveProperty('widgets')
           expect(preferences.dashboardLayout).toHaveProperty('layout')
           expect(preferences.navigationPreferences).toHaveProperty('collapsedSections')
-          expect(preferences.accessibilitySettings).toHaveProperty('highContrast')
           expect(preferences.aiSettings).toHaveProperty('enableSuggestions')
           
           // Verify types

@@ -183,9 +183,6 @@ export default function SearchBarWithAI({
             ${isOpen ? 'rounded-b-none border-b-0' : ''}
           `}
           aria-label="Search features and pages"
-          aria-expanded={isOpen}
-          aria-haspopup="listbox"
-          role="combobox"
         />
       </div>
 

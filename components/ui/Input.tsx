@@ -53,7 +53,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
         )}
       </div>
       {error && (
-        <p className="mt-1 text-sm text-red-600" role="alert">
+        <p className="mt-1 text-sm text-red-600">
           {error}
         </p>
       )}
@@ -106,7 +106,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps & {
         {...props}
       />
       {error && (
-        <p className="mt-1 text-sm text-red-600" role="alert">
+        <p className="mt-1 text-sm text-red-600">
           {error}
         </p>
       )}

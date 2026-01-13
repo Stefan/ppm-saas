@@ -1,10 +1,10 @@
 import React, { forwardRef, useState } from 'react'
-import { cn, componentVariants, a11y } from '@/lib/design-system'
+import { cn, componentVariants } from '@/lib/design-system'
 import type { InputProps } from '@/types'
 
 /**
  * ResponsiveInput - Atomic design component with mobile-first responsive design
- * Optimized for touch interactions and accessibility
+ * Optimized for touch interactions
  */
 export const ResponsiveInput = forwardRef<HTMLInputElement, InputProps>(({
   type = 'text',
@@ -34,9 +34,6 @@ export const ResponsiveInput = forwardRef<HTMLInputElement, InputProps>(({
   step,
   min,
   max,
-  'aria-label': ariaLabel,
-  'aria-labelledby': ariaLabelledBy,
-  'aria-describedby': ariaDescribedBy,
   'data-testid': testId,
   ...props
 }, ref) => {
@@ -76,9 +73,6 @@ export const ResponsiveInput = forwardRef<HTMLInputElement, InputProps>(({
   }
 
   const inputId = props.id || `input-${Math.random().toString(36).substr(2, 9)}`
-  const errorId = error ? `${inputId}-error` : undefined
-  const helperTextId = helperText ? `${inputId}-helper` : undefined
-  const describedBy = [ariaDescribedBy, errorId, helperTextId].filter(Boolean).join(' ') || undefined
 
   return (
     <div className="w-full">
@@ -93,7 +87,7 @@ export const ResponsiveInput = forwardRef<HTMLInputElement, InputProps>(({
         >
           {label}
           {required && (
-            <span className="text-error-500 ml-1" aria-label="required">
+            <span className="text-error-500 ml-1">
               *
             </span>
           )}
@@ -131,8 +125,6 @@ export const ResponsiveInput = forwardRef<HTMLInputElement, InputProps>(({
             'input-base',
             sizeClasses[size],
             componentVariants.input[variant],
-            a11y.focusVisible,
-            a11y.reducedMotion,
             leftIcon ? 'pl-10' : '',
             rightIcon ? 'pr-10' : '',
             disabled && 'opacity-50 cursor-not-allowed bg-gray-50',
@@ -147,11 +139,6 @@ export const ResponsiveInput = forwardRef<HTMLInputElement, InputProps>(({
           step={step}
           min={min}
           max={max}
-          aria-label={ariaLabel}
-          aria-labelledby={ariaLabelledBy}
-          aria-describedby={describedBy}
-          aria-invalid={error ? 'true' : 'false'}
-          aria-required={required}
           data-testid={testId}
           {...props}
         />
@@ -170,21 +157,13 @@ export const ResponsiveInput = forwardRef<HTMLInputElement, InputProps>(({
       </div>
       
       {error && (
-        <p
-          id={errorId}
-          className="mt-2 text-sm text-error-600"
-          role="alert"
-          aria-live="polite"
-        >
+        <p className="mt-2 text-sm text-error-600">
           {error}
         </p>
       )}
       
       {helperText && !error && (
-        <p
-          id={helperTextId}
-          className="mt-2 text-sm text-gray-500"
-        >
+        <p className="mt-2 text-sm text-gray-500">
           {helperText}
         </p>
       )}

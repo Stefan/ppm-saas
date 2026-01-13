@@ -16,11 +16,6 @@ interface UserPreferences {
     layout: 'grid' | 'list'
     widgets: string[]
   }
-  accessibility: {
-    highContrast: boolean
-    reducedMotion: boolean
-    fontSize: 'small' | 'medium' | 'large'
-  }
   lastSync: string
   createdAt: string
   updatedAt: string
@@ -76,11 +71,6 @@ export const getDefaultPreferences = (userId: string): UserPreferences => {
     dashboard: {
       layout: 'grid',
       widgets: ['quick-stats', 'recent-projects', 'alerts', 'performance']
-    },
-    accessibility: {
-      highContrast: false,
-      reducedMotion: false,
-      fontSize: 'medium'
     },
     lastSync: now,
     createdAt: now,

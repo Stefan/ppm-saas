@@ -1,13 +1,10 @@
 import React from 'react'
-import { cn, atomicPatterns, a11y } from '@/lib/design-system'
+import { cn, atomicPatterns } from '@/lib/design-system'
 
 export interface SmartIconProps {
   icon: React.ComponentType<{ className?: string }>
   size?: 'small' | 'medium' | 'large' | 'xlarge'
   className?: string
-  'aria-label'?: string
-  'aria-hidden'?: boolean
-  decorative?: boolean
   interactive?: boolean
   onClick?: () => void
   'data-testid'?: string
@@ -15,15 +12,12 @@ export interface SmartIconProps {
 
 /**
  * SmartIcon - Atomic design component for consistent icon rendering
- * Context-aware icons with accessibility labels and responsive sizing
+ * Context-aware icons with responsive sizing
  */
 export const SmartIcon: React.FC<SmartIconProps> = ({
   icon: Icon,
   size = 'medium',
   className,
-  'aria-label': ariaLabel,
-  'aria-hidden': ariaHidden,
-  decorative = false,
   interactive = false,
   onClick,
   'data-testid': testId,
@@ -35,11 +29,8 @@ export const SmartIcon: React.FC<SmartIconProps> = ({
       className={cn(
         sizeClasses[size],
         interactive && 'cursor-pointer hover:opacity-75 transition-opacity',
-        a11y.reducedMotion,
         className
       )}
-      aria-label={decorative ? undefined : ariaLabel}
-      aria-hidden={decorative || ariaHidden}
       data-testid={testId}
     />
   )
@@ -51,11 +42,9 @@ export const SmartIcon: React.FC<SmartIconProps> = ({
         onClick={onClick}
         className={cn(
           'inline-flex items-center justify-center rounded-md p-1',
-          'hover:bg-gray-100 focus:bg-gray-100',
-          a11y.focusVisible,
+          'hover:bg-gray-100',
           'touch-target'
         )}
-        aria-label={ariaLabel}
         data-testid={testId ? `${testId}-button` : undefined}
       >
         {iconElement}

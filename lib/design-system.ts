@@ -240,16 +240,6 @@ export const responsive = {
 }
 
 /**
- * Accessibility utilities
- */
-export const a11y = {
-  srOnly: 'sr-only',
-  focusVisible: 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
-  skipLink: 'absolute left-[-10000px] top-auto w-1 h-1 overflow-hidden focus:left-6 focus:top-7 focus:w-auto focus:h-auto focus:overflow-visible',
-  highContrast: 'contrast-more:border-black contrast-more:text-black'
-}
-
-/**
  * Utility function to get responsive classes
  */
 export function getResponsiveClasses(
@@ -332,7 +322,6 @@ export default {
   variants,
   animations,
   responsive,
-  a11y,
   getResponsiveClasses,
   getVariantClasses,
   darkMode,

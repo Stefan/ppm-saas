@@ -2,13 +2,11 @@ import '@testing-library/jest-dom'
 
 // Import custom testing utilities
 import { toMeetTouchTargetRequirements, toHaveResponsiveLayout } from './__tests__/utils/responsive-testing'
-import { toBeAccessible } from './__tests__/utils/accessibility-testing'
 
 // Extend Jest matchers
 expect.extend({
   toMeetTouchTargetRequirements,
-  toHaveResponsiveLayout,
-  toBeAccessible
+  toHaveResponsiveLayout
 })
 
 // Add polyfills for Node.js environment

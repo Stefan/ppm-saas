@@ -1,5 +1,5 @@
 import React from 'react'
-import { cn, a11y } from '@/lib/design-system'
+import { cn } from '@/lib/design-system'
 import type { ComponentProps } from '@/types'
 
 export interface TypographyProps extends ComponentProps {
@@ -11,7 +11,6 @@ export interface TypographyProps extends ComponentProps {
   align?: 'left' | 'center' | 'right' | 'justify'
   truncate?: boolean
   responsive?: boolean
-  'aria-level'?: number
 }
 
 /**
@@ -29,7 +28,6 @@ export const FlexibleTypography: React.FC<TypographyProps> = ({
   responsive = false,
   children,
   className,
-  'aria-level': ariaLevel,
   ...props
 }) => {
   const variantClasses = {
@@ -84,10 +82,8 @@ export const FlexibleTypography: React.FC<TypographyProps> = ({
         colorClasses[color],
         alignClasses[align],
         truncate && 'truncate',
-        a11y.highContrast,
         className
       )}
-      aria-level={ariaLevel}
       {...props}
     >
       {children}

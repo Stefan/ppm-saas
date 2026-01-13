@@ -254,17 +254,6 @@ export const touchTargets = {
   xlarge: 'min-h-[64px] min-w-[64px]',       // Extra large for primary actions
 } as const
 
-// Accessibility Utilities
-export const a11y = {
-  srOnly: 'sr-only',
-  notSrOnly: 'not-sr-only',
-  focusVisible: 'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500',
-  focusWithin: 'focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500',
-  skipLink: 'absolute left-[-10000px] top-auto w-1 h-1 overflow-hidden focus:left-6 focus:top-7 focus:w-auto focus:h-auto focus:overflow-visible bg-primary-600 text-white px-4 py-2 rounded-md font-medium',
-  highContrast: 'contrast-more:border-black contrast-more:text-black',
-  reducedMotion: 'motion-reduce:transition-none motion-reduce:animate-none',
-} as const
-
 // Mobile-First Responsive Utilities
 export const responsive = {
   // Container utilities
@@ -364,5 +353,4 @@ export type DesignTokens = typeof designTokens
 export type ComponentVariants = typeof componentVariants
 export type AtomicPatterns = typeof atomicPatterns
 export type TouchTargets = typeof touchTargets
-export type A11y = typeof a11y
 export type Responsive = typeof responsive

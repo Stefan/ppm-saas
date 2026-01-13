@@ -214,8 +214,7 @@ class ErrorBoundaryComponent extends Component<Props, State> {
             <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
               <button
                 onClick={this.handleRetry}
-                className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                aria-label="Retry loading this section"
+                className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Try Again
@@ -223,8 +222,7 @@ class ErrorBoundaryComponent extends Component<Props, State> {
               
               <button
                 onClick={() => window.location.reload()}
-                className="flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-                aria-label="Refresh the entire page"
+                className="flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh Page
@@ -241,8 +239,7 @@ class ErrorBoundaryComponent extends Component<Props, State> {
                   <div className="flex flex-col sm:flex-row gap-2 justify-center">
                     <button
                       onClick={this.handleGoHome}
-                      className="flex items-center justify-center px-3 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                      aria-label="Go to Portfolio Dashboards home page"
+                      className="flex items-center justify-center px-3 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
                     >
                       <Home className="h-4 w-4 mr-2" />
                       Dashboard Home
@@ -250,8 +247,7 @@ class ErrorBoundaryComponent extends Component<Props, State> {
                     
                     <button
                       onClick={this.handleGoBack}
-                      className="flex items-center justify-center px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-                      aria-label="Go back to previous page"
+                      className="flex items-center justify-center px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
                     >
                       <ArrowLeft className="h-4 w-4 mr-2" />
                       Go Back
@@ -265,29 +261,25 @@ class ErrorBoundaryComponent extends Component<Props, State> {
                   <div className="flex flex-wrap gap-2 justify-center text-xs">
                     <a 
                       href="/reports" 
-                      className="px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      aria-label="Go to AI Reports & Analytics"
+                      className="px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
                     >
                       Reports
                     </a>
                     <a 
                       href="/risks" 
-                      className="px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      aria-label="Go to Risk/Issue Registers"
+                      className="px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
                     >
                       Risks
                     </a>
                     <a 
                       href="/scenarios" 
-                      className="px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      aria-label="Go to What-If Scenarios"
+                      className="px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
                     >
                       Scenarios
                     </a>
                     <a 
                       href="/feedback" 
-                      className="px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      aria-label="Go to Feedback & Ideas"
+                      className="px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
                     >
                       <HelpCircle className="h-3 w-3 inline mr-1" />
                       Help

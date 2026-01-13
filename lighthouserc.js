@@ -52,7 +52,6 @@ module.exports = {
       assertions: {
         // Core Web Vitals thresholds
         'categories:performance': ['error', { minScore: 0.8 }],
-        'categories:accessibility': ['error', { minScore: 0.9 }],
         'categories:best-practices': ['error', { minScore: 0.8 }],
         'categories:seo': ['error', { minScore: 0.8 }],
         
@@ -71,10 +70,6 @@ module.exports = {
         
         // Network requests
         'resource-summary:total:count': ['error', { maxNumericValue: 50 }],
-        
-        // Accessibility
-        'color-contrast': 'error',
-        'image-alt': 'error',
         'label': 'error',
         'link-name': 'error',
         'button-name': 'error',

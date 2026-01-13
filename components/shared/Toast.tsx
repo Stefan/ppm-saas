@@ -117,7 +117,6 @@ const ToastItem: React.FC<{
         'p-4 rounded-lg border shadow-lg animate-slide-up',
         colors[toast.type]
       )}
-      role="alert"
     >
       <div className="flex items-start">
         <Icon className={cn('h-5 w-5 mt-0.5 flex-shrink-0', iconColors[toast.type])} />
@@ -143,7 +142,6 @@ const ToastItem: React.FC<{
         <button
           onClick={() => onRemove(toast.id)}
           className="ml-4 flex-shrink-0 p-1 rounded-md hover:bg-black hover:bg-opacity-10 transition-colors"
-          aria-label="Close notification"
         >
           <X className="h-4 w-4" />
         </button>

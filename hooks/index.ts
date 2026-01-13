@@ -8,7 +8,7 @@ export { useLocalStorage } from './useLocalStorage'
 export { useDebounce } from './useDebounce'
 export { useMediaQuery } from './useMediaQuery'
 export { useClickOutside } from './useClickOutside'
-export { useKeyboard } from './useKeyboard'
+
 export { useIntersectionObserver } from './useIntersectionObserver'
 export { useAsync } from './useAsync'
 export { usePrevious } from './usePrevious'

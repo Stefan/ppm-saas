@@ -52,7 +52,7 @@ export const viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="de" className={inter.variable}>
+    <html lang="de" className={`${inter.variable} chrome-optimized`}>
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -76,7 +76,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         
 
       </head>
-      <body className="font-sans antialiased bg-white min-h-screen" suppressHydrationWarning={true}>
+      <body 
+        className="font-sans antialiased bg-white min-h-screen chrome-optimized chrome-background-coverage" 
+        suppressHydrationWarning={true}
+        style={{
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain',
+          backgroundAttachment: 'local',
+          backgroundColor: '#ffffff'
+        } as React.CSSProperties}
+      >
         <PerformanceOptimizer>
           <ErrorBoundary>
             <SupabaseAuthProvider>

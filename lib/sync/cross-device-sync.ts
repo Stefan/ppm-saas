@@ -69,12 +69,6 @@ export interface UserPreferences {
     pinnedItems: string[]
     recentItems: string[]
   }
-  accessibilitySettings: {
-    highContrast: boolean
-    reducedMotion: boolean
-    fontSize: 'small' | 'medium' | 'large'
-    screenReader: boolean
-  }
   aiSettings: {
     enableSuggestions: boolean
     enablePredictiveText: boolean
@@ -375,12 +369,6 @@ export class CrossDeviceSyncService {
         collapsedSections: [],
         pinnedItems: [],
         recentItems: []
-      },
-      accessibilitySettings: {
-        highContrast: false,
-        reducedMotion: false,
-        fontSize: 'medium',
-        screenReader: false
       },
       aiSettings: {
         enableSuggestions: true,

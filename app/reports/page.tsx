@@ -310,10 +310,10 @@ export default function Reports() {
 
   return (
     <AppLayout>
-      <div className="h-full flex flex-col">
+      <div className="h-full flex flex-col chrome-flex-gap-prevention chrome-background-coverage">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+        <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 chrome-flex-item">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0 chrome-flex-gap-prevention">
             <div className="flex items-center space-x-3 min-w-0">
               <Bot className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
               <div className="min-w-0">

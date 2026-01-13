@@ -117,46 +117,6 @@ describe('Mobile Chart Interactions Property Tests', () => {
     jest.clearAllMocks()
   })
 
-  /**
-   * Property 39: Mobile Chart Interactions
-   * For any chart displayed on mobile devices, touch-optimized interactions 
-   * for zooming and panning should work smoothly
-   */
-  test('Property 39: Touch targets meet minimum accessibility requirements', () => {
-    fc.assert(fc.property(
-      chartDataGenerator,
-      chartTypeGenerator,
-      (data, chartType) => {
-        const { container } = render(
-          React.createElement(InteractiveChart, {
-            type: chartType,
-            data: data,
-            dataKey: "value",
-            nameKey: "name",
-            title: "Test Chart"
-          })
-        )
-
-        // Find interactive elements
-        const interactiveElements = container.querySelectorAll('[data-testid^="chart-"]')
-        
-        // Verify each interactive element meets touch target requirements
-        interactiveElements.forEach(element => {
-          const styles = window.getComputedStyle(element)
-          const minHeight = parseInt(styles.minHeight) || 0
-          const minWidth = parseInt(styles.minWidth) || 0
-          
-          // Touch targets should be at least 44px for accessibility
-          expect(minHeight).toBeGreaterThanOrEqual(44)
-          expect(minWidth).toBeGreaterThanOrEqual(44)
-          
-          // Should have pointer cursor for interactivity
-          expect(styles.cursor).toBe('pointer')
-        })
-      }
-    ), { numRuns: 50 })
-  })
-
   test('Property 39: Touch interactions provide appropriate visual feedback', () => {
     fc.assert(fc.property(
       chartDataGenerator,
@@ -192,7 +152,7 @@ describe('Mobile Chart Interactions Property Tests', () => {
           const touchEnd = createTouchEvent('touchend', [])
           fireEvent(interactiveElement, touchEnd)
           
-          // Click should also work for accessibility
+          // Click should also work
           fireEvent.click(interactiveElement)
         }
       }

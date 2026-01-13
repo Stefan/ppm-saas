@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "../styles/accessibility.css";
 
 :root {
   /* Base Colors */
@@ -274,7 +273,7 @@ textarea {
   font-weight: 400 !important;
 }
 
-/* Focus states for better accessibility - ALLE INPUT TYPEN */
+/* Focus states for better form usability */
 .input-field:focus,
 .textarea-field:focus,
 input[type="text"]:focus,
@@ -408,72 +407,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
   opacity: 1 !important;
   background-color: #f3f4f6 !important;
 }
-/* Enhanced accessibility styles for WCAG 2.1 AA compliance */
-
-/* High contrast focus indicators */
-*:focus-visible {
-  outline: 2px solid #3b82f6 !important;
-  outline-offset: 2px !important;
-  border-radius: 4px;
-}
-
-/* Enhanced button focus states */
-button:focus-visible,
-[role="button"]:focus-visible {
-  outline: 2px solid #3b82f6 !important;
-  outline-offset: 2px !important;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2) !important;
-}
-
-/* Enhanced link focus states */
-a:focus-visible {
-  outline: 2px solid #3b82f6 !important;
-  outline-offset: 2px !important;
-  text-decoration: underline !important;
-  background-color: rgba(59, 130, 246, 0.1) !important;
-  border-radius: 2px;
-  padding: 1px 2px;
-}
-
-/* Screen reader only content */
-.sr-only {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  padding: 0 !important;
-  margin: -1px !important;
-  overflow: hidden !important;
-  clip: rect(0, 0, 0, 0) !important;
-  white-space: nowrap !important;
-  border: 0 !important;
-}
-
-/* Skip links for keyboard navigation */
-.skip-link {
-  position: absolute;
-  left: -10000px;
-  top: auto;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-}
-
-.skip-link:focus {
-  position: absolute;
-  left: 6px;
-  top: 6px;
-  width: auto;
-  height: auto;
-  overflow: visible;
-  background: #2563eb;
-  color: #fff;
-  padding: 8px 12px;
-  text-decoration: none;
-  border-radius: 4px;
-  font-weight: bold;
-  font-size: 14px;
-  z-index: 1000;
-}
+/* Enhanced form styling */
 
 /* Hide development overlays that can interfere with the UI */
 .__next-error-overlay,
@@ -494,52 +428,13 @@ a:focus-visible {
   color: #6b7280 !important; /* Improved contrast ratio */
 }
 
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  * {
-    border-color: currentColor !important;
-  }
-  
-  .bg-gray-100 {
-    background-color: #f3f4f6 !important;
-    border: 1px solid #374151 !important;
-  }
-  
-  .bg-gray-50 {
-    background-color: #f9fafb !important;
-    border: 1px solid #374151 !important;
-  }
-  
-  .text-gray-400,
-  .text-gray-500,
-  .text-gray-600 {
-    color: #111827 !important;
-  }
-}
 
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-  
-  .animate-spin,
-  .animate-pulse,
-  .animate-bounce,
-  .animate-ping {
-    animation: none !important;
-  }
-}
+
+
 
 /* Enhanced touch targets for mobile */
 @media (max-width: 768px) {
   button,
-  [role="button"],
   a,
   input,
   select,
@@ -550,13 +445,12 @@ a:focus-visible {
   
   /* Ensure adequate spacing between interactive elements */
   button + button,
-  [role="button"] + [role="button"],
   a + a {
     margin-left: 8px !important;
   }
 }
 
-/* Enhanced form accessibility */
+/* Enhanced form validation */
 input:invalid,
 textarea:invalid,
 select:invalid {
@@ -572,13 +466,13 @@ select:invalid:focus {
 }
 
 /* Enhanced error states */
-[aria-invalid="true"] {
+.error-state {
   border-color: #dc2626 !important;
   background-color: #fef2f2 !important;
 }
 
 /* Enhanced success states */
-[aria-invalid="false"] {
+.success-state {
   border-color: #059669 !important;
   background-color: #ecfdf5 !important;
 }
@@ -592,7 +486,7 @@ label.required::after {
   font-size: 1.1em;
 }
 
-/* Enhanced table accessibility */
+/* Enhanced table styling */
 table {
   border-collapse: collapse !important;
 }
@@ -610,64 +504,63 @@ td {
   padding: 12px !important;
 }
 
-/* Enhanced list accessibility */
-ul[role="list"],
-ol[role="list"] {
+/* Enhanced list styling */
+ul.custom-list,
+ol.custom-list {
   list-style: none;
   padding-left: 0;
 }
 
-ul[role="list"] > li::before {
+ul.custom-list > li::before {
   content: "• ";
   color: #374151;
   font-weight: bold;
   margin-right: 8px;
 }
 
-ol[role="list"] {
+ol.custom-list {
   counter-reset: list-counter;
 }
 
-ol[role="list"] > li {
+ol.custom-list > li {
   counter-increment: list-counter;
 }
 
-ol[role="list"] > li::before {
+ol.custom-list > li::before {
   content: counter(list-counter) ". ";
   color: #374151;
   font-weight: bold;
   margin-right: 8px;
 }
 
-/* Enhanced dialog/modal accessibility */
-[role="dialog"],
-[role="alertdialog"] {
+/* Enhanced dialog/modal styling */
+.dialog,
+.modal {
   border: 2px solid #374151 !important;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* Enhanced alert accessibility */
-[role="alert"],
-[role="status"] {
+/* Enhanced alert styling */
+.alert {
   padding: 12px !important;
   border-radius: 6px !important;
   border: 2px solid currentColor !important;
 }
 
-[role="alert"] {
+.alert-error {
   background-color: #fef2f2 !important;
   color: #991b1b !important;
   border-color: #dc2626 !important;
 }
 
-[role="status"] {
+.alert-success {
   background-color: #ecfdf5 !important;
   color: #065f46 !important;
   border-color: #059669 !important;
 }
 
-/* Enhanced tooltip accessibility */
-[role="tooltip"] {
+/* Enhanced tooltip styling */
+.tooltip {
   background-color: #111827 !important;
   color: #f9fafb !important;
   border: 1px solid #374151 !important;
@@ -679,20 +572,20 @@ ol[role="list"] > li::before {
   word-wrap: break-word !important;
 }
 
-/* Enhanced progress indicator accessibility */
-[role="progressbar"] {
+/* Enhanced progress indicator styling */
+.progress-bar {
   border: 2px solid #d1d5db !important;
   border-radius: 4px !important;
   background-color: #f3f4f6 !important;
   overflow: hidden !important;
 }
 
-/* Enhanced tab accessibility */
-[role="tablist"] {
+/* Enhanced tab styling */
+.tab-list {
   border-bottom: 2px solid #d1d5db !important;
 }
 
-[role="tab"] {
+.tab {
   border: 2px solid transparent !important;
   border-bottom: none !important;
   background-color: transparent !important;
@@ -700,27 +593,27 @@ ol[role="list"] > li::before {
   cursor: pointer !important;
 }
 
-[role="tab"]:hover {
+.tab:hover {
   background-color: #f3f4f6 !important;
 }
 
-[role="tab"][aria-selected="true"] {
+.tab.active {
   background-color: #ffffff !important;
   border-color: #d1d5db !important;
   border-bottom-color: #ffffff !important;
   margin-bottom: -2px !important;
 }
 
-[role="tabpanel"] {
+.tab-panel {
   padding: 16px !important;
   border: 2px solid #d1d5db !important;
   border-top: none !important;
   background-color: #ffffff !important;
 }
 
-/* Enhanced menu accessibility */
-[role="menu"],
-[role="menubar"] {
+/* Enhanced menu styling */
+.menu,
+.menubar {
   background-color: #ffffff !important;
   border: 2px solid #d1d5db !important;
   border-radius: 6px !important;
@@ -728,9 +621,7 @@ ol[role="list"] > li::before {
   padding: 4px !important;
 }
 
-[role="menuitem"],
-[role="menuitemcheckbox"],
-[role="menuitemradio"] {
+.menu-item {
   padding: 8px 12px !important;
   cursor: pointer !important;
   border-radius: 4px !important;
@@ -738,12 +629,8 @@ ol[role="list"] > li::before {
   align-items: center !important;
 }
 
-[role="menuitem"]:hover,
-[role="menuitemcheckbox"]:hover,
-[role="menuitemradio"]:hover,
-[role="menuitem"]:focus,
-[role="menuitemcheckbox"]:focus,
-[role="menuitemradio"]:focus {
+.menu-item:hover,
+.menu-item:focus {
   background-color: #3b82f6 !important;
   color: #ffffff !important;
 }
@@ -885,13 +772,7 @@ pre code {
   @apply grid grid-cols-1 md:grid-cols-3 gap-6;
 }
 
-/* Enhanced focus states for better accessibility */
-.input-field:focus-visible,
-.textarea-field:focus-visible,
-select:focus-visible {
-  outline: 2px solid #3b82f6 !important;
-  outline-offset: 2px !important;
-}
+
 
 /* Loading states */
 .loading-spinner {
@@ -1970,23 +1851,857 @@ body {
   }
 }
 
-/* Performance optimizations for reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  .reduced-motion-performance {
-    /* Disable performance-heavy animations */
-    will-change: auto;
-    -webkit-will-change: auto;
-    /* Simplify transitions */
-    -webkit-transition: none;
-    -moz-transition: none;
-    -ms-transition: none;
-    -o-transition: none;
-    transition: none;
-    /* Remove transforms that might cause motion */
-    -webkit-transform: none;
-    -moz-transform: none;
-    -ms-transform: none;
-    -o-transform: none;
-    transform: none;
+
+
+/* ========================================
+   CHROME-SPECIFIC SCROLL OPTIMIZATIONS
+   ======================================== */
+
+/* Chrome-specific scroll optimization class */
+.chrome-scroll-optimized {
+  /* Chrome momentum scrolling */
+  -webkit-overflow-scrolling: touch;
+  /* Chrome overscroll behavior */
+  -webkit-overscroll-behavior: contain;
+  overscroll-behavior: contain;
+  -webkit-overscroll-behavior-y: contain;
+  overscroll-behavior-y: contain;
+  /* Chrome hardware acceleration */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  /* Chrome scroll performance */
+  will-change: scroll-position;
+  -webkit-will-change: scroll-position;
+  /* Chrome background attachment */
+  background-attachment: local;
+  -webkit-background-attachment: local;
+  /* Chrome scroll containment */
+  contain: layout style paint;
+}
+
+/* Chrome background coverage with linear gradients */
+.chrome-background-coverage {
+  /* Explicit white background */
+  background-color: #ffffff !important;
+  /* Chrome linear gradient for coverage */
+  background-image: -webkit-linear-gradient(to bottom, #ffffff 0%, #ffffff 100%);
+  background-image: linear-gradient(to bottom, #ffffff 0%, #ffffff 100%);
+  /* Chrome background attachment */
+  background-attachment: local;
+  -webkit-background-attachment: local;
+  /* Chrome background size */
+  -webkit-background-size: cover;
+  background-size: cover;
+  /* Chrome minimum height */
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+/* Chrome flexbox optimization */
+.chrome-flex-optimized {
+  /* Chrome box-sizing */
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  /* Chrome flexbox properties */
+  -webkit-flex: 1 1 0%;
+  flex: 1 1 0%;
+  /* Chrome background consistency */
+  background-color: #ffffff !important;
+  /* Chrome transform optimization */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  /* Chrome will-change optimization */
+  will-change: transform;
+  -webkit-will-change: transform;
+}
+
+/* Chrome-specific root element fixes */
+html.chrome-optimized {
+  /* Chrome root background */
+  background-color: #ffffff !important;
+  /* Chrome background size */
+  -webkit-background-size: cover;
+  background-size: cover;
+  /* Chrome scroll behavior */
+  scroll-behavior: smooth;
+  -webkit-scroll-behavior: smooth;
+  /* Chrome overscroll */
+  -webkit-overscroll-behavior: contain;
+  overscroll-behavior: contain;
+}
+
+body.chrome-optimized {
+  /* Chrome body background */
+  background-color: #ffffff !important;
+  /* Chrome background attachment */
+  background-attachment: local;
+  -webkit-background-attachment: local;
+  /* Chrome overscroll behavior */
+  -webkit-overscroll-behavior: contain;
+  overscroll-behavior: contain;
+  -webkit-overscroll-behavior-y: contain;
+  overscroll-behavior-y: contain;
+  /* Chrome minimum height */
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+/* Chrome main content optimization */
+main.chrome-optimized {
+  /* Chrome background with gradient */
+  background: #ffffff;
+  background: -webkit-linear-gradient(to bottom, #ffffff 0%, #ffffff 100%);
+  background: linear-gradient(to bottom, #ffffff 0%, #ffffff 100%);
+  /* Chrome background attachment */
+  background-attachment: local;
+  -webkit-background-attachment: local;
+  /* Chrome overscroll behavior */
+  -webkit-overscroll-behavior-y: contain;
+  overscroll-behavior-y: contain;
+  /* Chrome scroll optimization */
+  -webkit-overflow-scrolling: touch;
+  /* Chrome transform optimization */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  /* Chrome will-change */
+  will-change: scroll-position;
+  -webkit-will-change: scroll-position;
+  /* Chrome minimum height */
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+/* Chrome scroll container optimization */
+.chrome-scroll-container {
+  /* Chrome scroll properties */
+  -webkit-overflow-scrolling: touch;
+  -webkit-overscroll-behavior: contain;
+  overscroll-behavior: contain;
+  /* Chrome background coverage */
+  background-color: #ffffff !important;
+  background-image: -webkit-linear-gradient(to bottom, #ffffff 0%, #ffffff 100%);
+  background-image: linear-gradient(to bottom, #ffffff 0%, #ffffff 100%);
+  background-attachment: local;
+  -webkit-background-attachment: local;
+  /* Chrome hardware acceleration */
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  /* Chrome performance optimization */
+  will-change: scroll-position;
+  -webkit-will-change: scroll-position;
+  contain: layout style paint;
+}
+
+/* Chrome flexbox gap prevention */
+.chrome-flex-gap-prevention {
+  /* Chrome flexbox properties */
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  /* Chrome box-sizing for consistent rendering */
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  /* Chrome background consistency */
+  background-color: #ffffff !important;
+  /* Chrome gap prevention - eliminate all gaps */
+  gap: 0 !important;
+  -webkit-gap: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  /* Chrome transform optimization for hardware acceleration */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  /* Chrome will-change optimization */
+  will-change: transform;
+  -webkit-will-change: transform;
+  /* Chrome flex item behavior */
+  -webkit-flex: 1 1 0%;
+  flex: 1 1 0%;
+  /* Chrome background attachment */
+  background-attachment: local;
+  -webkit-background-attachment: local;
+  /* Chrome minimum height for full coverage */
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+/* Chrome flexbox container optimization */
+.chrome-flex-container {
+  /* Chrome flex display with fallbacks */
+  display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+  display: -moz-box;         /* OLD - Firefox 19- */
+  display: -ms-flexbox;      /* TWEENER - IE 10 */
+  display: -webkit-flex;     /* NEW - Chrome */
+  display: flex;             /* NEW, Spec - Opera 12.1, Firefox 20+ */
+  /* Chrome flex direction */
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  /* Chrome full height */
+  height: 100vh;
+  height: -webkit-fill-available;
+  /* Chrome box-sizing */
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  /* Chrome background with explicit white */
+  background-color: #ffffff !important;
+  background-image: -webkit-linear-gradient(to bottom, #ffffff 0%, #ffffff 100%);
+  background-image: linear-gradient(to bottom, #ffffff 0%, #ffffff 100%);
+  background-attachment: local;
+  -webkit-background-attachment: local;
+  /* Chrome gap elimination */
+  gap: 0 !important;
+  -webkit-gap: 0 !important;
+  /* Chrome hardware acceleration */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform;
+  -webkit-will-change: transform;
+}
+
+/* Chrome flexbox item optimization */
+.chrome-flex-item {
+  /* Chrome flex properties */
+  -webkit-box-flex: 1;
+  -webkit-flex: 1 1 0%;
+  -ms-flex: 1 1 0%;
+  flex: 1 1 0%;
+  /* Chrome box-sizing */
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  /* Chrome background consistency */
+  background-color: #ffffff !important;
+  /* Chrome gap prevention */
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  /* Chrome transform optimization */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform;
+  -webkit-will-change: transform;
+  /* Chrome background attachment */
+  background-attachment: local;
+  -webkit-background-attachment: local;
+}
+
+/* Chrome transform optimizations */
+.chrome-transform-optimized {
+  /* Chrome hardware acceleration */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  /* Chrome 3D transforms */
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  /* Chrome will-change */
+  will-change: transform;
+  -webkit-will-change: transform;
+  /* Chrome backface visibility */
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  /* Chrome perspective */
+  -webkit-perspective: 1000px;
+  perspective: 1000px;
+}
+
+/* Chrome scroll momentum handling */
+.chrome-scroll-momentum {
+  /* Chrome momentum scrolling */
+  -webkit-overflow-scrolling: touch;
+  /* Chrome overscroll behavior for momentum */
+  -webkit-overscroll-behavior: contain;
+  overscroll-behavior: contain;
+  -webkit-overscroll-behavior-y: contain;
+  overscroll-behavior-y: contain;
+  /* Chrome scroll performance optimization */
+  will-change: scroll-position;
+  -webkit-will-change: scroll-position;
+  /* Chrome layout containment for performance */
+  contain: layout style paint;
+  /* Chrome hardware acceleration */
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  /* Chrome background attachment for momentum */
+  background-attachment: local;
+  -webkit-background-attachment: local;
+}
+
+/* Chrome momentum scrolling active state */
+.chrome-momentum-scrolling {
+  /* Enhanced hardware acceleration during momentum */
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  /* Chrome will-change optimization during momentum */
+  will-change: scroll-position, transform;
+  -webkit-will-change: scroll-position, transform;
+  /* Chrome background consistency during momentum */
+  background-color: #ffffff !important;
+  background-attachment: local;
+  -webkit-background-attachment: local;
+  /* Chrome overscroll containment during momentum */
+  -webkit-overscroll-behavior: contain;
+  overscroll-behavior: contain;
+}
+
+/* Chrome boundary active state */
+.chrome-boundary-active {
+  /* Enhanced background coverage at boundaries */
+  background-color: #ffffff !important;
+  background-image: -webkit-linear-gradient(to bottom, #ffffff 0%, #ffffff 100%);
+  background-image: linear-gradient(to bottom, #ffffff 0%, #ffffff 100%);
+  background-attachment: local;
+  -webkit-background-attachment: local;
+  /* Chrome boundary containment */
+  -webkit-overscroll-behavior: contain;
+  overscroll-behavior: contain;
+  -webkit-overscroll-behavior-y: contain;
+  overscroll-behavior-y: contain;
+}
+
+/* Chrome artifact prevention active state */
+.chrome-artifact-prevention-active {
+  /* Force hardware acceleration to prevent artifacts */
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  /* Chrome background attachment to prevent artifacts */
+  background-attachment: local !important;
+  -webkit-background-attachment: local !important;
+  /* Chrome will-change for artifact prevention */
+  will-change: scroll-position, transform;
+  -webkit-will-change: scroll-position, transform;
+  /* Chrome containment for artifact prevention */
+  contain: layout style paint;
+  /* Chrome background consistency */
+  background-color: #ffffff !important;
+  background-image: -webkit-linear-gradient(to bottom, #ffffff 0%, #ffffff 100%);
+  background-image: linear-gradient(to bottom, #ffffff 0%, #ffffff 100%);
+}
+
+/* Chrome scroll performance optimizations - Task 5 Implementation */
+.chrome-scroll-performance {
+  /* Will-change properties for scroll optimization */
+  will-change: scroll-position, transform;
+  -webkit-will-change: scroll-position, transform;
+  
+  /* Contain properties for layout optimization */
+  contain: layout style paint;
+  
+  /* Chrome-specific scroll event handling optimization */
+  -webkit-overflow-scrolling: touch;
+  -webkit-overscroll-behavior: contain;
+  overscroll-behavior: contain;
+  
+  /* Hardware acceleration for smooth scrolling */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  
+  /* Background attachment for scroll performance */
+  background-attachment: local;
+  -webkit-background-attachment: local;
+  
+  /* Optimize repaints during scroll */
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  
+  /* Chrome perspective for 3D acceleration */
+  -webkit-perspective: 1000px;
+  perspective: 1000px;
+}
+
+/* Chrome scroll container with performance optimizations */
+.chrome-scroll-container-performance {
+  /* Advanced will-change for scroll containers */
+  will-change: scroll-position, contents;
+  -webkit-will-change: scroll-position, contents;
+  
+  /* Layout containment for performance */
+  contain: layout style paint;
+  
+  /* Chrome scroll momentum with performance */
+  -webkit-overflow-scrolling: touch;
+  -webkit-overscroll-behavior-y: contain;
+  overscroll-behavior-y: contain;
+  
+  /* Chrome 3D transforms for hardware acceleration */
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  
+  /* Chrome background optimization */
+  background-color: #ffffff !important;
+  background-attachment: local;
+  -webkit-background-attachment: local;
+  
+  /* Chrome compositing optimization */
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  isolation: isolate;
+}
+
+/* Chrome main content performance optimization */
+.chrome-main-content-performance {
+  /* Will-change for main content scrolling */
+  will-change: scroll-position;
+  -webkit-will-change: scroll-position;
+  
+  /* Strict containment for main content */
+  contain: strict;
+  
+  /* Chrome scroll optimization */
+  -webkit-overflow-scrolling: touch;
+  -webkit-overscroll-behavior: contain;
+  overscroll-behavior: contain;
+  
+  /* Chrome hardware acceleration */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  
+  /* Chrome background performance */
+  background: #ffffff;
+  background: -webkit-linear-gradient(to bottom, #ffffff 0%, #ffffff 100%);
+  background: linear-gradient(to bottom, #ffffff 0%, #ffffff 100%);
+  background-attachment: local;
+  -webkit-background-attachment: local;
+  
+  /* Chrome minimum height for coverage */
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+/* Chrome scroll event optimization */
+.chrome-scroll-events {
+  /* Optimize scroll event handling */
+  will-change: scroll-position;
+  -webkit-will-change: scroll-position;
+  
+  /* Layout containment for event performance */
+  contain: layout style;
+  
+  /* Chrome touch action optimization */
+  touch-action: pan-y;
+  -ms-touch-action: pan-y;
+  
+  /* Chrome scroll snap for performance */
+  scroll-snap-type: y proximity;
+  -webkit-scroll-snap-type: y proximity;
+  -ms-scroll-snap-type: y proximity;
+}
+
+/* Chrome background color consistency optimization */
+.chrome-background-consistency {
+  /* Explicit white background with performance */
+  background-color: #ffffff !important;
+  background-image: -webkit-linear-gradient(to bottom, #ffffff 0%, #ffffff 100%);
+  background-image: linear-gradient(to bottom, #ffffff 0%, #ffffff 100%);
+  background-attachment: local;
+  -webkit-background-attachment: local;
+  
+  /* Prevent any gray or dark backgrounds */
+  background-repeat: no-repeat;
+  background-size: cover;
+  -webkit-background-size: cover;
+  
+  /* Chrome background optimization */
+  will-change: background-color;
+  -webkit-will-change: background-color;
+  
+  /* Layout containment for background consistency */
+  contain: layout style paint;
+}
+
+/* Chrome scroll state background maintenance */
+.chrome-scroll-state-background {
+  /* Maintain background during all scroll states */
+  background-color: #ffffff !important;
+  background-attachment: local;
+  -webkit-background-attachment: local;
+  
+  /* Chrome scroll state optimization */
+  will-change: scroll-position, background-color;
+  -webkit-will-change: scroll-position, background-color;
+  
+  /* Prevent background artifacts during scroll */
+  -webkit-overscroll-behavior: contain;
+  overscroll-behavior: contain;
+  
+  /* Chrome hardware acceleration for background */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  
+  /* Layout containment for scroll state */
+  contain: layout style paint;
+}
+
+/* Chrome scroll momentum artifact prevention */
+.chrome-momentum-artifact-prevention {
+  /* Prevent artifacts during Chrome scroll momentum */
+  -webkit-overflow-scrolling: touch;
+  -webkit-overscroll-behavior: contain;
+  overscroll-behavior: contain;
+  
+  /* Chrome momentum optimization */
+  will-change: scroll-position, transform;
+  -webkit-will-change: scroll-position, transform;
+  
+  /* Chrome hardware acceleration for momentum */
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  
+  /* Chrome background during momentum */
+  background-color: #ffffff !important;
+  background-attachment: local;
+  -webkit-background-attachment: local;
+  
+  /* Chrome containment for momentum */
+  contain: layout style paint;
+  
+  /* Chrome perspective for smooth momentum */
+  -webkit-perspective: 1000px;
+  perspective: 1000px;
+  
+  /* Chrome backface visibility for momentum */
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Chrome performance monitoring classes */
+.chrome-performance-monitor {
+  /* Performance monitoring optimization */
+  will-change: scroll-position;
+  -webkit-will-change: scroll-position;
+  contain: layout style;
+}
+
+/* Chrome scroll performance for different content types */
+.chrome-scroll-text-performance {
+  /* Optimize text rendering during scroll */
+  text-rendering: optimizeSpeed;
+  -webkit-font-smoothing: subpixel-antialiased;
+  -moz-osx-font-smoothing: auto;
+  will-change: scroll-position;
+  -webkit-will-change: scroll-position;
+}
+
+.chrome-scroll-image-performance {
+  /* Optimize image rendering during scroll */
+  image-rendering: optimizeSpeed;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: scroll-position, transform;
+  -webkit-will-change: scroll-position, transform;
+}
+
+/* Chrome mobile scroll performance */
+@media (max-width: 768px) {
+  .chrome-mobile-scroll-performance {
+    /* Mobile-specific Chrome scroll optimization */
+    -webkit-overflow-scrolling: touch;
+    -webkit-overscroll-behavior-y: contain;
+    overscroll-behavior-y: contain;
+    
+    /* Mobile Chrome will-change optimization */
+    will-change: scroll-position;
+    -webkit-will-change: scroll-position;
+    
+    /* Mobile Chrome touch optimization */
+    touch-action: pan-y;
+    -ms-touch-action: pan-y;
+    
+    /* Mobile Chrome containment */
+    contain: layout style;
   }
+}
+
+/* Chrome desktop scroll performance */
+@media (min-width: 769px) {
+  .chrome-desktop-scroll-performance {
+    /* Desktop-specific Chrome scroll optimization */
+    will-change: scroll-position, transform;
+    -webkit-will-change: scroll-position, transform;
+    
+    /* Desktop Chrome containment */
+    contain: layout style paint;
+    
+    /* Desktop Chrome hardware acceleration */
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Chrome scroll momentum handling */
+.chrome-scroll-momentum {
+  /* Chrome momentum scrolling */
+  -webkit-overflow-scrolling: touch;
+  /* Chrome overscroll containment */
+  -webkit-overscroll-behavior: contain;
+  overscroll-behavior: contain;
+  /* Chrome scroll snap */
+  -webkit-scroll-snap-type: y proximity;
+  scroll-snap-type: y proximity;
+  /* Chrome background during scroll */
+  background-color: #ffffff !important;
+  background-attachment: local;
+  -webkit-background-attachment: local;
+}
+
+/* Chrome boundary artifact prevention */
+.chrome-boundary-fix {
+  /* Chrome background extension */
+  background: #ffffff;
+  background: -webkit-linear-gradient(to bottom, #ffffff 0%, #ffffff 100%);
+  background: linear-gradient(to bottom, #ffffff 0%, #ffffff 100%);
+  /* Chrome background attachment */
+  background-attachment: local;
+  -webkit-background-attachment: local;
+  /* Chrome overscroll prevention */
+  -webkit-overscroll-behavior: contain;
+  overscroll-behavior: contain;
+  /* Chrome minimum coverage */
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  /* Chrome padding for boundary coverage */
+  padding-bottom: 100px; /* Extra padding to prevent boundary exposure */
+}
+
+/* Chrome-specific CSS property validation classes */
+.chrome-css-validation {
+  /* Validate overscroll-behavior: contain */
+  -webkit-overscroll-behavior: contain !important;
+  overscroll-behavior: contain !important;
+  /* Validate webkit-overflow-scrolling: touch */
+  -webkit-overflow-scrolling: touch !important;
+  /* Validate background-attachment: local */
+  background-attachment: local !important;
+  -webkit-background-attachment: local !important;
+  /* Validate min-height: 100vh */
+  min-height: 100vh !important;
+  min-height: -webkit-fill-available !important;
+  /* Validate webkit-transform */
+  -webkit-transform: translateZ(0) !important;
+  transform: translateZ(0) !important;
+  /* Validate will-change */
+  will-change: scroll-position !important;
+  -webkit-will-change: scroll-position !important;
+}
+
+/* Chrome performance optimization classes */
+.chrome-performance-optimized {
+  /* Chrome containment */
+  contain: layout style paint;
+  /* Chrome will-change optimization */
+  will-change: scroll-position, transform;
+  -webkit-will-change: scroll-position, transform;
+  /* Chrome hardware acceleration */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  /* Chrome scroll optimization */
+  -webkit-overflow-scrolling: touch;
+  -webkit-overscroll-behavior: contain;
+  overscroll-behavior: contain;
+}
+
+/* Chrome-specific media queries for optimization */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  /* Chrome-specific optimizations */
+  .chrome-webkit-specific {
+    -webkit-overflow-scrolling: touch;
+    -webkit-overscroll-behavior: contain;
+    -webkit-transform: translateZ(0);
+    -webkit-will-change: scroll-position;
+    -webkit-background-attachment: local;
+  }
+}
+
+/* Chrome mobile optimizations */
+@media (max-width: 768px) {
+  .chrome-mobile-optimized {
+    /* Chrome mobile scroll */
+    -webkit-overflow-scrolling: touch;
+    /* Chrome mobile overscroll */
+    -webkit-overscroll-behavior-y: contain;
+    overscroll-behavior-y: contain;
+    /* Chrome mobile touch action */
+    touch-action: pan-y;
+    -webkit-touch-action: pan-y;
+    /* Chrome mobile background */
+    background-color: #ffffff !important;
+    background-attachment: local;
+    -webkit-background-attachment: local;
+  }
+}
+
+/* Chrome desktop optimizations */
+@media (min-width: 769px) {
+  .chrome-desktop-optimized {
+    /* Chrome desktop scroll */
+    scroll-behavior: smooth;
+    -webkit-scroll-behavior: smooth;
+    /* Chrome desktop overscroll */
+    -webkit-overscroll-behavior: contain;
+    overscroll-behavior: contain;
+    /* Chrome desktop performance */
+    contain: layout style paint;
+    will-change: scroll-position;
+    -webkit-will-change: scroll-position;
+  }
+}
+
+/* Chrome version-specific optimizations */
+@supports (-webkit-appearance: none) {
+  /* Modern Chrome optimizations */
+  .chrome-modern-optimized {
+    -webkit-overflow-scrolling: touch;
+    -webkit-overscroll-behavior: contain;
+    overscroll-behavior: contain;
+    scroll-behavior: smooth;
+    -webkit-scroll-behavior: smooth;
+  }
+}
+
+/* Chrome sidebar scroll optimizations */
+.chrome-sidebar-scroll-optimized {
+  /* Chrome sidebar scroll properties */
+  -webkit-overflow-scrolling: touch;
+  -webkit-overscroll-behavior: contain;
+  overscroll-behavior: contain;
+  -webkit-overscroll-behavior-y: contain;
+  overscroll-behavior-y: contain;
+  
+  /* Chrome sidebar will-change optimization */
+  will-change: scroll-position, transform;
+  -webkit-will-change: scroll-position, transform;
+  
+  /* Chrome sidebar containment */
+  contain: layout style paint;
+  
+  /* Chrome sidebar hardware acceleration */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  
+  /* Chrome sidebar background consistency - IMPORTANT: Override white backgrounds */
+  background-color: #1f2937 !important; /* gray-800 */
+  background-attachment: local !important;
+  -webkit-background-attachment: local !important;
+  background-image: linear-gradient(to bottom, #1f2937 0%, #1f2937 100%) !important;
+  -webkit-background-image: linear-gradient(to bottom, #1f2937 0%, #1f2937 100%) !important;
+  
+  /* Chrome sidebar background size */
+  background-size: cover !important;
+  -webkit-background-size: cover !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Chrome sidebar background consistency - Higher specificity */
+.chrome-sidebar-background-consistency {
+  /* Explicit gray-800 background with performance - OVERRIDE white */
+  background-color: #1f2937 !important;
+  background-image: linear-gradient(to bottom, #1f2937 0%, #1f2937 100%) !important;
+  background-attachment: local !important;
+  -webkit-background-attachment: local !important;
+  
+  /* Prevent any white backgrounds from showing through */
+  background-repeat: no-repeat !important;
+  background-size: cover !important;
+  -webkit-background-size: cover !important;
+  
+  /* Chrome background optimization for sidebar */
+  will-change: background-color !important;
+  -webkit-will-change: background-color !important;
+  
+  /* Layout containment for sidebar background consistency */
+  contain: layout style paint !important;
+}
+
+/* Override any white background classes for sidebar */
+nav.chrome-sidebar-background-consistency,
+nav.chrome-sidebar-scroll-optimized,
+#navigation.chrome-sidebar-background-consistency,
+#navigation.chrome-sidebar-scroll-optimized {
+  /* Force gray-800 background for sidebar navigation */
+  background-color: #1f2937 !important;
+  background-image: linear-gradient(to bottom, #1f2937 0%, #1f2937 100%) !important;
+}
+
+/* Ensure sidebar keeps gray background during scroll states */
+nav.chrome-sidebar-scroll-optimized.chrome-scrolling,
+#navigation.chrome-sidebar-scroll-optimized.chrome-scrolling {
+  background-color: #1f2937 !important;
+  background-image: linear-gradient(to bottom, #1f2937 0%, #1f2937 100%) !important;
+}
+
+/* Chrome sidebar scroll state background maintenance */
+.chrome-sidebar-scroll-state-background {
+  /* Maintain gray-800 background during all scroll states */
+  background-color: #1f2937 !important;
+  background-attachment: local !important;
+  -webkit-background-attachment: local !important;
+  
+  /* Chrome sidebar scroll state optimization */
+  will-change: scroll-position, background-color !important;
+  -webkit-will-change: scroll-position, background-color !important;
+  
+  /* Prevent background artifacts during sidebar scroll */
+  -webkit-overscroll-behavior: contain !important;
+  overscroll-behavior: contain !important;
+  
+  /* Chrome hardware acceleration for sidebar background */
+  -webkit-transform: translateZ(0) !important;
+  transform: translateZ(0) !important;
+  
+  /* Layout containment for sidebar scroll state */
+  contain: layout style paint !important;
+}
+
+/* Chrome sidebar momentum artifact prevention */
+.chrome-sidebar-momentum-artifact-prevention {
+  /* Prevent artifacts during Chrome sidebar scroll momentum */
+  -webkit-overflow-scrolling: touch !important;
+  -webkit-overscroll-behavior: contain !important;
+  overscroll-behavior: contain !important;
+  
+  /* Chrome sidebar momentum optimization */
+  will-change: scroll-position, transform !important;
+  -webkit-will-change: scroll-position, transform !important;
+  
+  /* Chrome hardware acceleration for sidebar momentum */
+  -webkit-transform: translate3d(0, 0, 0) !important;
+  transform: translate3d(0, 0, 0) !important;
+  
+  /* Chrome sidebar background during momentum - FORCE gray-800 */
+  background-color: #1f2937 !important;
+  background-attachment: local !important;
+  -webkit-background-attachment: local !important;
+  background-image: linear-gradient(to bottom, #1f2937 0%, #1f2937 100%) !important;
+  
+  /* Chrome containment for sidebar momentum */
+  contain: layout style paint !important;
+  
+  /* Chrome perspective for smooth sidebar momentum */
+  -webkit-perspective: 1000px !important;
+  perspective: 1000px !important;
+  
+  /* Chrome backface visibility for sidebar momentum */
+  -webkit-backface-visibility: hidden !important;
+  backface-visibility: hidden !important;
+}
+
+/* Chrome fallback optimizations */
+.chrome-fallback-optimized {
+  /* Fallback background */
+  background-color: #ffffff !important;
+  /* Fallback minimum height */
+  min-height: 100vh !important;
+  /* Fallback overflow */
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* Fallback box-sizing */
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
 }

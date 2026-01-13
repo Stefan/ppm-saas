@@ -125,7 +125,7 @@ export const Select: React.FC<SelectProps> = ({
       )}
 
       {error && (
-        <p className="mt-1 text-sm text-red-600" role="alert">
+        <p className="mt-1 text-sm text-red-600">
           {error}
         </p>
       )}

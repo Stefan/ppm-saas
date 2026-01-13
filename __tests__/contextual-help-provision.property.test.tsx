@@ -397,7 +397,7 @@ describe('Contextual Help Provision Properties', () => {
             let helpVisible = screen.queryByText(`Help for ${feature.name}`)
             fireEvent.mouseLeave(featureButton)
             
-            // Test focus interaction (keyboard accessibility)
+            // Test focus interaction
             fireEvent.focus(featureButton)
             helpVisible = screen.queryByText(`Help for ${feature.name}`)
             fireEvent.blur(featureButton)

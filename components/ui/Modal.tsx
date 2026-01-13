@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/design-system'
-import { useKeyboard, useClickOutside } from '@/hooks'
+import { useClickOutside } from '@/hooks'
 
 interface ModalProps {
   isOpen: boolean
@@ -11,13 +11,12 @@ interface ModalProps {
   children: React.ReactNode
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full'
   closeOnOverlayClick?: boolean
-  closeOnEscape?: boolean
   showCloseButton?: boolean
   className?: string
 }
 
 /**
- * Enhanced Modal component with accessibility features
+ * Enhanced Modal component
  */
 export const Modal: React.FC<ModalProps> = ({
   isOpen,
@@ -26,7 +25,6 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   size = 'md',
   closeOnOverlayClick = true,
-  closeOnEscape = true,
   showCloseButton = true,
   className,
 }) => {
@@ -35,9 +33,6 @@ export const Modal: React.FC<ModalProps> = ({
       onClose()
     }
   })
-
-  // Handle escape key
-  useKeyboard('Escape', closeOnEscape ? onClose : () => {}, { preventDefault: true })
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -49,19 +44,6 @@ export const Modal: React.FC<ModalProps> = ({
     }
     // Return undefined for the else case
     return undefined
-  }, [isOpen])
-
-  // Focus management
-  useEffect(() => {
-    if (isOpen && modalRef.current) {
-      const focusableElements = modalRef.current.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      )
-      const firstElement = focusableElements[0] as HTMLElement
-      if (firstElement) {
-        firstElement.focus()
-      }
-    }
   }, [isOpen])
 
   if (!isOpen) return null
@@ -77,9 +59,6 @@ export const Modal: React.FC<ModalProps> = ({
   const modalContent = (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={title ? 'modal-title' : undefined}
     >
       {/* Backdrop */}
       <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" />
@@ -98,7 +77,7 @@ export const Modal: React.FC<ModalProps> = ({
         {(title || showCloseButton) && (
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             {title && (
-              <h2 id="modal-title" className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-gray-900">
                 {title}
               </h2>
             )}
@@ -106,7 +85,6 @@ export const Modal: React.FC<ModalProps> = ({
               <button
                 onClick={onClose}
                 className="p-2 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100 transition-colors"
-                aria-label="Close modal"
               >
                 <X className="h-5 w-5" />
               </button>

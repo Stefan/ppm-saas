@@ -4,7 +4,7 @@
  */
 
 export { HelpChat, default as HelpChatComponent } from '../HelpChat'
-export { HelpChatToggle, HelpChatToggleCompact, default as HelpChatToggleComponent } from '../HelpChatToggle'
+export { HelpChatToggle, CompactHelpChatToggle, default as HelpChatToggleComponent } from '../HelpChatToggle'
 
 // Re-export types for convenience
 export type {

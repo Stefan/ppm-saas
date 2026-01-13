@@ -4,7 +4,6 @@
  */
 
 import { PropertyTestConfig } from '../utils/property-testing'
-import { AccessibilityTestOptions } from '../utils/accessibility-testing'
 import { ViewportSize } from '../utils/responsive-testing'
 
 /**
@@ -32,41 +31,6 @@ export const COMPREHENSIVE_PROPERTY_TEST_CONFIG: PropertyTestConfig = {
   numRuns: 500,
   timeout: 30000,
   seed: undefined
-}
-
-/**
- * Accessibility testing configuration
- */
-export const ACCESSIBILITY_TEST_CONFIG: AccessibilityTestOptions = {
-  rules: {
-    // Core WCAG 2.1 AA rules
-    'color-contrast': { enabled: true },
-    'keyboard-navigation': { enabled: true },
-    'focus-order-semantics': { enabled: true },
-    'aria-valid-attr': { enabled: true },
-    'aria-valid-attr-value': { enabled: true },
-    'button-name': { enabled: true },
-    'link-name': { enabled: true },
-    'image-alt': { enabled: true },
-    'label': { enabled: true },
-    'landmark-one-main': { enabled: true },
-    'page-has-heading-one': { enabled: true },
-    'region': { enabled: true },
-    'skip-link': { enabled: true },
-    'tabindex': { enabled: true },
-    'valid-lang': { enabled: true },
-    
-    // Mobile-specific accessibility rules
-    'target-size': { enabled: true },
-    'touch-target': { enabled: true },
-    'orientation': { enabled: true },
-    
-    // Additional WCAG 2.1 rules
-    'autocomplete-valid': { enabled: true },
-    'focus-order-semantics': { enabled: true },
-    'scrollable-region-focusable': { enabled: true }
-  },
-  tags: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice']
 }
 
 /**
@@ -239,7 +203,6 @@ export const TEST_ENV_CONFIG = {
 export const TEST_FEATURE_FLAGS = {
   enableVisualRegression: process.env.ENABLE_VISUAL_REGRESSION === 'true',
   enablePerformanceTesting: process.env.ENABLE_PERFORMANCE_TESTING === 'true',
-  enableAccessibilityTesting: process.env.ENABLE_A11Y_TESTING !== 'false', // enabled by default
   enablePropertyTesting: process.env.ENABLE_PROPERTY_TESTING !== 'false', // enabled by default
   enableCrossBrowserTesting: process.env.ENABLE_CROSS_BROWSER_TESTING === 'true',
   enableMobileTesting: process.env.ENABLE_MOBILE_TESTING !== 'false', // enabled by default
@@ -262,7 +225,6 @@ export function getTestConfig() {
   
   return {
     propertyTesting: isCI ? FAST_PROPERTY_TEST_CONFIG : PROPERTY_TEST_CONFIG,
-    accessibility: ACCESSIBILITY_TEST_CONFIG,
     performance: PERFORMANCE_THRESHOLDS,
     touch: TOUCH_TEST_CONFIG,
     ai: AI_TEST_CONFIG,
@@ -298,11 +260,6 @@ export const TEST_SUITES = {
   e2e: {
     pattern: '**/*.e2e.test.{ts,tsx}',
     timeout: TEST_ENV_CONFIG.longTimeout,
-    coverage: false
-  },
-  accessibility: {
-    pattern: '**/*.a11y.test.{ts,tsx}',
-    timeout: TEST_ENV_CONFIG.defaultTimeout,
     coverage: false
   },
   performance: {

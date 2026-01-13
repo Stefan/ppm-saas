@@ -81,33 +81,6 @@ jest.mock('../components/onboarding/ProactiveTips', () => {
   }
 })
 
-jest.mock('../components/accessibility/KeyboardNavigation', () => ({
-  __esModule: true,
-  default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  FocusIndicator: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
-}))
-
-jest.mock('../components/accessibility/LandmarkNavigation', () => ({
-  __esModule: true,
-  default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  SkipLink: ({ children, href }: { children: React.ReactNode; href: string }) => 
-    <a href={href}>{children}</a>
-}))
-
-jest.mock('../components/accessibility/ScreenReaderSupport', () => ({
-  AnnouncementManager: () => <div data-testid="announcement-manager">Announcement Manager</div>
-}))
-
-jest.mock('../components/accessibility/AccessibilityThemes', () => ({
-  AccessibilityProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
-}))
-
-jest.mock('../components/accessibility/ColorBlindnessFilters', () => {
-  return function MockColorBlindnessFilters() {
-    return <div data-testid="color-blindness-filters">Color Blindness Filters</div>
-  }
-})
-
 // Test content component with various heights
 const TestContent = ({ height = 'normal' }: { height?: 'short' | 'normal' | 'long' | 'very-long' }) => {
   const heights = {

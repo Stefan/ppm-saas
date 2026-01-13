@@ -365,7 +365,6 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
             <button
               onClick={() => setIsMinimized(!isMinimized)}
               className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-              aria-label={isMinimized ? "Expand assistant" : "Minimize assistant"}
             >
               {isMinimized ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </button>
@@ -373,7 +372,6 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
             <button
               onClick={() => setIsVisible(false)}
               className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-              aria-label="Close assistant"
             >
               <X className="h-4 w-4" />
             </button>

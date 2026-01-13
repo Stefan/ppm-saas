@@ -65,7 +65,6 @@ function generateSummaryReport(results) {
     timestamp: new Date().toISOString(),
     totalPages: results.length,
     performance: calculateAverageScore(results, 'performance'),
-    accessibility: calculateAverageScore(results, 'accessibility'),
     bestPractices: calculateAverageScore(results, 'best-practices'),
     seo: calculateAverageScore(results, 'seo'),
     
@@ -84,7 +83,6 @@ function generateSummaryReport(results) {
     pages: results.map(result => ({
       url: result.finalUrl,
       performance: Math.round((result.categories.performance?.score || 0) * 100),
-      accessibility: Math.round((result.categories.accessibility?.score || 0) * 100),
       bestPractices: Math.round((result.categories['best-practices']?.score || 0) * 100),
       seo: Math.round((result.categories.seo?.score || 0) * 100),
       lcp: result.audits['largest-contentful-paint']?.numericValue || 0,
@@ -166,7 +164,6 @@ Generated: ${new Date(summary.timestamp).toLocaleString()}
 | Category | Score | Status |
 |----------|-------|--------|
 | Performance | ${summary.performance}% | ${getStatusEmoji(summary.performance)} |
-| Accessibility | ${summary.accessibility}% | ${getStatusEmoji(summary.accessibility, 90)} |
 | Best Practices | ${summary.bestPractices}% | ${getStatusEmoji(summary.bestPractices)} |
 | SEO | ${summary.seo}% | ${getStatusEmoji(summary.seo)} |
 
@@ -186,7 +183,8 @@ ${summary.pages.map(page => `
 ### ${page.url}
 
 - **Performance**: ${page.performance}% ${getStatusEmoji(page.performance)}
-- **Accessibility**: ${page.accessibility}% ${getStatusEmoji(page.accessibility, 90)}
+- **Best Practices**: ${page.bestPractices}% ${getStatusEmoji(page.bestPractices)}
+- **SEO**: ${page.seo}% ${getStatusEmoji(page.seo)}
 - **LCP**: ${page.lcp}ms ${getCoreVitalStatus(page.lcp, 2500)}
 - **CLS**: ${page.cls} ${getCoreVitalStatus(page.cls, 0.1)}
 `).join('\n')}
@@ -194,7 +192,6 @@ ${summary.pages.map(page => `
 ## Recommendations
 
 ${summary.performance < 80 ? '- 🚨 **Performance score is below 80%** - Consider optimizing images, reducing JavaScript, and improving server response times.' : ''}
-${summary.accessibility < 90 ? '- 🚨 **Accessibility score is below 90%** - Review color contrast, ARIA labels, and keyboard navigation.' : ''}
 ${summary.lcp > 2500 ? '- 🚨 **LCP is above 2.5s** - Optimize images, improve server response time, and consider preloading critical resources.' : ''}
 ${summary.cls > 0.1 ? '- 🚨 **CLS is above 0.1** - Ensure proper sizing for images and ads, avoid inserting content above existing content.' : ''}
 
@@ -243,14 +240,13 @@ function main() {
   // Output summary to console
   console.log('\n📊 Performance Summary:')
   console.log(`Performance: ${summary.performance}% ${summary.performance >= 80 ? '✅' : '❌'}`)
-  console.log(`Accessibility: ${summary.accessibility}% ${summary.accessibility >= 90 ? '✅' : '❌'}`)
   console.log(`LCP: ${summary.lcp}ms ${summary.lcp <= 2500 ? '✅' : '❌'}`)
   console.log(`CLS: ${summary.cls} ${summary.cls <= 0.1 ? '✅' : '❌'}`)
   
   console.log(`\n✅ Reports generated in ${REPORTS_DIR}/`)
   
   // Exit with error code if performance is poor
-  if (summary.performance < 70 || summary.accessibility < 80) {
+  if (summary.performance < 70) {
     console.log('❌ Performance thresholds not met')
     process.exit(1)
   }

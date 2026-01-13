@@ -1,15 +1,13 @@
 import React, { useRef, useCallback, useState } from 'react'
-import { cn, componentVariants, touchTargets, a11y } from '@/lib/design-system'
+import { cn, componentVariants, touchTargets } from '@/lib/design-system'
 import type { ButtonProps } from '@/types'
 
 /**
- * TouchButton Component - Enhanced button with accessibility and touch optimization
+ * TouchButton Component - Enhanced button with touch optimization
  * 
  * Features:
- * - Minimum 44px touch targets (WCAG 2.1 AA compliance)
+ * - Minimum 44px touch targets
  * - Haptic feedback simulation through visual/audio cues
- * - Enhanced focus management and keyboard navigation
- * - Proper ARIA labels and accessibility support
  * - Visual press states with smooth animations
  */
 
@@ -44,25 +42,18 @@ export const TouchButton: React.FC<TouchButtonProps> = ({
   fullWidth = false,
   leftIcon,
   rightIcon,
-  'aria-label': ariaLabel,
-  'aria-labelledby': ariaLabelledBy,
-  'aria-describedby': ariaDescribedBy,
   'data-testid': dataTestId,
   ...props
 }) => {
   const buttonRef = useRef<HTMLButtonElement>(null)
   const [isPressed, setIsPressed] = useState(false)
-  const [isFocused, setIsFocused] = useState(false)
 
   // Base classes for the button
   const baseClasses = `
     inline-flex items-center justify-center font-medium rounded-lg
     transition-all duration-200 ease-in-out
-    focus:outline-none focus:ring-2 focus:ring-offset-2
     disabled:opacity-50 disabled:cursor-not-allowed
     select-none touch-manipulation
-    ${a11y.focusVisible}
-    ${a11y.reducedMotion}
   `
 
   // Size classes with proper touch targets
@@ -84,9 +75,6 @@ export const TouchButton: React.FC<TouchButtonProps> = ({
   // Press animation classes
   const pressClasses = isPressed && hapticFeedback ? 'transform scale-95' : ''
   
-  // Focus classes
-  const focusClasses = isFocused ? 'ring-2 ring-offset-2' : ''
-
   // Full width classes
   const widthClasses = fullWidth ? 'w-full' : ''
 
@@ -140,13 +128,11 @@ export const TouchButton: React.FC<TouchButtonProps> = ({
 
   // Enhanced focus handler
   const handleFocus = useCallback((event: React.FocusEvent<HTMLButtonElement>) => {
-    setIsFocused(true)
     onFocus?.(event)
   }, [onFocus])
 
   // Enhanced blur handler
   const handleBlur = useCallback((event: React.FocusEvent<HTMLButtonElement>) => {
-    setIsFocused(false)
     onBlur?.(event)
   }, [onBlur])
 
@@ -155,13 +141,6 @@ export const TouchButton: React.FC<TouchButtonProps> = ({
     if (disabled || loading) return
     simulateHapticFeedback()
   }, [disabled, loading, simulateHapticFeedback])
-
-  // Keyboard event handler for accessibility
-  const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      simulateHapticFeedback()
-    }
-  }, [simulateHapticFeedback])
 
   // Helper function to render icon safely
   const renderIcon = (icon: React.ReactNode) => {
@@ -187,7 +166,6 @@ export const TouchButton: React.FC<TouchButtonProps> = ({
   const LoadingSpinner = () => (
     <div 
       className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent mr-2"
-      aria-hidden="true"
     />
   )
 
@@ -201,7 +179,6 @@ export const TouchButton: React.FC<TouchButtonProps> = ({
         sizeClasses[size],
         touchTargetClasses[touchTarget],
         pressClasses,
-        focusClasses,
         widthClasses,
         className
       )}
@@ -210,24 +187,18 @@ export const TouchButton: React.FC<TouchButtonProps> = ({
       onFocus={handleFocus}
       onBlur={handleBlur}
       onTouchStart={handleTouchStart}
-      onKeyDown={handleKeyDown}
-      aria-label={ariaLabel}
-      aria-labelledby={ariaLabelledBy}
-      aria-describedby={ariaDescribedBy}
-      aria-disabled={disabled || loading}
-      aria-pressed={isPressed}
       data-testid={dataTestId || 'touch-button'}
       {...props}
     >
       {loading && <LoadingSpinner />}
       {leftIcon && (
-        <span className="mr-2 flex-shrink-0" aria-hidden="true">
+        <span className="mr-2 flex-shrink-0">
           {renderIcon(leftIcon)}
         </span>
       )}
       <span className={loading ? 'opacity-70' : ''}>{children}</span>
       {rightIcon && (
-        <span className="ml-2 flex-shrink-0" aria-hidden="true">
+        <span className="ml-2 flex-shrink-0">
           {renderIcon(rightIcon)}
         </span>
       )}

@@ -204,12 +204,6 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       >
         {children}
       </div>
-
-      {/* Accessibility announcement */}
-      <div className="sr-only" aria-live="polite">
-        {isRefreshing && 'Refreshing content'}
-        {isReadyToRefresh && !isRefreshing && 'Ready to refresh, release to refresh'}
-      </div>
     </div>
   )
 }

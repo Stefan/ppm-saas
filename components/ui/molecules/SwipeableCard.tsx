@@ -8,7 +8,7 @@ import type { CardProps } from '@/types'
  * Features:
  * - Configurable swipe actions (left and right)
  * - Smooth animations and visual feedback
- * - Accessibility support with keyboard navigation
+
  * - Customizable action thresholds and animations
  * - Support for both touch and mouse interactions
  */
@@ -285,21 +285,6 @@ export const SwipeableCard: React.FC<SwipeableCardProps> = ({
     }
   }, [swipeOffset, isDragging, onCardClick])
 
-  // Keyboard navigation support
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (swipeDisabled) return
-
-    if (e.key === 'ArrowLeft' && leftAction) {
-      e.preventDefault()
-      leftAction.action()
-      onSwipeEnd?.('left', leftAction)
-    } else if (e.key === 'ArrowRight' && rightAction) {
-      e.preventDefault()
-      rightAction.action()
-      onSwipeEnd?.('right', rightAction)
-    }
-  }, [swipeDisabled, leftAction, rightAction, onSwipeEnd])
-
   // Base card classes
   const cardClasses = cn(
     'relative overflow-hidden cursor-pointer select-none',
@@ -369,14 +354,6 @@ export const SwipeableCard: React.FC<SwipeableCardProps> = ({
         onTouchEnd={handleTouchEnd}
         onMouseDown={handleMouseDown}
         onClick={handleCardClick}
-        onKeyDown={handleKeyDown}
-        tabIndex={onCardClick || leftAction || rightAction ? 0 : -1}
-        role={onCardClick ? 'button' : 'article'}
-        aria-label={
-          leftAction || rightAction
-            ? `Swipeable card. ${leftAction ? `Swipe left for ${leftAction.label}.` : ''} ${rightAction ? `Swipe right for ${rightAction.label}.` : ''}`
-            : undefined
-        }
         {...props}
       >
         {children}

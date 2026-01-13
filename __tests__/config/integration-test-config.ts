@@ -9,7 +9,6 @@ export interface TestConfig {
   retries: number
   devices: DeviceConfig[]
   testData: TestDataConfig
-  accessibility: AccessibilityConfig
   performance: PerformanceConfig
 }
 
@@ -86,32 +85,11 @@ export interface UserPreferences {
     pinnedItems: string[]
     recentItems: string[]
   }
-  accessibilitySettings: {
-    highContrast: boolean
-    reducedMotion: boolean
-    fontSize: 'small' | 'medium' | 'large'
-    screenReader: boolean
-  }
   aiSettings: {
     enableSuggestions: boolean
     enablePredictiveText: boolean
     enableAutoOptimization: boolean
   }
-}
-
-export interface AccessibilityConfig {
-  wcagLevel: 'A' | 'AA' | 'AAA'
-  rules: {
-    colorContrast: boolean
-    keyboardNavigation: boolean
-    focusManagement: boolean
-    ariaLabels: boolean
-    headingStructure: boolean
-    landmarkRoles: boolean
-  }
-  testScreenReaders: boolean
-  testHighContrast: boolean
-  testReducedMotion: boolean
 }
 
 export interface PerformanceConfig {
@@ -192,12 +170,6 @@ export const defaultTestConfig: TestConfig = {
             pinnedItems: ['dashboards', 'projects'],
             recentItems: ['resources', 'risks']
           },
-          accessibilitySettings: {
-            highContrast: false,
-            reducedMotion: false,
-            fontSize: 'medium',
-            screenReader: false
-          },
           aiSettings: {
             enableSuggestions: true,
             enablePredictiveText: true,
@@ -222,12 +194,6 @@ export const defaultTestConfig: TestConfig = {
             collapsedSections: ['admin'],
             pinnedItems: ['projects', 'resources'],
             recentItems: ['dashboards', 'reports']
-          },
-          accessibilitySettings: {
-            highContrast: true,
-            reducedMotion: false,
-            fontSize: 'large',
-            screenReader: false
           },
           aiSettings: {
             enableSuggestions: true,
@@ -322,20 +288,6 @@ export const defaultTestConfig: TestConfig = {
         mitigation: ['Regular cost monitoring', 'Negotiate better rates', 'Optimize usage']
       }
     ]
-  },
-  accessibility: {
-    wcagLevel: 'AA',
-    rules: {
-      colorContrast: true,
-      keyboardNavigation: true,
-      focusManagement: true,
-      ariaLabels: true,
-      headingStructure: true,
-      landmarkRoles: true
-    },
-    testScreenReaders: true,
-    testHighContrast: true,
-    testReducedMotion: true
   },
   performance: {
     coreWebVitals: {

@@ -184,7 +184,7 @@ export function FeedbackInterface({
                 ? 'bg-blue-100 text-blue-600'
                 : 'text-gray-400 hover:text-yellow-500 hover:bg-gray-50'
             )}
-            aria-label={`Rate ${rating} stars`}
+
           >
             <Star 
               className={cn(
@@ -432,7 +432,6 @@ export function FeedbackInterface({
         <button
           onClick={onClose}
           className="p-1 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100 transition-colors"
-          aria-label="Close feedback"
         >
           <X className="h-4 w-4" />
         </button>

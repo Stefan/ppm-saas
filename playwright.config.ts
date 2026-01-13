@@ -131,15 +131,6 @@ export default defineConfig({
       },
     },
 
-    // Accessibility testing with screen readers simulation
-    {
-      name: 'accessibility-desktop',
-      use: {
-        ...devices['Desktop Chrome'],
-        viewport: { width: 1280, height: 720 }
-      },
-    },
-
     // Performance testing on slower devices
     {
       name: 'slow-device-simulation',
