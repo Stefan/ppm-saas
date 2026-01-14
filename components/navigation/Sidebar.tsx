@@ -183,114 +183,213 @@ export default function Sidebar({ isOpen = true, onToggle, isMobile = false }: S
     )
   }
 
-  // Desktop sidebar - Consistent cross-browser layout
+  // Desktop sidebar - Explicit styles for cross-browser consistency
   return (
     <nav
       ref={sidebarRef}
       id="navigation"
-      className="hidden lg:flex lg:flex-col w-64 h-screen bg-gray-800 text-white flex-shrink-0"
+      className="hidden lg:block w-64 h-screen bg-gray-800 text-white flex-shrink-0"
       style={{
         position: 'fixed',
         left: 0,
         top: 0,
         bottom: 0,
+        width: '256px',
+        height: '100vh',
         overflowY: 'auto',
-        overflowX: 'hidden'
+        overflowX: 'hidden',
+        backgroundColor: '#1f2937',
+        color: '#ffffff',
+        display: 'none'
       }}
     >
-      <div className="p-4 mb-4">
-        <h1 className="text-2xl font-bold text-white">ORKA PPM</h1>
-        <p className="text-gray-400 text-sm mt-1">Portfolio Management</p>
+      <style jsx>{`
+        @media (min-width: 1024px) {
+          nav#navigation {
+            display: flex !important;
+            flex-direction: column !important;
+          }
+        }
+      `}</style>
+      
+      <div style={{ padding: '1rem', marginBottom: '1rem', flexShrink: 0 }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ffffff', margin: 0, display: 'block' }}>
+          ORKA PPM
+        </h1>
+        <p style={{ fontSize: '0.875rem', color: '#9ca3af', marginTop: '0.25rem', display: 'block' }}>
+          Portfolio Management
+        </p>
       </div>
       
-      <ul className="px-4 space-y-2" style={{ flex: '1 1 auto', minHeight: 0 }}>
-        <li>
+      <ul style={{ padding: '0 1rem', margin: 0, listStyle: 'none', flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <li style={{ display: 'block', width: '100%' }}>
           <Link 
             href="/dashboards" 
-            className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors"
+            style={{ 
+              display: 'block', 
+              padding: '0.5rem 1rem', 
+              borderRadius: '0.375rem', 
+              color: '#ffffff', 
+              textDecoration: 'none',
+              transition: 'background-color 0.2s'
+            }}
           >
             Portfolio Dashboards
           </Link>
         </li>
-        <li>
+        <li style={{ display: 'block', width: '100%' }}>
           <Link 
             href="/scenarios" 
-            className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors"
+            style={{ 
+              display: 'block', 
+              padding: '0.5rem 1rem', 
+              borderRadius: '0.375rem', 
+              color: '#ffffff', 
+              textDecoration: 'none',
+              transition: 'background-color 0.2s'
+            }}
           >
             What-If Scenarios
           </Link>
         </li>
-        <li>
+        <li style={{ display: 'block', width: '100%' }}>
           <Link 
             href="/resources" 
-            className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors"
+            style={{ 
+              display: 'block', 
+              padding: '0.5rem 1rem', 
+              borderRadius: '0.375rem', 
+              color: '#ffffff', 
+              textDecoration: 'none',
+              transition: 'background-color 0.2s'
+            }}
           >
             Resource Management
           </Link>
         </li>
-        <li>
+        <li style={{ display: 'block', width: '100%' }}>
           <Link 
             href="/reports" 
-            className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors"
+            style={{ 
+              display: 'block', 
+              padding: '0.5rem 1rem', 
+              borderRadius: '0.375rem', 
+              color: '#ffffff', 
+              textDecoration: 'none',
+              transition: 'background-color 0.2s'
+            }}
           >
             AI Reports & Analytics
           </Link>
         </li>
-        <li>
+        <li style={{ display: 'block', width: '100%' }}>
           <Link 
             href="/financials" 
-            className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors"
+            style={{ 
+              display: 'block', 
+              padding: '0.5rem 1rem', 
+              borderRadius: '0.375rem', 
+              color: '#ffffff', 
+              textDecoration: 'none',
+              transition: 'background-color 0.2s'
+            }}
           >
             Financial Tracking
           </Link>
         </li>
-        <li>
+        <li style={{ display: 'block', width: '100%' }}>
           <Link 
             href="/risks" 
-            className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors"
+            style={{ 
+              display: 'block', 
+              padding: '0.5rem 1rem', 
+              borderRadius: '0.375rem', 
+              color: '#ffffff', 
+              textDecoration: 'none',
+              transition: 'background-color 0.2s'
+            }}
           >
             Risk/Issue Registers
           </Link>
         </li>
-        <li>
+        <li style={{ display: 'block', width: '100%' }}>
           <Link 
             href="/monte-carlo" 
-            className="flex items-center py-2 px-4 rounded hover:bg-gray-700 transition-colors"
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center',
+              padding: '0.5rem 1rem', 
+              borderRadius: '0.375rem', 
+              color: '#ffffff', 
+              textDecoration: 'none',
+              transition: 'background-color 0.2s'
+            }}
           >
             <BarChart3 className="mr-2 h-4 w-4" />
             Monte Carlo Analysis
           </Link>
         </li>
-        <li>
+        <li style={{ display: 'block', width: '100%' }}>
           <Link 
             href="/changes" 
-            className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors"
+            style={{ 
+              display: 'block', 
+              padding: '0.5rem 1rem', 
+              borderRadius: '0.375rem', 
+              color: '#ffffff', 
+              textDecoration: 'none',
+              transition: 'background-color 0.2s'
+            }}
           >
             Change Management
           </Link>
         </li>
-        <li>
+        <li style={{ display: 'block', width: '100%' }}>
           <Link 
             href="/feedback" 
-            className="flex items-center py-2 px-4 rounded hover:bg-gray-700 transition-colors"
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center',
+              padding: '0.5rem 1rem', 
+              borderRadius: '0.375rem', 
+              color: '#ffffff', 
+              textDecoration: 'none',
+              transition: 'background-color 0.2s'
+            }}
           >
             <MessageSquare className="mr-2 h-4 w-4" />
             Feedback & Ideas
           </Link>
         </li>
-        <li>
+        <li style={{ display: 'block', width: '100%' }}>
           <Link 
             href="/admin/performance" 
-            className="flex items-center py-2 px-4 rounded hover:bg-gray-700 transition-colors"
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center',
+              padding: '0.5rem 1rem', 
+              borderRadius: '0.375rem', 
+              color: '#ffffff', 
+              textDecoration: 'none',
+              transition: 'background-color 0.2s'
+            }}
           >
             <Activity className="mr-2 h-4 w-4" />
             Performance Monitor
           </Link>
         </li>
-        <li>
+        <li style={{ display: 'block', width: '100%' }}>
           <Link 
             href="/admin/users" 
-            className="flex items-center py-2 px-4 rounded hover:bg-gray-700 transition-colors"
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center',
+              padding: '0.5rem 1rem', 
+              borderRadius: '0.375rem', 
+              color: '#ffffff', 
+              textDecoration: 'none',
+              transition: 'background-color 0.2s'
+            }}
           >
             <Users className="mr-2 h-4 w-4" />
             User Management
@@ -298,10 +397,21 @@ export default function Sidebar({ isOpen = true, onToggle, isMobile = false }: S
         </li>
       </ul>
       
-      <div className="p-4 mt-4 border-t border-gray-700" style={{ flexShrink: 0 }}>
+      <div style={{ padding: '1rem', marginTop: '1rem', borderTop: '1px solid #374151', flexShrink: 0 }}>
         <button 
           onClick={handleLogout} 
-          className="flex items-center w-full py-2 px-4 rounded hover:bg-gray-700 text-gray-300 hover:text-white transition-colors"
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center',
+            width: '100%',
+            padding: '0.5rem 1rem', 
+            borderRadius: '0.375rem', 
+            color: '#d1d5db', 
+            backgroundColor: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'background-color 0.2s, color 0.2s'
+          }}
         >
           <LogOut className="mr-2 h-4 w-4" /> 
           Logout
