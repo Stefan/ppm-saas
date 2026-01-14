@@ -150,6 +150,14 @@ export function useLanguage(): UseLanguageReturn {
         { code: 'en', name: 'English', native_name: 'English', formal_tone: false },
         { code: 'de', name: 'German', native_name: 'Deutsch', formal_tone: true },
         { code: 'fr', name: 'French', native_name: 'Français', formal_tone: true },
+        { code: 'es', name: 'Spanish', native_name: 'Español', formal_tone: false },
+        { code: 'it', name: 'Italian', native_name: 'Italiano', formal_tone: false },
+        { code: 'pt', name: 'Portuguese', native_name: 'Português', formal_tone: false },
+        { code: 'nl', name: 'Dutch', native_name: 'Nederlands', formal_tone: false },
+        { code: 'pl', name: 'Polish', native_name: 'Polski', formal_tone: false },
+        { code: 'ru', name: 'Russian', native_name: 'Русский', formal_tone: false },
+        { code: 'zh', name: 'Chinese', native_name: '中文', formal_tone: false },
+        { code: 'ja', name: 'Japanese', native_name: '日本語', formal_tone: false },
       ]
       setSupportedLanguages(defaultLanguages)
       return defaultLanguages

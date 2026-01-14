@@ -151,7 +151,7 @@ export function HelpChat({ className }: HelpChatProps) {
                 </h1>
               </div>
               <div className="flex items-center space-x-2">
-                <LanguageSelector compact className="mr-2" />
+                <LanguageSelector compact />
                 {state.messages.length > 0 && (
                   <button
                     onClick={handleClearMessages}
@@ -279,7 +279,7 @@ export function HelpChat({ className }: HelpChatProps) {
               </h2>
             </div>
             <div className="flex items-center space-x-2">
-              <LanguageSelector compact className="mr-2" />
+              <LanguageSelector compact />
               {state.messages.length > 0 && (
                 <button
                   onClick={handleClearMessages}
