@@ -160,12 +160,6 @@ export function HelpChat({ className }: HelpChatProps) {
                     <RefreshCw className="h-5 w-5" />
                   </button>
                 )}
-                <button
-                  onClick={toggleChat}
-                  className="p-2 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100 transition-colors"
-                >
-                  <X className="h-5 w-5" />
-                </button>
               </div>
             </header>
 
@@ -303,12 +297,6 @@ export function HelpChat({ className }: HelpChatProps) {
                 ) : (
                   <Minimize2 className="h-4 w-4" />
                 )}
-              </button>
-              <button
-                onClick={toggleChat}
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100 transition-colors"
-              >
-                <X className="h-4 w-4" />
               </button>
             </div>
           </header>
