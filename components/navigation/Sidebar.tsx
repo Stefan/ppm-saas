@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { LogOut, Activity, MessageSquare, X, Users, BarChart3 } from 'lucide-react'
@@ -16,22 +16,6 @@ export default function Sidebar({ isOpen = true, onToggle, isMobile = false }: S
   const router = useRouter()
   const { clearSession } = useAuth()
   const sidebarRef = useRef<HTMLElement>(null)
-
-  useEffect(() => {
-    const sidebarElement = sidebarRef.current
-    if (!sidebarElement) return
-
-    // Simple scroll optimization without browser detection
-    const handleScroll = () => {
-      // Optional: Add scroll performance monitoring
-    }
-
-    sidebarElement.addEventListener('scroll', handleScroll, { passive: true })
-
-    return () => {
-      sidebarElement.removeEventListener('scroll', handleScroll)
-    }
-  }, [])
 
   const handleLogout = async () => {
     try {
@@ -199,12 +183,12 @@ export default function Sidebar({ isOpen = true, onToggle, isMobile = false }: S
     )
   }
 
-  // Desktop sidebar - Standard CSS that works in all browsers
+  // Desktop sidebar - Simple standard CSS that works everywhere
   return (
     <nav
       ref={sidebarRef}
       id="navigation"
-      className="hidden lg:flex lg:flex-col w-64 h-screen p-4 bg-gray-800 text-white overflow-y-auto"
+      className="hidden lg:flex lg:flex-col w-64 h-screen p-4 bg-gray-800 text-white overflow-y-auto flex-shrink-0"
     >
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white">ORKA PPM</h1>
@@ -215,7 +199,7 @@ export default function Sidebar({ isOpen = true, onToggle, isMobile = false }: S
         <li>
           <Link 
             href="/dashboards" 
-            className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors min-h-[44px] flex items-center"
+            className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors"
           >
             Portfolio Dashboards
           </Link>
@@ -223,7 +207,7 @@ export default function Sidebar({ isOpen = true, onToggle, isMobile = false }: S
         <li>
           <Link 
             href="/scenarios" 
-            className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors min-h-[44px] flex items-center"
+            className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors"
           >
             What-If Scenarios
           </Link>
@@ -231,7 +215,7 @@ export default function Sidebar({ isOpen = true, onToggle, isMobile = false }: S
         <li>
           <Link 
             href="/resources" 
-            className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors min-h-[44px] flex items-center"
+            className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors"
           >
             Resource Management
           </Link>
@@ -239,7 +223,7 @@ export default function Sidebar({ isOpen = true, onToggle, isMobile = false }: S
         <li>
           <Link 
             href="/reports" 
-            className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors min-h-[44px] flex items-center"
+            className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors"
           >
             AI Reports & Analytics
           </Link>
@@ -247,7 +231,7 @@ export default function Sidebar({ isOpen = true, onToggle, isMobile = false }: S
         <li>
           <Link 
             href="/financials" 
-            className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors min-h-[44px] flex items-center"
+            className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors"
           >
             Financial Tracking
           </Link>
@@ -255,7 +239,7 @@ export default function Sidebar({ isOpen = true, onToggle, isMobile = false }: S
         <li>
           <Link 
             href="/risks" 
-            className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors min-h-[44px] flex items-center"
+            className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors"
           >
             Risk/Issue Registers
           </Link>
@@ -263,7 +247,7 @@ export default function Sidebar({ isOpen = true, onToggle, isMobile = false }: S
         <li>
           <Link 
             href="/monte-carlo" 
-            className="flex items-center py-2 px-4 rounded hover:bg-gray-700 transition-colors min-h-[44px]"
+            className="flex items-center py-2 px-4 rounded hover:bg-gray-700 transition-colors"
           >
             <BarChart3 className="mr-2 h-4 w-4" />
             Monte Carlo Analysis
@@ -272,7 +256,7 @@ export default function Sidebar({ isOpen = true, onToggle, isMobile = false }: S
         <li>
           <Link 
             href="/changes" 
-            className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors min-h-[44px] flex items-center"
+            className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors"
           >
             Change Management
           </Link>
@@ -280,7 +264,7 @@ export default function Sidebar({ isOpen = true, onToggle, isMobile = false }: S
         <li>
           <Link 
             href="/feedback" 
-            className="flex items-center py-2 px-4 rounded hover:bg-gray-700 transition-colors min-h-[44px]"
+            className="flex items-center py-2 px-4 rounded hover:bg-gray-700 transition-colors"
           >
             <MessageSquare className="mr-2 h-4 w-4" />
             Feedback & Ideas
@@ -289,7 +273,7 @@ export default function Sidebar({ isOpen = true, onToggle, isMobile = false }: S
         <li>
           <Link 
             href="/admin/performance" 
-            className="flex items-center py-2 px-4 rounded hover:bg-gray-700 transition-colors min-h-[44px]"
+            className="flex items-center py-2 px-4 rounded hover:bg-gray-700 transition-colors"
           >
             <Activity className="mr-2 h-4 w-4" />
             Performance Monitor
@@ -298,7 +282,7 @@ export default function Sidebar({ isOpen = true, onToggle, isMobile = false }: S
         <li>
           <Link 
             href="/admin/users" 
-            className="flex items-center py-2 px-4 rounded hover:bg-gray-700 transition-colors min-h-[44px]"
+            className="flex items-center py-2 px-4 rounded hover:bg-gray-700 transition-colors"
           >
             <Users className="mr-2 h-4 w-4" />
             User Management

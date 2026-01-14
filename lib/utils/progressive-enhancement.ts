@@ -212,43 +212,20 @@ export function getAnimationFallback(animationType: 'css' | 'js'): 'css' | 'js' 
  * Load polyfills for unsupported features
  */
 export async function loadPolyfills(): Promise<void> {
+  // Modern browsers (Chrome 80+, Firefox 78+, Safari 13+, Edge 80+) support all these features
+  // Polyfills are no longer needed for our target browsers
   const features = detectFeatureSupport()
-  const polyfillsToLoad: Promise<void>[] = []
-
-  // IntersectionObserver polyfill
-  if (!features.js.intersectionObserver) {
-    polyfillsToLoad.push(
-      import('intersection-observer').then(() => {
-        console.log('✅ IntersectionObserver polyfill loaded')
-      }).catch(() => {
-        console.warn('⚠️ Failed to load IntersectionObserver polyfill')
-      })
-    )
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 Feature support check:', {
+      intersectionObserver: features.js.intersectionObserver,
+      fetch: features.js.fetch,
+      promises: features.js.promises
+    })
   }
-
-  // Fetch polyfill
-  if (!features.js.fetch) {
-    polyfillsToLoad.push(
-      import('whatwg-fetch').then(() => {
-        console.log('✅ Fetch polyfill loaded')
-      }).catch(() => {
-        console.warn('⚠️ Failed to load Fetch polyfill')
-      })
-    )
-  }
-
-  // Promise polyfill
-  if (!features.js.promises) {
-    polyfillsToLoad.push(
-      import('promise-polyfill').then(() => {
-        console.log('✅ Promise polyfill loaded')
-      }).catch(() => {
-        console.warn('⚠️ Failed to load Promise polyfill')
-      })
-    )
-  }
-
-  await Promise.all(polyfillsToLoad)
+  
+  // All modern browsers support these features, so we don't need to load polyfills
+  return Promise.resolve()
 }
 
 /**
