@@ -122,15 +122,15 @@ export function HelpChat({ className }: HelpChatProps) {
     }
   }, [clearMessages, state.messages.length])
 
-  if (!state.isOpen) {
-    return null
-  }
-
+  // Mobile version with slide animation
   if (isMobile) {
     return (
       <>
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className={cn(
+            'fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden transition-opacity duration-300',
+            state.isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          )}
           onClick={toggleChat}
         />
         
@@ -138,6 +138,7 @@ export function HelpChat({ className }: HelpChatProps) {
           className={cn(
             'fixed inset-0 z-50 lg:hidden',
             'transform transition-transform duration-300 ease-in-out',
+            state.isOpen ? 'translate-x-0' : 'translate-x-full',
             className
           )}
         >
@@ -270,6 +271,7 @@ export function HelpChat({ className }: HelpChatProps) {
         className={cn(
           'fixed right-0 top-0 h-full w-96 bg-white border-l-2 border-gray-200 shadow-lg z-40',
           'transform transition-transform duration-300 ease-in-out',
+          state.isOpen ? 'translate-x-0' : 'translate-x-full',
           isMinimized && 'translate-x-full',
           className
         )}
