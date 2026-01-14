@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { MessageSquare, Lightbulb, PanelRightOpen, PanelRightClose, HelpCircle } from 'lucide-react'
+import { MessageSquare, Lightbulb, PanelRightOpen, PanelRightClose, HelpCircle, MessageCircleQuestion } from 'lucide-react'
 import { useHelpChat } from '../hooks/useHelpChat'
 import { useMediaQuery } from '../hooks/useMediaQuery'
 import { cn } from '../lib/utils/design-system'
@@ -78,7 +78,7 @@ export function HelpChatToggle({ className }: HelpChatToggleProps) {
             {hasUnreadTips ? (
               <Lightbulb className="h-5 w-5" />
             ) : (
-              <HelpCircle className="h-5 w-5" />
+              <MessageCircleQuestion className="h-5 w-5" />
             )}
             
             {hasUnreadTips && (
@@ -151,7 +151,7 @@ export function HelpChatToggle({ className }: HelpChatToggleProps) {
           ) : hasUnreadTips ? (
             <Lightbulb className="h-5 w-5" />
           ) : (
-            <HelpCircle className="h-5 w-5" />
+            <MessageCircleQuestion className="h-5 w-5" />
           )}
           
           {hasUnreadTips && !state.isOpen && (
