@@ -40,3 +40,13 @@ export {
   useHelpChatMessages,
   useHelpChatPreferences
 } from './useHelpChat'
+
+// Progressive enhancement hooks
+export {
+  useFeatureSupport,
+  useLayoutFallback,
+  useAnimationFallback,
+  useProgressiveEnhancement,
+  useFeatureCheck,
+  useProgressiveClasses
+} from './useProgressiveEnhancement'

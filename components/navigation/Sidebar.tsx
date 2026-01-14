@@ -9,6 +9,15 @@ import {
   chromeScrollPerformanceManager, 
   CHROME_SCROLL_CLASSES 
 } from '../../lib/utils/chrome-scroll-performance'
+import { 
+  getSidebarClasses, 
+  getSidebarStyles, 
+  logBrowserInfo 
+} from '../../lib/utils/browser-detection'
+import { 
+  applyScrollPerformanceOptimization,
+  getScrollPerformanceClasses 
+} from '../../lib/utils/performance-optimization'
 
 export interface SidebarProps {
   isOpen?: boolean
@@ -25,8 +34,56 @@ export default function Sidebar({ isOpen = true, onToggle, isMobile = false }: S
     const sidebarElement = sidebarRef.current
     if (!sidebarElement) return
 
+    // Log browser information for debugging
+    logBrowserInfo()
+
+    // FIREFOX FIX: Force display on desktop
+    if (typeof navigator !== 'undefined' && /Firefox/.test(navigator.userAgent)) {
+      const checkAndFixDisplay = () => {
+        if (window.innerWidth >= 1024) {
+          sidebarElement.style.display = 'flex'
+          sidebarElement.style.flexDirection = 'column'
+          console.log('🦊 Firefox: Sidebar display forced to flex')
+        }
+      }
+      
+      // Initial check
+      checkAndFixDisplay()
+      
+      // Check on resize
+      window.addEventListener('resize', checkAndFixDisplay)
+      
+      // Cleanup
+      const resizeCleanup = () => window.removeEventListener('resize', checkAndFixDisplay)
+      
+      // Continue with other optimizations
+      chromeScrollPerformanceManager.applyChromeOptimizations(sidebarElement)
+      const scrollCleanup = chromeScrollPerformanceManager.initializeChromeScrollHandling(sidebarElement)
+      
+      applyScrollPerformanceOptimization(sidebarElement, {
+        enableSmoothScroll: true,
+        enableOverscrollBehavior: true,
+        enableTouchAction: true,
+        enableMomentumScrolling: true
+      })
+      
+      return () => {
+        resizeCleanup()
+        scrollCleanup()
+      }
+    }
+
+    // Apply Chrome-specific optimizations
     chromeScrollPerformanceManager.applyChromeOptimizations(sidebarElement)
     const cleanup = chromeScrollPerformanceManager.initializeChromeScrollHandling(sidebarElement)
+    
+    // Apply cross-browser scroll performance optimizations
+    applyScrollPerformanceOptimization(sidebarElement, {
+      enableSmoothScroll: true,
+      enableOverscrollBehavior: true,
+      enableTouchAction: true,
+      enableMomentumScrolling: true
+    })
     
     return cleanup
   }, [isOpen])
@@ -62,18 +119,12 @@ export default function Sidebar({ isOpen = true, onToggle, isMobile = false }: S
         <nav 
           ref={sidebarRef}
           id="navigation"
-          className={`fixed left-0 top-0 h-full w-64 bg-gray-800 text-white flex flex-col z-50 lg:hidden transform transition-transform duration-300 ease-in-out overflow-y-auto sidebar-optimized animation-optimized modal-optimized chrome-flex-gap-prevention chrome-flex-item ${CHROME_SCROLL_CLASSES.SIDEBAR_SCROLL_OPTIMIZED} ${CHROME_SCROLL_CLASSES.SIDEBAR_BACKGROUND_CONSISTENCY} ${CHROME_SCROLL_CLASSES.SIDEBAR_SCROLL_STATE_BACKGROUND} ${CHROME_SCROLL_CLASSES.SIDEBAR_MOMENTUM_ARTIFACT_PREVENTION} ${CHROME_SCROLL_CLASSES.PERFORMANCE} ${CHROME_SCROLL_CLASSES.CONTAINER_PERFORMANCE} ${CHROME_SCROLL_CLASSES.MOBILE_PERFORMANCE}`}
+          className={`fixed left-0 top-0 h-full w-64 bg-gray-800 text-white flex flex-col z-50 lg:hidden transform transition-transform duration-300 ease-in-out overflow-y-auto sidebar-optimized animation-optimized modal-optimized ${getSidebarClasses(true)} ${getScrollPerformanceClasses()} ${CHROME_SCROLL_CLASSES.SIDEBAR_SCROLL_OPTIMIZED} ${CHROME_SCROLL_CLASSES.SIDEBAR_BACKGROUND_CONSISTENCY} ${CHROME_SCROLL_CLASSES.SIDEBAR_SCROLL_STATE_BACKGROUND} ${CHROME_SCROLL_CLASSES.SIDEBAR_MOMENTUM_ARTIFACT_PREVENTION} ${CHROME_SCROLL_CLASSES.PERFORMANCE} ${CHROME_SCROLL_CLASSES.CONTAINER_PERFORMANCE} ${CHROME_SCROLL_CLASSES.MOBILE_PERFORMANCE}`}
           style={{
-            WebkitOverflowScrolling: 'touch',
-            overscrollBehavior: 'contain',
-            overscrollBehaviorY: 'contain',
-            willChange: 'scroll-position, transform',
-            contain: 'layout style paint',
+            ...getSidebarStyles(),
             backgroundColor: '#1f2937',
             backgroundAttachment: 'local',
             backgroundImage: 'linear-gradient(to bottom, #1f2937 0%, #1f2937 100%)',
-            WebkitBoxSizing: 'border-box',
-            boxSizing: 'border-box',
             gap: 0,
             transform: isOpen ? 'translateX(0)' : 'translateX(-100%)'
           }}
@@ -209,23 +260,26 @@ export default function Sidebar({ isOpen = true, onToggle, isMobile = false }: S
   }
 
   // Desktop sidebar
+  // FIREFOX FIX: Detect Firefox and force display
+  const isFirefox = typeof navigator !== 'undefined' && /Firefox/.test(navigator.userAgent)
+  const firefoxDisplayFix = isFirefox ? 'flex' : undefined
+  
   return (
     <nav
       ref={sidebarRef}
       id="navigation"
-      className={`hidden lg:flex w-64 h-screen p-4 bg-gray-800 text-white flex-col overflow-y-auto sidebar-optimized layout-stable chrome-flex-gap-prevention chrome-flex-item ${CHROME_SCROLL_CLASSES.SIDEBAR_SCROLL_OPTIMIZED} ${CHROME_SCROLL_CLASSES.SIDEBAR_BACKGROUND_CONSISTENCY} ${CHROME_SCROLL_CLASSES.SIDEBAR_SCROLL_STATE_BACKGROUND} ${CHROME_SCROLL_CLASSES.SIDEBAR_MOMENTUM_ARTIFACT_PREVENTION} ${CHROME_SCROLL_CLASSES.PERFORMANCE} ${CHROME_SCROLL_CLASSES.CONTAINER_PERFORMANCE} ${CHROME_SCROLL_CLASSES.DESKTOP_PERFORMANCE} ${!isOpen ? 'hidden' : ''}`}
+      className={`hidden lg:flex w-64 h-screen p-4 bg-gray-800 text-white flex-col overflow-y-auto sidebar-optimized layout-stable ${getSidebarClasses(false)} ${getScrollPerformanceClasses()} ${CHROME_SCROLL_CLASSES.SIDEBAR_SCROLL_OPTIMIZED} ${CHROME_SCROLL_CLASSES.SIDEBAR_BACKGROUND_CONSISTENCY} ${CHROME_SCROLL_CLASSES.SIDEBAR_SCROLL_STATE_BACKGROUND} ${CHROME_SCROLL_CLASSES.SIDEBAR_MOMENTUM_ARTIFACT_PREVENTION} ${CHROME_SCROLL_CLASSES.PERFORMANCE} ${CHROME_SCROLL_CLASSES.CONTAINER_PERFORMANCE} ${CHROME_SCROLL_CLASSES.DESKTOP_PERFORMANCE} ${!isOpen ? 'hidden' : ''}`}
       style={{
-        WebkitOverflowScrolling: 'touch',
-        overscrollBehavior: 'contain',
-        overscrollBehaviorY: 'contain',
-        willChange: 'scroll-position, transform',
-        contain: 'layout style paint',
+        ...getSidebarStyles(),
         backgroundColor: '#1f2937',
         backgroundAttachment: 'local',
         backgroundImage: 'linear-gradient(to bottom, #1f2937 0%, #1f2937 100%)',
-        WebkitBoxSizing: 'border-box',
-        boxSizing: 'border-box',
-        gap: 0
+        gap: 0,
+        // FIREFOX FIX: Force display flex on desktop
+        ...(isFirefox && typeof window !== 'undefined' && window.innerWidth >= 1024 ? {
+          display: 'flex',
+          flexDirection: 'column'
+        } : {})
       }}
     >
       <div className="mb-8">

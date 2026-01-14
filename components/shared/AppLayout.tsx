@@ -116,18 +116,21 @@ export default function AppLayout({ children }: AppLayoutProps) {
     <HelpChatProvider>
       <div className="flex h-screen bg-white layout-optimized chrome-flex-container chrome-flex-gap-prevention chrome-background-coverage"
            style={{
-             // Chrome flexbox gap prevention
+             // Cross-browser flexbox with vendor prefixes
              WebkitBoxSizing: 'border-box',
+             MozBoxSizing: 'border-box',
              boxSizing: 'border-box',
              backgroundColor: '#ffffff',
              backgroundAttachment: 'local',
              minHeight: '100vh',
-             // Chrome gap elimination
+             // Cross-browser gap elimination
              gap: 0,
              margin: 0,
              padding: 0,
-             // Chrome hardware acceleration
+             // Cross-browser hardware acceleration
              WebkitTransform: 'translateZ(0)',
+             MozTransform: 'translateZ(0)',
+             msTransform: 'translateZ(0)',
              transform: 'translateZ(0)',
              willChange: 'transform'
            } as React.CSSProperties}
@@ -142,19 +145,23 @@ export default function AppLayout({ children }: AppLayoutProps) {
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0 layout-optimized chrome-flex-item chrome-flex-gap-prevention chrome-background-coverage"
              style={{
-               // Chrome flexbox optimization
+               // Cross-browser flexbox optimization with vendor prefixes
                WebkitBoxSizing: 'border-box',
+               MozBoxSizing: 'border-box',
                boxSizing: 'border-box',
                WebkitFlex: '1 1 0%',
+               MsFlex: '1 1 0%',
                flex: '1 1 0%',
                backgroundColor: '#ffffff',
                backgroundAttachment: 'local',
-               // Chrome gap prevention
+               // Cross-browser gap prevention
                margin: 0,
                padding: 0,
                border: 'none',
-               // Chrome hardware acceleration
+               // Cross-browser hardware acceleration
                WebkitTransform: 'translateZ(0)',
+               MozTransform: 'translateZ(0)',
+               msTransform: 'translateZ(0)',
                transform: 'translateZ(0)',
                willChange: 'transform'
              } as React.CSSProperties}
@@ -178,35 +185,46 @@ export default function AppLayout({ children }: AppLayoutProps) {
             className={`flex-1 min-h-screen bg-white overflow-auto scrollable-container scroll-boundary-fix content-scroll-area dashboard-scroll main-content-optimized dashboard-performance performance-critical chrome-scroll-optimized chrome-background-coverage chrome-flex-item chrome-flex-gap-prevention chrome-boundary-fix ${CHROME_SCROLL_CLASSES.PERFORMANCE} ${CHROME_SCROLL_CLASSES.CONTAINER_PERFORMANCE} ${CHROME_SCROLL_CLASSES.MAIN_CONTENT_PERFORMANCE} ${CHROME_SCROLL_CLASSES.BACKGROUND_CONSISTENCY} ${CHROME_SCROLL_CLASSES.SCROLL_STATE_BACKGROUND} ${CHROME_SCROLL_CLASSES.MOMENTUM_ARTIFACT_PREVENTION} ${CHROME_SCROLL_CLASSES.SCROLL_EVENTS} ${isScrolling ? 'scrolling' : ''} ${isMobile ? `mobile-performance chrome-mobile-optimized ${CHROME_SCROLL_CLASSES.MOBILE_PERFORMANCE}` : `chrome-desktop-optimized ${CHROME_SCROLL_CLASSES.DESKTOP_PERFORMANCE}`}`}
 
             style={{
-              // Chrome-specific scroll optimizations with will-change and contain
+              // Cross-browser scroll optimizations with vendor prefixes
               WebkitOverflowScrolling: 'touch',
               overscrollBehavior: 'contain',
               overscrollBehaviorY: 'contain',
+              WebkitOverscrollBehavior: 'contain',
+              MozOverscrollBehavior: 'contain',
+              msOverscrollBehavior: 'contain',
               
-              // Chrome will-change properties for scroll optimization (Task 5)
+              // Cross-browser will-change properties for scroll optimization (Task 5)
               willChange: isScrolling ? 'scroll-position, transform' : 'scroll-position',
+              WebkitWillChange: isScrolling ? 'scroll-position, transform' : 'scroll-position',
               
-              // Chrome contain properties for layout optimization (Task 5)
+              // Cross-browser contain properties for layout optimization (Task 5)
               contain: 'layout style paint',
               
-              // Chrome background coverage and overscroll containment
+              // Cross-browser background coverage and overscroll containment
               backgroundColor: '#ffffff',
               backgroundAttachment: 'local',
+              WebkitBackgroundAttachment: 'local',
               backgroundImage: 'linear-gradient(to bottom, #ffffff 0%, #ffffff 100%)',
               minHeight: '100vh',
               
-              // Chrome hardware acceleration and performance
+              // Cross-browser hardware acceleration and performance
               WebkitTransform: 'translateZ(0)',
+              MozTransform: 'translateZ(0)',
+              msTransform: 'translateZ(0)',
               transform: 'translateZ(0)',
               
-              // Chrome layout containment and optimization
+              // Cross-browser layout containment and optimization
               WebkitBackfaceVisibility: 'hidden',
+              MozBackfaceVisibility: 'hidden',
+              msBackfaceVisibility: 'hidden',
               backfaceVisibility: 'hidden',
               
-              // Chrome flexbox optimization and gap prevention
+              // Cross-browser flexbox optimization and gap prevention
               WebkitBoxSizing: 'border-box',
+              MozBoxSizing: 'border-box',
               boxSizing: 'border-box',
               WebkitFlex: '1 1 0%',
+              MsFlex: '1 1 0%',
               flex: '1 1 0%',
               margin: 0,
               padding: 0,

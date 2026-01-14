@@ -5,6 +5,7 @@ import { Inter } from 'next/font/google'
 import { SupabaseAuthProvider } from './providers/SupabaseAuthProvider'
 import { ErrorBoundary } from '../components/shared/ErrorBoundary'
 import PerformanceOptimizer from '../components/performance/PerformanceOptimizer'
+import FirefoxSidebarFix from '../components/navigation/FirefoxSidebarFix'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -86,6 +87,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           backgroundColor: '#ffffff'
         } as React.CSSProperties}
       >
+        <FirefoxSidebarFix />
         <PerformanceOptimizer>
           <ErrorBoundary>
             <SupabaseAuthProvider>

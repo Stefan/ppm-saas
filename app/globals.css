@@ -1,5 +1,684 @@
 @import "tailwindcss";
 
+/* ========================================
+   CSS RESET AND NORMALIZATION
+   Based on normalize.css v8.0.1 with modern enhancements
+   ======================================== */
+
+/* Document
+   ========================================================================== */
+
+/**
+ * 1. Correct the line height in all browsers.
+ * 2. Prevent adjustments of font size after orientation changes in iOS.
+ * 3. Use a better box model (opinionated).
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box; /* 3 */
+  -webkit-box-sizing: border-box; /* Safari/Chrome */
+  -moz-box-sizing: border-box; /* Firefox */
+}
+
+html {
+  line-height: 1.15; /* 1 */
+  -webkit-text-size-adjust: 100%; /* 2 */
+  -moz-text-size-adjust: 100%; /* Firefox */
+  -ms-text-size-adjust: 100%; /* IE/Edge */
+  text-size-adjust: 100%; /* Standard */
+  
+  /* Cross-browser font rendering optimizations */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  
+  /* Prevent horizontal scroll */
+  overflow-x: hidden;
+  
+  /* Consistent height */
+  height: 100%;
+}
+
+/* Sections
+   ========================================================================== */
+
+/**
+ * Remove the margin in all browsers.
+ * Add consistent font family and improve font rendering.
+ */
+
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  
+  /* Cross-browser font stack */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 
+               'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 
+               'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 
+               'Noto Color Emoji';
+  
+  /* Enhanced font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  
+  /* Consistent line height */
+  line-height: 1.5;
+  
+  /* Prevent horizontal scroll */
+  overflow-x: hidden;
+}
+
+/**
+ * Render the `main` element consistently in IE.
+ */
+
+main {
+  display: block;
+  height: 100%;
+}
+
+/**
+ * Correct the font size and margin on `h1` elements within `section` and
+ * `article` contexts in Chrome, Firefox, and Safari.
+ */
+
+h1 {
+  font-size: 2em;
+  margin: 0.67em 0;
+}
+
+/* Grouping content
+   ========================================================================== */
+
+/**
+ * 1. Add the correct box sizing in Firefox.
+ * 2. Show the overflow in Edge and IE.
+ */
+
+hr {
+  box-sizing: content-box; /* 1 */
+  height: 0; /* 1 */
+  overflow: visible; /* 2 */
+  border: 0;
+  border-top: 1px solid #e5e7eb;
+  margin: 1rem 0;
+}
+
+/**
+ * 1. Correct the inheritance and scaling of font size in all browsers.
+ * 2. Correct the odd `em` font sizing in all browsers.
+ */
+
+pre {
+  font-family: monospace, monospace; /* 1 */
+  font-size: 1em; /* 2 */
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+}
+
+/* Text-level semantics
+   ========================================================================== */
+
+/**
+ * Remove the gray background on active links in IE 10.
+ */
+
+a {
+  background-color: transparent;
+  text-decoration: none;
+  color: inherit;
+}
+
+/**
+ * 1. Remove the bottom border in Chrome 57-
+ * 2. Add the correct text decoration in Chrome, Edge, IE, Opera, and Safari.
+ */
+
+abbr[title] {
+  border-bottom: none; /* 1 */
+  text-decoration: underline; /* 2 */
+  text-decoration: underline dotted; /* 2 */
+}
+
+/**
+ * Add the correct font weight in Chrome, Edge, and Safari.
+ */
+
+b,
+strong {
+  font-weight: bolder;
+}
+
+/**
+ * 1. Correct the inheritance and scaling of font size in all browsers.
+ * 2. Correct the odd `em` font sizing in all browsers.
+ */
+
+code,
+kbd,
+samp {
+  font-family: monospace, monospace; /* 1 */
+  font-size: 1em; /* 2 */
+}
+
+/**
+ * Add the correct font size in all browsers.
+ */
+
+small {
+  font-size: 80%;
+}
+
+/**
+ * Prevent `sub` and `sup` elements from affecting the line height in
+ * all browsers.
+ */
+
+sub,
+sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+sub {
+  bottom: -0.25em;
+}
+
+sup {
+  top: -0.5em;
+}
+
+/* Embedded content
+   ========================================================================== */
+
+/**
+ * Remove the border on images inside links in IE 10.
+ * Make images responsive by default.
+ */
+
+img {
+  border-style: none;
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Forms
+   ========================================================================== */
+
+/**
+ * 1. Change the font styles in all browsers.
+ * 2. Remove the margin in Firefox and Safari.
+ * 3. Consistent box-sizing.
+ */
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  font-family: inherit; /* 1 */
+  font-size: 100%; /* 1 */
+  line-height: 1.15; /* 1 */
+  margin: 0; /* 2 */
+  padding: 0;
+  box-sizing: border-box; /* 3 */
+  -webkit-box-sizing: border-box; /* Safari/Chrome */
+  -moz-box-sizing: border-box; /* Firefox */
+}
+
+/**
+ * Show the overflow in IE.
+ * 1. Show the overflow in Edge.
+ */
+
+button,
+input { /* 1 */
+  overflow: visible;
+}
+
+/**
+ * Remove the inheritance of text transform in Edge, Firefox, and IE.
+ * 1. Remove the inheritance of text transform in Firefox.
+ */
+
+button,
+select { /* 1 */
+  text-transform: none;
+}
+
+/**
+ * Correct the inability to style clickable types in iOS and Safari.
+ */
+
+button,
+[type="button"],
+[type="reset"],
+[type="submit"] {
+  -webkit-appearance: button;
+  appearance: button;
+  cursor: pointer;
+}
+
+/**
+ * Remove the inner border and padding in Firefox.
+ */
+
+button::-moz-focus-inner,
+[type="button"]::-moz-focus-inner,
+[type="reset"]::-moz-focus-inner,
+[type="submit"]::-moz-focus-inner {
+  border-style: none;
+  padding: 0;
+}
+
+/**
+ * Restore the focus styles unset by the previous rule.
+ */
+
+button:-moz-focusring,
+[type="button"]:-moz-focusring,
+[type="reset"]:-moz-focusring,
+[type="submit"]:-moz-focusring {
+  outline: 1px dotted ButtonText;
+}
+
+/**
+ * Correct the padding in Firefox.
+ */
+
+fieldset {
+  padding: 0.35em 0.75em 0.625em;
+  margin: 0;
+  border: 1px solid #c0c0c0;
+}
+
+/**
+ * 1. Correct the text wrapping in Edge and IE.
+ * 2. Correct the color inheritance from `fieldset` elements in IE.
+ * 3. Remove the padding so developers are not caught out when they zero out
+ *    `fieldset` elements in all browsers.
+ */
+
+legend {
+  box-sizing: border-box; /* 1 */
+  color: inherit; /* 2 */
+  display: table; /* 1 */
+  max-width: 100%; /* 1 */
+  padding: 0; /* 3 */
+  white-space: normal; /* 1 */
+}
+
+/**
+ * Add the correct vertical alignment in Chrome, Firefox, and Opera.
+ */
+
+progress {
+  vertical-align: baseline;
+}
+
+/**
+ * Remove the default vertical scrollbar in IE 10+.
+ */
+
+textarea {
+  overflow: auto;
+  resize: vertical;
+}
+
+/**
+ * 1. Add the correct box sizing in IE 10.
+ * 2. Remove the padding in IE 10.
+ */
+
+[type="checkbox"],
+[type="radio"] {
+  box-sizing: border-box; /* 1 */
+  padding: 0; /* 2 */
+}
+
+/**
+ * Correct the cursor style of increment and decrement buttons in Chrome.
+ */
+
+[type="number"]::-webkit-inner-spin-button,
+[type="number"]::-webkit-outer-spin-button {
+  height: auto;
+}
+
+/**
+ * 1. Correct the odd appearance in Chrome and Safari.
+ * 2. Correct the outline style in Safari.
+ */
+
+[type="search"] {
+  -webkit-appearance: textfield; /* 1 */
+  outline-offset: -2px; /* 2 */
+}
+
+/**
+ * Remove the inner padding in Chrome and Safari on macOS.
+ */
+
+[type="search"]::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+
+/**
+ * 1. Correct the inability to style clickable types in iOS and Safari.
+ * 2. Change font properties to `inherit` in Safari.
+ */
+
+::-webkit-file-upload-button {
+  -webkit-appearance: button; /* 1 */
+  font: inherit; /* 2 */
+}
+
+/* Interactive
+   ========================================================================== */
+
+/*
+ * Add the correct display in Edge, IE 10+, and Firefox.
+ */
+
+details {
+  display: block;
+}
+
+/*
+ * Add the correct display in all browsers.
+ */
+
+summary {
+  display: list-item;
+  cursor: pointer;
+}
+
+/* Misc
+   ========================================================================== */
+
+/**
+ * Add the correct display in IE 10+.
+ */
+
+template {
+  display: none;
+}
+
+/**
+ * Add the correct display in IE 10.
+ */
+
+[hidden] {
+  display: none;
+}
+
+/* ========================================
+   MODERN CSS RESET ADDITIONS
+   ======================================== */
+
+/**
+ * Remove default margins and padding from common elements
+ */
+
+h1, h2, h3, h4, h5, h6,
+p, blockquote, pre,
+dl, dd, ol, ul,
+form, fieldset, legend,
+figure, table, th, td, caption,
+hr {
+  margin: 0;
+  padding: 0;
+}
+
+/**
+ * Remove list styles on ul, ol elements with a list role,
+ * which suggests default styling will be removed
+ */
+
+ul[role='list'],
+ol[role='list'] {
+  list-style: none;
+}
+
+/**
+ * Set core root defaults
+ */
+
+html:focus-within {
+  scroll-behavior: smooth;
+}
+
+/**
+ * Set core body defaults
+ */
+
+body {
+  min-height: 100vh;
+  text-rendering: optimizeSpeed;
+  line-height: 1.5;
+}
+
+/**
+ * A elements that don't have a class get default styles
+ */
+
+a:not([class]) {
+  text-decoration-skip-ink: auto;
+}
+
+/**
+ * Make images easier to work with
+ */
+
+img,
+picture {
+  max-width: 100%;
+  display: block;
+}
+
+/**
+ * Inherit fonts for inputs and buttons
+ */
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+/**
+ * Remove all animations, transitions and smooth scroll for people that prefer not to see them
+ */
+
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+   scroll-behavior: auto;
+  }
+  
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ========================================
+   CROSS-BROWSER TYPOGRAPHY NORMALIZATION
+   ======================================== */
+
+/**
+ * Consistent typography across browsers
+ */
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 
+               'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 
+               'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 
+               'Noto Color Emoji';
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #111827;
+  background-color: #ffffff;
+  
+  /* Enhanced font rendering across browsers */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  -webkit-font-feature-settings: "kern" 1;
+  -moz-font-feature-settings: "kern" 1;
+  -ms-font-feature-settings: "kern" 1;
+  font-feature-settings: "kern" 1;
+  font-kerning: normal;
+}
+
+/**
+ * Consistent heading styles
+ */
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.25;
+  color: #111827;
+  margin-bottom: 0.5em;
+}
+
+h1 { font-size: 2.25rem; }
+h2 { font-size: 1.875rem; }
+h3 { font-size: 1.5rem; }
+h4 { font-size: 1.25rem; }
+h5 { font-size: 1.125rem; }
+h6 { font-size: 1rem; }
+
+/**
+ * Consistent paragraph and text styles
+ */
+
+p {
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+/**
+ * Consistent list styles
+ */
+
+ul, ol {
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+}
+
+li {
+  margin-bottom: 0.25rem;
+}
+
+/**
+ * Consistent table styles
+ */
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+}
+
+th, td {
+  text-align: left;
+  padding: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+th {
+  font-weight: 600;
+  background-color: #f9fafb;
+}
+
+/**
+ * Consistent form element styles
+ */
+
+input, textarea, select {
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  background-color: #ffffff;
+  color: #111827;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-color: #3b82f6;
+}
+
+button {
+  border: none;
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  background-color: #3b82f6;
+  color: #ffffff;
+}
+
+button:hover {
+  background-color: #2563eb;
+}
+
+button:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/**
+ * Consistent code and pre styles
+ */
+
+code {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.875rem;
+  background-color: #f3f4f6;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  color: #374151;
+}
+
+pre {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.875rem;
+  background-color: #f3f4f6;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  color: #374151;
+  margin-bottom: 1rem;
+}
+
+pre code {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+/* ========================================
+   END CSS RESET AND NORMALIZATION
+   ======================================== */
+
 :root {
   /* Base Colors */
   --background: #ffffff;
@@ -1264,9 +1943,511 @@ main {
   }
 }
 
+/* ========================================
+   CROSS-BROWSER LAYOUT SYSTEM
+   Comprehensive flexbox normalization and CSS Grid fallbacks
+   ======================================== */
+
+/* Cross-browser flexbox utilities with full vendor prefix support */
+.flex-cross-browser {
+  /* Old flexbox syntax for legacy browsers */
+  display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+  display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+  display: -ms-flexbox;      /* TWEENER - IE 10 */
+  display: -webkit-flex;     /* NEW - Chrome */
+  display: flex;             /* NEW, Spec - Opera 12.1, Firefox 20+ */
+  
+  /* Ensure consistent box-sizing */
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+.flex-direction-row-cross-browser {
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+  -webkit-flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
+}
+
+.flex-direction-column-cross-browser {
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+}
+
+.flex-wrap-cross-browser {
+  -webkit-flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+}
+
+.flex-nowrap-cross-browser {
+  -webkit-flex-wrap: nowrap;
+  -ms-flex-wrap: nowrap;
+  flex-wrap: nowrap;
+}
+
+/* Flex item properties with cross-browser support */
+.flex-1-cross-browser {
+  -webkit-box-flex: 1;
+  -webkit-flex: 1 1 0%;
+  -ms-flex: 1 1 0%;
+  flex: 1 1 0%;
+}
+
+.flex-auto-cross-browser {
+  -webkit-box-flex: 1;
+  -webkit-flex: 1 1 auto;
+  -ms-flex: 1 1 auto;
+  flex: 1 1 auto;
+}
+
+.flex-none-cross-browser {
+  -webkit-box-flex: 0;
+  -webkit-flex: none;
+  -ms-flex: none;
+  flex: none;
+}
+
+.flex-shrink-0-cross-browser {
+  -webkit-flex-shrink: 0;
+  -ms-flex-negative: 0;
+  flex-shrink: 0;
+}
+
+.flex-grow-0-cross-browser {
+  -webkit-box-flex: 0;
+  -webkit-flex-grow: 0;
+  -ms-flex-positive: 0;
+  flex-grow: 0;
+}
+
+.flex-grow-1-cross-browser {
+  -webkit-box-flex: 1;
+  -webkit-flex-grow: 1;
+  -ms-flex-positive: 1;
+  flex-grow: 1;
+}
+
+/* Alignment properties with cross-browser support */
+.items-start-cross-browser {
+  -webkit-box-align: start;
+  -webkit-align-items: flex-start;
+  -ms-flex-align: start;
+  align-items: flex-start;
+}
+
+.items-center-cross-browser {
+  -webkit-box-align: center;
+  -webkit-align-items: center;
+  -ms-flex-align: center;
+  align-items: center;
+}
+
+.items-end-cross-browser {
+  -webkit-box-align: end;
+  -webkit-align-items: flex-end;
+  -ms-flex-align: end;
+  align-items: flex-end;
+}
+
+.items-stretch-cross-browser {
+  -webkit-box-align: stretch;
+  -webkit-align-items: stretch;
+  -ms-flex-align: stretch;
+  align-items: stretch;
+}
+
+.items-baseline-cross-browser {
+  -webkit-box-align: baseline;
+  -webkit-align-items: baseline;
+  -ms-flex-align: baseline;
+  align-items: baseline;
+}
+
+/* Justify content properties with cross-browser support */
+.justify-start-cross-browser {
+  -webkit-box-pack: start;
+  -webkit-justify-content: flex-start;
+  -ms-flex-pack: start;
+  justify-content: flex-start;
+}
+
+.justify-center-cross-browser {
+  -webkit-box-pack: center;
+  -webkit-justify-content: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+}
+
+.justify-end-cross-browser {
+  -webkit-box-pack: end;
+  -webkit-justify-content: flex-end;
+  -ms-flex-pack: end;
+  justify-content: flex-end;
+}
+
+.justify-between-cross-browser {
+  -webkit-box-pack: justify;
+  -webkit-justify-content: space-between;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+}
+
+.justify-around-cross-browser {
+  -webkit-justify-content: space-around;
+  -ms-flex-pack: distribute;
+  justify-content: space-around;
+}
+
+.justify-evenly-cross-browser {
+  -webkit-justify-content: space-evenly;
+  -ms-flex-pack: space-evenly;
+  justify-content: space-evenly;
+}
+
+/* Self alignment properties */
+.self-start-cross-browser {
+  -webkit-align-self: flex-start;
+  -ms-flex-item-align: start;
+  align-self: flex-start;
+}
+
+.self-center-cross-browser {
+  -webkit-align-self: center;
+  -ms-flex-item-align: center;
+  align-self: center;
+}
+
+.self-end-cross-browser {
+  -webkit-align-self: flex-end;
+  -ms-flex-item-align: end;
+  align-self: flex-end;
+}
+
+.self-stretch-cross-browser {
+  -webkit-align-self: stretch;
+  -ms-flex-item-align: stretch;
+  align-self: stretch;
+}
+
+/* CSS Grid with comprehensive fallbacks */
+.grid-cross-browser {
+  display: -ms-grid;
+  display: grid;
+  
+  /* Ensure consistent box-sizing */
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+/* Grid fallback for browsers without grid support */
+@supports not (display: grid) {
+  .grid-cross-browser {
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-wrap: wrap;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+  }
+  
+  .grid-cross-browser > * {
+    -webkit-box-flex: 1;
+    -webkit-flex: 1 1 auto;
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
+    margin: 0.5rem;
+    min-width: 0;
+  }
+}
+
+/* Grid template columns with fallbacks */
+.grid-cols-1-cross-browser {
+  -ms-grid-columns: 1fr;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.grid-cols-2-cross-browser {
+  -ms-grid-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.grid-cols-3-cross-browser {
+  -ms-grid-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.grid-cols-4-cross-browser {
+  -ms-grid-columns: 1fr 1fr 1fr 1fr;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.grid-cols-6-cross-browser {
+  -ms-grid-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.grid-cols-12-cross-browser {
+  -ms-grid-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+/* Grid template rows with fallbacks */
+.grid-rows-1-cross-browser {
+  -ms-grid-rows: 1fr;
+  grid-template-rows: repeat(1, minmax(0, 1fr));
+}
+
+.grid-rows-2-cross-browser {
+  -ms-grid-rows: 1fr 1fr;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+
+.grid-rows-3-cross-browser {
+  -ms-grid-rows: 1fr 1fr 1fr;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+}
+
+/* Grid gap with fallbacks */
+.gap-1-cross-browser {
+  gap: 0.25rem;
+  -ms-grid-column-gap: 0.25rem;
+  -ms-grid-row-gap: 0.25rem;
+  grid-gap: 0.25rem; /* Fallback for older browsers */
+}
+
+.gap-2-cross-browser {
+  gap: 0.5rem;
+  -ms-grid-column-gap: 0.5rem;
+  -ms-grid-row-gap: 0.5rem;
+  grid-gap: 0.5rem;
+}
+
+.gap-4-cross-browser {
+  gap: 1rem;
+  -ms-grid-column-gap: 1rem;
+  -ms-grid-row-gap: 1rem;
+  grid-gap: 1rem;
+}
+
+.gap-6-cross-browser {
+  gap: 1.5rem;
+  -ms-grid-column-gap: 1.5rem;
+  -ms-grid-row-gap: 1.5rem;
+  grid-gap: 1.5rem;
+}
+
+.gap-8-cross-browser {
+  gap: 2rem;
+  -ms-grid-column-gap: 2rem;
+  -ms-grid-row-gap: 2rem;
+  grid-gap: 2rem;
+}
+
+/* Grid item placement with IE support */
+.col-span-1-cross-browser {
+  -ms-grid-column-span: 1;
+  grid-column: span 1 / span 1;
+}
+
+.col-span-2-cross-browser {
+  -ms-grid-column-span: 2;
+  grid-column: span 2 / span 2;
+}
+
+.col-span-3-cross-browser {
+  -ms-grid-column-span: 3;
+  grid-column: span 3 / span 3;
+}
+
+.col-span-4-cross-browser {
+  -ms-grid-column-span: 4;
+  grid-column: span 4 / span 4;
+}
+
+.col-span-6-cross-browser {
+  -ms-grid-column-span: 6;
+  grid-column: span 6 / span 6;
+}
+
+.col-span-full-cross-browser {
+  -ms-grid-column: 1;
+  -ms-grid-column-span: 12;
+  grid-column: 1 / -1;
+}
+
+.row-span-1-cross-browser {
+  -ms-grid-row-span: 1;
+  grid-row: span 1 / span 1;
+}
+
+.row-span-2-cross-browser {
+  -ms-grid-row-span: 2;
+  grid-row: span 2 / span 2;
+}
+
+.row-span-3-cross-browser {
+  -ms-grid-row-span: 3;
+  grid-row: span 3 / span 3;
+}
+
+/* Grid fallbacks for older browsers without grid support */
+@supports not (display: grid) {
+  .grid-cols-1-cross-browser > * { width: calc(100% - 1rem); }
+  .grid-cols-2-cross-browser > * { width: calc(50% - 1rem); }
+  .grid-cols-3-cross-browser > * { width: calc(33.333333% - 1rem); }
+  .grid-cols-4-cross-browser > * { width: calc(25% - 1rem); }
+  .grid-cols-6-cross-browser > * { width: calc(16.666667% - 1rem); }
+  .grid-cols-12-cross-browser > * { width: calc(8.333333% - 1rem); }
+  
+  .col-span-1-cross-browser { width: calc(8.333333% - 1rem) !important; }
+  .col-span-2-cross-browser { width: calc(16.666667% - 1rem) !important; }
+  .col-span-3-cross-browser { width: calc(25% - 1rem) !important; }
+  .col-span-4-cross-browser { width: calc(33.333333% - 1rem) !important; }
+  .col-span-6-cross-browser { width: calc(50% - 1rem) !important; }
+  .col-span-full-cross-browser { width: calc(100% - 1rem) !important; }
+}
+
+/* Responsive grid utilities with cross-browser support */
+@media (min-width: 640px) {
+  .sm-grid-cross-browser {
+    display: -ms-grid;
+    display: grid;
+  }
+  
+  .sm-grid-cols-1-cross-browser {
+    -ms-grid-columns: 1fr;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+  
+  .sm-grid-cols-2-cross-browser {
+    -ms-grid-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  
+  .sm-grid-cols-3-cross-browser {
+    -ms-grid-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  
+  .sm-flex-cross-browser {
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+  }
+  
+  .sm-flex-row-cross-browser {
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+    -webkit-flex-direction: row;
+    -ms-flex-direction: row;
+    flex-direction: row;
+  }
+}
+
+@media (min-width: 768px) {
+  .md-grid-cross-browser {
+    display: -ms-grid;
+    display: grid;
+  }
+  
+  .md-grid-cols-2-cross-browser {
+    -ms-grid-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  
+  .md-grid-cols-3-cross-browser {
+    -ms-grid-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  
+  .md-grid-cols-4-cross-browser {
+    -ms-grid-columns: 1fr 1fr 1fr 1fr;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  
+  .md-flex-cross-browser {
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+  }
+  
+  .md-flex-row-cross-browser {
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+    -webkit-flex-direction: row;
+    -ms-flex-direction: row;
+    flex-direction: row;
+  }
+}
+
+@media (min-width: 1024px) {
+  .lg-grid-cross-browser {
+    display: -ms-grid;
+    display: grid;
+  }
+  
+  .lg-grid-cols-3-cross-browser {
+    -ms-grid-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  
+  .lg-grid-cols-4-cross-browser {
+    -ms-grid-columns: 1fr 1fr 1fr 1fr;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  
+  .lg-grid-cols-6-cross-browser {
+    -ms-grid-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  
+  .lg-flex-cross-browser {
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+  }
+}
+
+@media (min-width: 1280px) {
+  .xl-grid-cross-browser {
+    display: -ms-grid;
+    display: grid;
+  }
+  
+  .xl-grid-cols-4-cross-browser {
+    -ms-grid-columns: 1fr 1fr 1fr 1fr;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  
+  .xl-grid-cols-6-cross-browser {
+    -ms-grid-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  
+  .xl-grid-cols-12-cross-browser {
+    -ms-grid-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+}
+
 /* Cross-Browser Compatibility Fallbacks */
 
-/* Flexbox fallbacks for older browsers */
+/* Legacy flexbox fallbacks for older browsers */
 .flex {
   display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
   display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
@@ -2494,15 +3675,8 @@ main.chrome-optimized {
   /* Chrome containment */
   contain: layout style paint;
   /* Chrome will-change optimization */
-  will-change: scroll-position, transform;
-  -webkit-will-change: scroll-position, transform;
-  /* Chrome hardware acceleration */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  /* Chrome scroll optimization */
-  -webkit-overflow-scrolling: touch;
-  -webkit-overscroll-behavior: contain;
-  overscroll-behavior: contain;
+  will-change: scroll-position, transform !important;
+  -webkit-will-change: scroll-position, transform !important;
 }
 
 /* Chrome-specific media queries for optimization */
@@ -2704,4 +3878,1613 @@ nav.chrome-sidebar-scroll-optimized.chrome-scrolling,
   /* Fallback box-sizing */
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
+}
+
+/* ========================================
+   FIREFOX-SPECIFIC SIDEBAR SCROLL FIXES
+   ======================================== */
+
+/* Firefox-specific sidebar optimization class */
+.sidebar-firefox-fix {
+  /* Firefox scroll optimization */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(155, 155, 155, 0.5) transparent;
+  
+  /* Firefox touch action */
+  touch-action: pan-y;
+  -moz-user-select: none;
+  
+  /* Firefox overscroll behavior */
+  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
+  
+  /* Firefox hardware acceleration */
+  will-change: scroll-position;
+  transform: translateZ(0);
+  -moz-transform: translateZ(0);
+  
+  /* Firefox-specific overflow handling */
+  overflow-y: auto;
+  overflow-x: hidden;
+  
+  /* Firefox scroll behavior */
+  scroll-behavior: smooth;
+  -moz-scroll-behavior: smooth;
+}
+
+/* Safari-specific sidebar fixes */
+.sidebar-safari-fix {
+  -webkit-overflow-scrolling: touch;
+  -webkit-transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  -webkit-touch-callout: none;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+
+/* Cross-browser sidebar base */
+.sidebar-cross-browser {
+  /* Standard properties first */
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  
+  /* Vendor prefixes */
+  -webkit-overflow-scrolling: touch; /* Safari */
+  -webkit-scroll-behavior: smooth;   /* Safari */
+  -moz-scroll-behavior: smooth;      /* Firefox */
+  
+  /* Performance optimizations */
+  contain: layout style paint;
+  will-change: scroll-position;
+  
+  /* Hardware acceleration - all browsers */
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+  
+  /* Touch action for all browsers */
+  touch-action: pan-y;
+  -ms-touch-action: pan-y;
+  
+  /* Overscroll behavior for all browsers */
+  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
+  -webkit-overscroll-behavior: contain;
+  -moz-overscroll-behavior: contain;
+  -ms-overscroll-behavior: contain;
+  -webkit-overscroll-behavior-y: contain;
+  -moz-overscroll-behavior-y: contain;
+  -ms-overscroll-behavior-y: contain;
+}
+
+/* Firefox sidebar scroll performance optimization */
+.firefox-sidebar-scroll-performance {
+  /* Firefox-specific scroll event handling optimization */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(155, 155, 155, 0.5) transparent;
+  
+  /* Firefox touch optimization */
+  touch-action: pan-y;
+  -moz-user-select: none;
+  
+  /* Firefox overscroll containment */
+  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
+  -moz-overscroll-behavior: contain;
+  -moz-overscroll-behavior-y: contain;
+  
+  /* Firefox hardware acceleration */
+  will-change: scroll-position;
+  -moz-will-change: scroll-position;
+  transform: translateZ(0);
+  -moz-transform: translateZ(0);
+  
+  /* Firefox scroll behavior */
+  scroll-behavior: smooth;
+  -moz-scroll-behavior: smooth;
+  
+  /* Firefox layout containment */
+  contain: layout style paint;
+}
+
+/* Firefox mobile sidebar optimizations */
+@media (max-width: 768px) {
+  .firefox-mobile-sidebar-fix {
+    /* Firefox mobile scroll */
+    scrollbar-width: none; /* Hide scrollbar on mobile */
+    touch-action: pan-y;
+    -moz-user-select: none;
+    
+    /* Firefox mobile overscroll */
+    overscroll-behavior-y: contain;
+    -moz-overscroll-behavior-y: contain;
+    
+    /* Firefox mobile performance */
+    will-change: scroll-position;
+    -moz-will-change: scroll-position;
+    transform: translateZ(0);
+    -moz-transform: translateZ(0);
+  }
+}
+
+/* Firefox desktop sidebar optimizations */
+@media (min-width: 769px) {
+  .firefox-desktop-sidebar-fix {
+    /* Firefox desktop scroll */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(155, 155, 155, 0.5) transparent;
+    
+    /* Firefox desktop touch action */
+    touch-action: pan-y;
+    -moz-user-select: none;
+    
+    /* Firefox desktop overscroll */
+    overscroll-behavior: contain;
+    -moz-overscroll-behavior: contain;
+    
+    /* Firefox desktop performance */
+    scroll-behavior: smooth;
+    -moz-scroll-behavior: smooth;
+    contain: layout style paint;
+  }
+}
+
+/* CRITICAL FIX: Ensure sidebar is visible in Firefox at desktop sizes */
+@-moz-document url-prefix() {
+  @media (min-width: 1024px) {
+    nav#navigation.hidden {
+      display: flex !important;
+    }
+    
+    nav#navigation {
+      display: flex !important;
+      flex-direction: column !important;
+    }
+  }
+}
+
+/* Firefox version-specific optimizations */
+@-moz-document url-prefix() {
+  /* Firefox-specific optimizations */
+  .firefox-specific-sidebar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(155, 155, 155, 0.5) transparent;
+    touch-action: pan-y;
+    -moz-user-select: none;
+    overscroll-behavior: contain;
+    -moz-overscroll-behavior: contain;
+    scroll-behavior: smooth;
+    -moz-scroll-behavior: smooth;
+  }
+  
+  /* CRITICAL: Override Tailwind's hidden class for sidebar in Firefox at desktop sizes */
+  @media (min-width: 1024px) {
+    nav.hidden.lg\:flex,
+    aside.hidden.lg\:flex,
+    [role="navigation"].hidden.lg\:flex {
+      display: flex !important;
+    }
+  }
+  
+  /* Ensure sidebar layout is correct in Firefox */
+  nav#navigation,
+  aside#navigation,
+  [role="navigation"]#navigation {
+    @media (min-width: 1024px) {
+      display: flex !important;
+      flex-direction: column !important;
+      width: 16rem !important; /* 64 * 0.25rem = 16rem = w-64 */
+      height: 100vh !important;
+    }
+  }
+}
+
+/* Edge-specific sidebar fixes */
+.sidebar-edge-fix {
+  -ms-overflow-style: -ms-autohiding-scrollbar;
+  -ms-touch-action: pan-y;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+  -ms-overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  -ms-scroll-behavior: smooth;
+}
+
+/* Cross-browser sidebar layout stability */
+.sidebar-layout-stable {
+  /* Prevent layout shifts during scroll */
+  contain: layout;
+  /* Optimize for stability */
+  will-change: scroll-position;
+  /* Ensure consistent sizing */
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  /* Consistent positioning */
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 16rem; /* 256px */
+  height: 100vh;
+  height: -webkit-fill-available; /* Safari */
+  height: -moz-available; /* Firefox */
+}
+
+/* ========================================
+   ADDITIONAL CROSS-BROWSER UTILITIES
+   Comprehensive utilities for cross-browser compatibility
+   ======================================== */
+
+/* Cross-browser responsive utilities */
+.responsive-flex-cross-browser {
+  /* Mobile-first flexbox */
+  display: -webkit-box;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .responsive-flex-cross-browser {
+    -webkit-flex-direction: row;
+    -ms-flex-direction: row;
+    flex-direction: row;
+  }
+}
+
+/* Cross-browser spacing utilities */
+.space-y-4-cross-browser > * + * {
+  margin-top: 1rem !important;
+}
+
+.space-x-4-cross-browser > * + * {
+  margin-left: 1rem !important;
+}
+
+/* Cross-browser text utilities */
+.text-center-cross-browser {
+  text-align: center !important;
+}
+
+.text-left-cross-browser {
+  text-align: left !important;
+}
+
+.text-right-cross-browser {
+  text-align: right !important;
+}
+
+/* Cross-browser display utilities */
+.block-cross-browser {
+  display: block !important;
+}
+
+.inline-block-cross-browser {
+  display: inline-block !important;
+  /* IE7 fallback */
+  *display: inline;
+  *zoom: 1;
+}
+
+.hidden-cross-browser {
+  display: none !important;
+}
+
+/* Cross-browser positioning utilities */
+.relative-cross-browser {
+  position: relative !important;
+}
+
+.absolute-cross-browser {
+  position: absolute !important;
+}
+
+.fixed-cross-browser {
+  position: fixed !important;
+}
+
+.sticky-cross-browser {
+  position: -webkit-sticky !important;
+  position: sticky !important;
+}
+
+/* Cross-browser width and height utilities */
+.w-full-cross-browser {
+  width: 100% !important;
+}
+
+.h-full-cross-browser {
+  height: 100% !important;
+}
+
+.min-h-screen-cross-browser {
+  min-height: 100vh !important;
+  /* Fallback for older browsers */
+  min-height: 100% !important;
+}
+
+.max-w-none-cross-browser {
+  max-width: none !important;
+}
+
+/* Cross-browser overflow utilities */
+.overflow-hidden-cross-browser {
+  overflow: hidden !important;
+}
+
+.overflow-auto-cross-browser {
+  overflow: auto !important;
+}
+
+.overflow-x-hidden-cross-browser {
+  overflow-x: hidden !important;
+}
+
+.overflow-y-auto-cross-browser {
+  overflow-y: auto !important;
+}
+
+/* Cross-browser margin and padding utilities */
+.m-0-cross-browser {
+  margin: 0 !important;
+}
+
+.p-0-cross-browser {
+  padding: 0 !important;
+}
+
+.mx-auto-cross-browser {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.my-4-cross-browser {
+  margin-top: 1rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.px-4-cross-browser {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+.py-2-cross-browser {
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+}
+
+/* Cross-browser border utilities */
+.border-cross-browser {
+  border: 1px solid #d1d5db !important;
+}
+
+.border-0-cross-browser {
+  border: 0 !important;
+}
+
+.border-t-cross-browser {
+  border-top: 1px solid #d1d5db !important;
+}
+
+.border-b-cross-browser {
+  border-bottom: 1px solid #d1d5db !important;
+}
+
+.border-l-cross-browser {
+  border-left: 1px solid #d1d5db !important;
+}
+
+.border-r-cross-browser {
+  border-right: 1px solid #d1d5db !important;
+}
+
+/* Cross-browser layout container utilities */
+.container-cross-browser {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .container-cross-browser {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container-cross-browser {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-cross-browser {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container-cross-browser {
+    max-width: 1280px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .container-cross-browser {
+    max-width: 1536px;
+  }
+}
+
+/* Cross-browser button utilities */
+.btn-cross-browser {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  -webkit-border-radius: 0.375rem;
+  -moz-border-radius: 0.375rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-transition: all 0.2s ease-in-out;
+  -moz-transition: all 0.2s ease-in-out;
+  -ms-transition: all 0.2s ease-in-out;
+  -o-transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-primary-cross-browser {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+
+.btn-primary-cross-browser:hover {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+.btn-secondary-cross-browser {
+  background-color: #6b7280;
+  border-color: #6b7280;
+  color: #ffffff;
+}
+
+.btn-secondary-cross-browser:hover {
+  background-color: #4b5563;
+  border-color: #4b5563;
+}
+
+/* Cross-browser form utilities */
+.form-input-cross-browser {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #374151;
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  -webkit-border-radius: 0.375rem;
+  -moz-border-radius: 0.375rem;
+  border-radius: 0.375rem;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  -webkit-transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  -moz-transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  -ms-transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  -o-transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-input-cross-browser:focus {
+  outline: none;
+  border-color: #3b82f6;
+  -webkit-box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  -moz-box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Cross-browser card utilities */
+.card-cross-browser {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  -webkit-border-radius: 0.5rem;
+  -moz-border-radius: 0.5rem;
+  border-radius: 0.5rem;
+  -webkit-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  -moz-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.card-header-cross-browser {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.card-body-cross-browser {
+  padding: 1.5rem;
+}
+
+/* Cross-browser animation utilities */
+.animate-spin-cross-browser {
+  -webkit-animation: spin-cross-browser 1s linear infinite;
+  -moz-animation: spin-cross-browser 1s linear infinite;
+  -ms-animation: spin-cross-browser 1s linear infinite;
+  animation: spin-cross-browser 1s linear infinite;
+}
+
+@-webkit-keyframes spin-cross-browser {
+  from {
+    -webkit-transform: rotate(0deg);
+  }
+  to {
+    -webkit-transform: rotate(360deg);
+  }
+}
+
+@-moz-keyframes spin-cross-browser {
+  from {
+    -moz-transform: rotate(0deg);
+  }
+  to {
+    -moz-transform: rotate(360deg);
+  }
+}
+
+@keyframes spin-cross-browser {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-pulse-cross-browser {
+  -webkit-animation: pulse-cross-browser 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  -moz-animation: pulse-cross-browser 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  -ms-animation: pulse-cross-browser 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: pulse-cross-browser 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@-webkit-keyframes pulse-cross-browser {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@-moz-keyframes pulse-cross-browser {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes pulse-cross-browser {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Cross-browser visibility utilities */
+.visible-cross-browser {
+  visibility: visible !important;
+}
+
+.invisible-cross-browser {
+  visibility: hidden !important;
+}
+
+.opacity-0-cross-browser {
+  opacity: 0 !important;
+}
+
+.opacity-50-cross-browser {
+  opacity: 0.5 !important;
+}
+
+.opacity-100-cross-browser {
+  opacity: 1 !important;
+}
+
+/* Cross-browser z-index utilities */
+.z-0-cross-browser {
+  z-index: 0 !important;
+}
+
+.z-10-cross-browser {
+  z-index: 10 !important;
+}
+
+.z-20-cross-browser {
+  z-index: 20 !important;
+}
+
+.z-30-cross-browser {
+  z-index: 30 !important;
+}
+
+.z-40-cross-browser {
+  z-index: 40 !important;
+}
+
+.z-50-cross-browser {
+  z-index: 50 !important;
+}
+
+/* Cross-browser cursor utilities */
+.cursor-pointer-cross-browser {
+  cursor: pointer !important;
+}
+
+.cursor-default-cross-browser {
+  cursor: default !important;
+}
+
+.cursor-not-allowed-cross-browser {
+  cursor: not-allowed !important;
+}
+
+/* Cross-browser user-select utilities */
+.select-none-cross-browser {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+}
+
+.select-text-cross-browser {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+}
+
+.select-all-cross-browser {
+  -webkit-user-select: all !important;
+  -moz-user-select: all !important;
+  -ms-user-select: all !important;
+  user-select: all !important;
+}
+
+/* Cross-browser pointer-events utilities */
+.pointer-events-none-cross-browser {
+  pointer-events: none !important;
+}
+
+.pointer-events-auto-cross-browser {
+  pointer-events: auto !important;
+}
+
+/* Cross-browser appearance utilities */
+.appearance-none-cross-browser {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+}
+
+/* Cross-browser outline utilities */
+.outline-none-cross-browser {
+  outline: none !important;
+}
+
+.outline-cross-browser {
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+}
+
+/* Cross-browser resize utilities */
+.resize-none-cross-browser {
+  resize: none !important;
+}
+
+.resize-cross-browser {
+  resize: both !important;
+}
+
+.resize-x-cross-browser {
+  resize: horizontal !important;
+}
+
+.resize-y-cross-browser {
+  resize: vertical !important;
+}
+
+/* ========================================
+   END ADDITIONAL CROSS-BROWSER UTILITIES
+   ======================================== */
+
+/* ========================================
+   MOBILE VIEWPORT AND TOUCH COMPATIBILITY
+   Cross-browser mobile optimizations and viewport scaling fixes
+   Implements Requirements 6.1, 6.2, 6.3, 6.4, 6.5
+   ======================================== */
+
+/* Mobile Viewport Base Configuration */
+html {
+  /* Prevent horizontal scroll on mobile */
+  overflow-x: hidden;
+  /* Consistent box-sizing for mobile */
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  /* Prevent zoom on orientation change */
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  /* Prevent horizontal scroll */
+  overflow-x: hidden;
+  /* Prevent bounce scrolling on iOS */
+  -webkit-overscroll-behavior: contain;
+  -moz-overscroll-behavior: contain;
+  -ms-overscroll-behavior: contain;
+  overscroll-behavior: contain;
+  /* Consistent box-sizing */
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+/* Mobile Input Zoom Prevention */
+/* Prevent zoom on input focus in iOS Safari */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+textarea,
+select {
+  font-size: 16px !important; /* Prevent zoom on iOS */
+  -webkit-appearance: none; /* Remove iOS styling */
+  -moz-appearance: none; /* Remove Firefox styling */
+  appearance: none; /* Remove default styling */
+}
+
+/* Mobile Touch Optimizations */
+.touch-optimized {
+  /* Cross-browser touch action */
+  touch-action: pan-y;
+  -ms-touch-action: pan-y;
+  -webkit-touch-action: pan-y;
+  
+  /* Prevent text selection during touch */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  
+  /* Remove tap highlight */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  
+  /* Hardware acceleration */
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+  
+  /* Performance optimization */
+  will-change: transform;
+  -webkit-will-change: transform;
+}
+
+/* Safari-specific touch optimizations */
+.touch-safari {
+  /* iOS momentum scrolling */
+  -webkit-overflow-scrolling: touch;
+  /* Prevent callout menu */
+  -webkit-touch-callout: none;
+  /* Hardware acceleration */
+  -webkit-backface-visibility: hidden;
+  /* Prevent text selection */
+  -webkit-user-select: none;
+}
+
+.ios-momentum-scroll {
+  -webkit-overflow-scrolling: touch;
+  -webkit-transform: translateZ(0);
+}
+
+/* Firefox-specific touch optimizations */
+.touch-firefox {
+  /* Firefox touch action */
+  touch-action: pan-y;
+  /* Prevent text selection */
+  -moz-user-select: none;
+  /* Overscroll behavior */
+  -moz-overscroll-behavior: contain;
+  -moz-overscroll-behavior-y: contain;
+}
+
+.firefox-touch-action {
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+}
+
+/* Chrome-specific touch optimizations */
+.touch-chrome {
+  /* Chrome overscroll behavior */
+  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
+  /* Touch action */
+  touch-action: pan-y;
+  /* Performance optimization */
+  will-change: scroll-position, transform;
+}
+
+.chrome-overscroll {
+  overscroll-behavior: contain;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Edge-specific touch optimizations */
+.touch-edge {
+  /* Edge touch action */
+  -ms-touch-action: pan-y;
+  touch-action: pan-y;
+  /* Overscroll behavior */
+  -ms-overscroll-behavior: contain;
+  overscroll-behavior: contain;
+  /* Scrollbar styling */
+  -ms-overflow-style: -ms-autohiding-scrollbar;
+}
+
+.edge-touch-action {
+  -ms-touch-action: pan-y;
+  -ms-overscroll-behavior: contain;
+}
+
+/* Mobile-specific optimizations */
+.touch-mobile {
+  /* Minimum touch target size */
+  min-width: 44px;
+  min-height: 44px;
+  /* Adequate spacing */
+  margin: 4px;
+  /* Touch feedback */
+  cursor: pointer;
+}
+
+.mobile-optimized {
+  /* Optimize for mobile performance */
+  contain: layout style;
+  /* Reduce animation complexity on mobile */
+  -webkit-animation-duration: 0.2s;
+  -moz-animation-duration: 0.2s;
+  animation-duration: 0.2s;
+  /* Optimize touch interactions */
+  touch-action: manipulation;
+  -ms-touch-action: manipulation;
+}
+
+/* Touch Target Size Utilities */
+.touch-target-small {
+  min-width: 32px;
+  min-height: 32px;
+}
+
+.touch-target-medium {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.touch-target-large {
+  min-width: 56px;
+  min-height: 56px;
+}
+
+/* Viewport Scaling Utilities */
+.viewport-stable {
+  /* Prevent viewport scaling issues */
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  /* Consistent box-sizing */
+  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+}
+
+.viewport-fixed {
+  /* Fixed viewport behavior */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Mobile Responsive Utilities */
+@media (max-width: 768px) {
+  /* Enhanced mobile touch targets */
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  [role="button"],
+  [tabindex="0"] {
+    min-height: 44px !important;
+    min-width: 44px !important;
+    /* Adequate spacing between touch targets */
+    margin: 2px !important;
+  }
+  
+  /* Mobile-specific touch optimizations */
+  .mobile-touch-enhanced {
+    /* Enhanced touch area */
+    padding: 12px !important;
+    /* Clear touch feedback */
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1) !important;
+    /* Prevent accidental selection */
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    user-select: none !important;
+  }
+  
+  /* Mobile scroll optimizations */
+  .mobile-scroll-optimized {
+    /* iOS momentum scrolling */
+    -webkit-overflow-scrolling: touch;
+    /* Prevent overscroll bounce */
+    -webkit-overscroll-behavior-y: contain;
+    -moz-overscroll-behavior-y: contain;
+    overscroll-behavior-y: contain;
+    /* Touch action for vertical scrolling */
+    touch-action: pan-y;
+    -ms-touch-action: pan-y;
+  }
+  
+  /* Mobile form optimizations */
+  input,
+  textarea,
+  select {
+    /* Prevent zoom on focus */
+    font-size: 16px !important;
+    /* Enhanced touch area */
+    padding: 12px !important;
+    /* Clear borders for touch */
+    border-radius: 8px !important;
+  }
+}
+
+/* Tablet-specific optimizations */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .tablet-touch-optimized {
+    /* Tablet-specific touch targets */
+    min-width: 48px;
+    min-height: 48px;
+    /* Adequate spacing */
+    margin: 3px;
+  }
+}
+
+/* High-DPI display optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .high-dpi-touch {
+    /* Enhanced precision for high-DPI displays */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    /* Crisp rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Touch Gesture Support */
+.gesture-enabled {
+  /* Enable all touch gestures */
+  touch-action: auto;
+  -ms-touch-action: auto;
+  /* Prevent default behaviors that interfere with gestures */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  /* Hardware acceleration for smooth gestures */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.gesture-pan-only {
+  /* Allow only pan gestures */
+  touch-action: pan-x pan-y;
+  -ms-touch-action: pan-x pan-y;
+}
+
+.gesture-zoom-disabled {
+  /* Disable zoom gestures */
+  touch-action: pan-x pan-y;
+  -ms-touch-action: pan-x pan-y;
+}
+
+/* Touch Feedback Utilities */
+.touch-feedback {
+  /* Visual feedback on touch */
+  transition: background-color 0.1s ease, transform 0.1s ease;
+  -webkit-transition: background-color 0.1s ease, -webkit-transform 0.1s ease;
+  -moz-transition: background-color 0.1s ease, -moz-transform 0.1s ease;
+}
+
+.touch-feedback:active {
+  /* Active state feedback */
+  transform: scale(0.98);
+  -webkit-transform: scale(0.98);
+  -moz-transform: scale(0.98);
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Accessibility Enhancements for Touch */
+.touch-accessible {
+  /* Enhanced accessibility for touch interfaces */
+  min-width: 44px;
+  min-height: 44px;
+  /* Clear focus indicators */
+  outline: none;
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.touch-accessible:focus {
+  /* Clear focus indication */
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Performance Optimizations for Touch */
+.touch-performance {
+  /* Optimize for touch performance */
+  contain: layout style paint;
+  /* Reduce repaints during touch */
+  will-change: transform;
+  -webkit-will-change: transform;
+  /* Hardware acceleration */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* Cross-browser Touch Action Utilities */
+.touch-action-auto {
+  touch-action: auto;
+  -ms-touch-action: auto;
+}
+
+.touch-action-none {
+  touch-action: none;
+  -ms-touch-action: none;
+}
+
+.touch-action-pan-x {
+  touch-action: pan-x;
+  -ms-touch-action: pan-x;
+}
+
+.touch-action-pan-y {
+  touch-action: pan-y;
+  -ms-touch-action: pan-y;
+}
+
+.touch-action-pan-xy {
+  touch-action: pan-x pan-y;
+  -ms-touch-action: pan-x pan-y;
+}
+
+.touch-action-manipulation {
+  touch-action: manipulation;
+  -ms-touch-action: manipulation;
+}
+
+/* Overscroll Behavior Utilities */
+.overscroll-auto {
+  -webkit-overscroll-behavior: auto;
+  -moz-overscroll-behavior: auto;
+  -ms-overscroll-behavior: auto;
+  overscroll-behavior: auto;
+}
+
+.overscroll-contain {
+  -webkit-overscroll-behavior: contain;
+  -moz-overscroll-behavior: contain;
+  -ms-overscroll-behavior: contain;
+  overscroll-behavior: contain;
+}
+
+.overscroll-none {
+  -webkit-overscroll-behavior: none;
+  -moz-overscroll-behavior: none;
+  -ms-overscroll-behavior: none;
+  overscroll-behavior: none;
+}
+
+.overscroll-y-auto {
+  -webkit-overscroll-behavior-y: auto;
+  -moz-overscroll-behavior-y: auto;
+  -ms-overscroll-behavior-y: auto;
+  overscroll-behavior-y: auto;
+}
+
+.overscroll-y-contain {
+  -webkit-overscroll-behavior-y: contain;
+  -moz-overscroll-behavior-y: contain;
+  -ms-overscroll-behavior-y: contain;
+  overscroll-behavior-y: contain;
+}
+
+.overscroll-y-none {
+  -webkit-overscroll-behavior-y: none;
+  -moz-overscroll-behavior-y: none;
+  -ms-overscroll-behavior-y: none;
+  overscroll-behavior-y: none;
+}
+
+.overscroll-x-auto {
+  -webkit-overscroll-behavior-x: auto;
+  -moz-overscroll-behavior-x: auto;
+  -ms-overscroll-behavior-x: auto;
+  overscroll-behavior-x: auto;
+}
+
+.overscroll-x-contain {
+  -webkit-overscroll-behavior-x: contain;
+  -moz-overscroll-behavior-x: contain;
+  -ms-overscroll-behavior-x: contain;
+  overscroll-behavior-x: contain;
+}
+
+.overscroll-x-none {
+  -webkit-overscroll-behavior-x: none;
+  -moz-overscroll-behavior-x: none;
+  -ms-overscroll-behavior-x: none;
+  overscroll-behavior-x: none;
+}
+
+/* ========================================
+   END MOBILE VIEWPORT AND TOUCH COMPATIBILITY
+   ======================================== */
+
+/* ========================================
+   Performance Optimization Classes
+   Cross-browser performance optimizations
+   ======================================== */
+
+/* General scroll optimization - cross-browser */
+.scroll-optimized {
+  /* Base scroll performance */
+  will-change: scroll-position;
+  -webkit-will-change: scroll-position;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  
+  /* Overflow behavior */
+  overflow-y: auto;
+  overflow-x: hidden;
+  
+  /* Overscroll behavior */
+  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
+  -webkit-overscroll-behavior: contain;
+  -moz-overscroll-behavior: contain;
+  
+  /* Layout containment */
+  contain: layout style paint;
+}
+
+/* Firefox-specific scroll optimization */
+.firefox-scroll-optimized {
+  /* Firefox scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(155, 155, 155, 0.5) transparent;
+  
+  /* Firefox touch action */
+  touch-action: pan-y;
+  -moz-user-select: none;
+  
+  /* Firefox overscroll behavior */
+  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
+  -moz-overscroll-behavior: contain;
+  
+  /* Firefox hardware acceleration */
+  will-change: scroll-position;
+  transform: translateZ(0);
+  -moz-transform: translateZ(0);
+}
+
+/* Safari-specific scroll optimization */
+.safari-scroll-optimized {
+  /* Safari momentum scrolling */
+  -webkit-overflow-scrolling: touch;
+  
+  /* Safari hardware acceleration */
+  -webkit-transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  
+  /* Safari will-change */
+  will-change: scroll-position;
+  -webkit-will-change: scroll-position;
+  
+  /* Safari overscroll behavior */
+  overscroll-behavior: contain;
+  -webkit-overscroll-behavior: contain;
+  
+  /* Safari touch callout */
+  -webkit-touch-callout: none;
+}
+
+/* Edge-specific scroll optimization */
+.edge-scroll-optimized {
+  /* Edge scrollbar styling */
+  -ms-overflow-style: -ms-autohiding-scrollbar;
+  
+  /* Edge touch action */
+  touch-action: pan-y;
+  -ms-touch-action: pan-y;
+  
+  /* Edge overscroll behavior */
+  overscroll-behavior: contain;
+  
+  /* Edge hardware acceleration */
+  will-change: scroll-position;
+  transform: translateZ(0);
+  -ms-transform: translateZ(0);
+}
+
+/* Large content scroll optimization */
+.large-content-scroll {
+  /* Enhanced containment for large content */
+  contain: layout style paint;
+  
+  /* Will-change for scroll optimization */
+  will-change: scroll-position;
+  -webkit-will-change: scroll-position;
+  
+  /* Hardware acceleration */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+}
+
+/* Smooth scroll optimization */
+.smooth-scroll-optimized {
+  /* Smooth scroll behavior */
+  scroll-behavior: smooth;
+  -webkit-scroll-behavior: smooth;
+  -moz-scroll-behavior: smooth;
+  
+  /* Performance optimization */
+  will-change: scroll-position;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* Transform GPU acceleration utility */
+.transform-gpu {
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* Animation performance optimization */
+.animated-element {
+  /* Optimize for transform and opacity animations */
+  will-change: transform, opacity;
+  -webkit-will-change: transform, opacity;
+  
+  /* Hardware acceleration */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+  
+  /* Backface visibility */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Layout performance optimization */
+.layout-optimized {
+  /* Layout containment */
+  contain: layout style paint;
+  
+  /* Will-change for transform and opacity */
+  will-change: transform, opacity;
+  -webkit-will-change: transform, opacity;
+  
+  /* Hardware acceleration */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* ========================================
+   PROGRESSIVE ENHANCEMENT FALLBACKS
+   CSS fallbacks for unsupported features
+   ======================================== */
+
+/* Grid fallback to flexbox */
+.no-grid .grid-cross-browser,
+.fallback-flexbox .grid-cross-browser {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+  margin: -0.5rem;
+}
+
+.no-grid .grid-cross-browser > *,
+.fallback-flexbox .grid-cross-browser > * {
+  -webkit-box-flex: 1;
+  -webkit-flex: 1 1 auto;
+  -ms-flex: 1 1 auto;
+  flex: 1 1 auto;
+  margin: 0.5rem;
+  min-width: 250px;
+}
+
+/* Flexbox fallback to float */
+.no-flexbox .flex-cross-browser {
+  display: block;
+}
+
+.no-flexbox .flex-cross-browser::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.no-flexbox .flex-cross-browser > * {
+  float: left;
+  width: 100%;
+}
+
+/* CSS custom properties fallback */
+.no-css-vars {
+  /* Fallback colors */
+  --color-primary: #3b82f6;
+  --color-secondary: #8b5cf6;
+  --color-background: #ffffff;
+  --color-text: #1f2937;
+}
+
+.no-css-vars .bg-primary {
+  background-color: #3b82f6;
+}
+
+.no-css-vars .text-primary {
+  color: #3b82f6;
+}
+
+/* Transform fallback */
+.no-transforms .transform-gpu {
+  /* Remove transform-based optimizations */
+  -webkit-transform: none;
+  -moz-transform: none;
+  -ms-transform: none;
+  transform: none;
+}
+
+/* Animation fallback to static */
+.no-animations .animated-element,
+.static-fallback .animated-element {
+  /* Remove animations */
+  -webkit-animation: none !important;
+  -moz-animation: none !important;
+  animation: none !important;
+  
+  /* Remove transitions */
+  -webkit-transition: none !important;
+  -moz-transition: none !important;
+  transition: none !important;
+  
+  /* Remove will-change */
+  will-change: auto;
+  -webkit-will-change: auto;
+}
+
+.no-animations .fade-in,
+.static-fallback .fade-in {
+  opacity: 1 !important;
+}
+
+.no-animations .slide-in,
+.static-fallback .slide-in {
+  transform: none !important;
+  -webkit-transform: none !important;
+}
+
+/* Object-fit fallback */
+.no-object-fit img {
+  width: 100%;
+  height: auto;
+}
+
+/* Backdrop filter fallback */
+.no-backdrop-filter .backdrop-blur {
+  background-color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Clip-path fallback */
+.no-clip-path .clip-circle {
+  border-radius: 50%;
+  clip-path: none;
+  -webkit-clip-path: none;
+}
+
+/* ========================================
+   PROGRESSIVE ENHANCEMENT UTILITIES
+   Feature-specific utility classes
+   ======================================== */
+
+/* Grid with automatic fallback */
+.progressive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+@supports not (display: grid) {
+  .progressive-grid {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-flex-wrap: wrap;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    margin: -0.5rem;
+  }
+  
+  .progressive-grid > * {
+    -webkit-box-flex: 1;
+    -webkit-flex: 1 1 auto;
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
+    margin: 0.5rem;
+    min-width: 250px;
+  }
+}
+
+/* Flexbox with automatic fallback */
+.progressive-flex {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@supports not (display: flex) {
+  .progressive-flex {
+    display: block;
+  }
+  
+  .progressive-flex > * {
+    margin-bottom: 1rem;
+  }
+  
+  .progressive-flex > *:last-child {
+    margin-bottom: 0;
+  }
+}
+
+/* Smooth animations with fallback */
+.progressive-animate {
+  transition: all 0.3s ease;
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progressive-animate {
+    transition: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+  }
+}
+
+/* Container with progressive enhancement */
+.progressive-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+@supports (padding: clamp(1rem, 5vw, 2rem)) {
+  .progressive-container {
+    padding: clamp(1rem, 5vw, 2rem);
+  }
+}
+
+/* Responsive typography with fallback */
+.progressive-text {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+@supports (font-size: clamp(1rem, 2vw, 1.5rem)) {
+  .progressive-text {
+    font-size: clamp(1rem, 2vw, 1.5rem);
+  }
+}
+
+/* Sticky positioning with fallback */
+.progressive-sticky {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+}
+
+@supports not (position: sticky) {
+  .progressive-sticky {
+    position: relative;
+  }
+}
+
+/* Aspect ratio with fallback */
+.progressive-aspect-ratio {
+  aspect-ratio: 16 / 9;
+}
+
+@supports not (aspect-ratio: 16 / 9) {
+  .progressive-aspect-ratio {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  }
+  
+  .progressive-aspect-ratio > * {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
 }

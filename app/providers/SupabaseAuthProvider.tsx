@@ -56,10 +56,11 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     // Get initial session
     const initializeAuth = async () => {
       try {
+        console.log('🔐 Initializing authentication...')
         const { data: { session }, error } = await supabase.auth.getSession()
         
         if (error) {
-          console.error('Error getting session:', error)
+          console.error('❌ Error getting session:', error)
           // If it's a refresh token error, clear the session
           if (error.message?.includes('refresh') || error.message?.includes('Refresh Token')) {
             console.log('🔄 Refresh token invalid, clearing session...')
@@ -68,13 +69,15 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
             setError(error)
           }
         } else {
+          console.log('✅ Session check complete:', session ? 'Session found' : 'No session')
           setSession(session)
         }
       } catch (err: unknown) {
-        console.error('Unexpected error getting session:', err)
+        console.error('🚨 Unexpected error getting session:', err)
         // Clear session on any auth error
         await clearSession()
       } finally {
+        console.log('✅ Auth initialization complete')
         setLoading(false)
       }
     }
@@ -109,6 +112,18 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     loading,
     error,
     clearSession,
+  }
+
+  // Show loading state during initial auth check
+  if (loading && !isClient) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Initializing...</p>
+        </div>
+      </div>
+    )
   }
 
   return (

@@ -43,6 +43,130 @@ const eslintConfig = defineConfig([
       }
     },
     rules: {
+      // Deprecated API avoidance rules
+      "no-restricted-globals": [
+        "error",
+        {
+          name: "event",
+          message: "Use the event parameter passed to the handler instead of the global 'event' object."
+        }
+      ],
+      "no-restricted-properties": [
+        "error",
+        // Deprecated event properties
+        {
+          object: "event",
+          property: "keyCode",
+          message: "event.keyCode is deprecated. Use event.key or event.code instead."
+        },
+        {
+          object: "event",
+          property: "which",
+          message: "event.which is deprecated. Use event.key or event.code instead."
+        },
+        {
+          object: "event",
+          property: "charCode",
+          message: "event.charCode is deprecated. Use event.key instead."
+        },
+        {
+          object: "event",
+          property: "returnValue",
+          message: "event.returnValue is deprecated. Use event.preventDefault() instead."
+        },
+        {
+          object: "event",
+          property: "srcElement",
+          message: "event.srcElement is deprecated. Use event.target instead."
+        },
+        // Deprecated document methods
+        {
+          object: "document",
+          property: "write",
+          message: "document.write is deprecated. Use DOM manipulation methods like appendChild() instead."
+        },
+        {
+          object: "document",
+          property: "writeln",
+          message: "document.writeln is deprecated. Use DOM manipulation methods like appendChild() instead."
+        },
+        {
+          object: "document",
+          property: "clear",
+          message: "document.clear is deprecated. Use modern DOM manipulation instead."
+        },
+        {
+          object: "document",
+          property: "captureEvents",
+          message: "document.captureEvents is deprecated. Use addEventListener with capture option instead."
+        },
+        {
+          object: "document",
+          property: "releaseEvents",
+          message: "document.releaseEvents is deprecated. Use removeEventListener instead."
+        },
+        // Deprecated window methods
+        {
+          object: "window",
+          property: "showModalDialog",
+          message: "window.showModalDialog is deprecated. Use the <dialog> element or a custom modal instead."
+        },
+        {
+          object: "window",
+          property: "createPopup",
+          message: "window.createPopup is deprecated. Use modern popup/modal patterns instead."
+        },
+        // Deprecated execCommand
+        {
+          object: "document",
+          property: "execCommand",
+          message: "document.execCommand is deprecated. Use the Clipboard API or modern contenteditable APIs instead."
+        },
+        {
+          object: "document",
+          property: "queryCommandEnabled",
+          message: "document.queryCommandEnabled is deprecated. Use modern contenteditable APIs instead."
+        },
+        {
+          object: "document",
+          property: "queryCommandState",
+          message: "document.queryCommandState is deprecated. Use modern contenteditable APIs instead."
+        },
+        {
+          object: "document",
+          property: "queryCommandSupported",
+          message: "document.queryCommandSupported is deprecated. Use modern contenteditable APIs instead."
+        }
+      ],
+      "no-restricted-syntax": [
+        "error",
+        // Deprecated event handling
+        {
+          selector: "CallExpression[callee.property.name='attachEvent']",
+          message: "attachEvent is deprecated. Use addEventListener instead."
+        },
+        {
+          selector: "CallExpression[callee.property.name='detachEvent']",
+          message: "detachEvent is deprecated. Use removeEventListener instead."
+        },
+        {
+          selector: "CallExpression[callee.property.name='createEvent']",
+          message: "createEvent is deprecated. Use new Event() or new CustomEvent() instead."
+        },
+        {
+          selector: "CallExpression[callee.property.name='initEvent']",
+          message: "initEvent is deprecated. Use the Event constructor with options instead."
+        },
+        {
+          selector: "CallExpression[callee.property.name='initMouseEvent']",
+          message: "initMouseEvent is deprecated. Use the MouseEvent constructor instead."
+        },
+        {
+          selector: "CallExpression[callee.property.name='initKeyboardEvent']",
+          message: "initKeyboardEvent is deprecated. Use the KeyboardEvent constructor instead."
+        }
+      ],
+      
       // Catch common JSX syntax issues
       "react/jsx-no-undef": "error",
       "react/jsx-uses-react": "error",

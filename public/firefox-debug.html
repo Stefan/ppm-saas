@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firefox Sidebar Debug</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .debug-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background: #f5f5f5;
+        }
+        .debug-section h3 {
+            margin-top: 0;
+        }
+        pre {
+            background: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .test-sidebar {
+            width: 256px;
+            height: 400px;
+            background: #1f2937;
+            color: white;
+            padding: 16px;
+        }
+        .hidden {
+            display: none;
+        }
+        @media (min-width: 1024px) {
+            .lg\:flex {
+                display: flex;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Firefox Sidebar Debug Tool</h1>
+    
+    <div class="debug-section">
+        <h3>Browser Information</h3>
+        <pre id="browser-info"></pre>
+    </div>
+    
+    <div class="debug-section">
+        <h3>Viewport Information</h3>
+        <pre id="viewport-info"></pre>
+    </div>
+    
+    <div class="debug-section">
+        <h3>Test Sidebar (hidden lg:flex)</h3>
+        <nav class="test-sidebar hidden lg:flex" id="test-sidebar" style="flex-direction: column;">
+            <h2>Test Sidebar</h2>
+            <p>Diese Sidebar sollte bei ≥1024px sichtbar sein</p>
+        </nav>
+        <div id="sidebar-status"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>Computed Styles</h3>
+        <pre id="computed-styles"></pre>
+    </div>
+    
+    <div class="debug-section">
+        <h3>CSS Support Tests</h3>
+        <pre id="css-support"></pre>
+    </div>
+
+    <script>
+        // Browser Information
+        const browserInfo = {
+            userAgent: navigator.userAgent,
+            vendor: navigator.vendor,
+            platform: navigator.platform,
+            language: navigator.language,
+            isFirefox: /Firefox/.test(navigator.userAgent),
+            firefoxVersion: navigator.userAgent.match(/Firefox\/(\d+)/)?.[1] || 'N/A'
+        };
+        document.getElementById('browser-info').textContent = JSON.stringify(browserInfo, null, 2);
+        
+        // Viewport Information
+        function updateViewportInfo() {
+            const viewportInfo = {
+                width: window.innerWidth,
+                height: window.innerHeight,
+                devicePixelRatio: window.devicePixelRatio,
+                isDesktop: window.innerWidth >= 1024,
+                matchesLgMediaQuery: window.matchMedia('(min-width: 1024px)').matches
+            };
+            document.getElementById('viewport-info').textContent = JSON.stringify(viewportInfo, null, 2);
+            
+            // Update sidebar status
+            const sidebar = document.getElementById('test-sidebar');
+            const computedDisplay = window.getComputedStyle(sidebar).display;
+            const isVisible = computedDisplay !== 'none';
+            
+            document.getElementById('sidebar-status').innerHTML = `
+                <p><strong>Sidebar Status:</strong></p>
+                <ul>
+                    <li>Computed display: <code>${computedDisplay}</code></li>
+                    <li>Is visible: <strong style="color: ${isVisible ? 'green' : 'red'}">${isVisible ? 'JA ✓' : 'NEIN ✗'}</strong></li>
+                    <li>Should be visible (≥1024px): <strong>${viewportInfo.isDesktop ? 'JA' : 'NEIN'}</strong></li>
+                    <li>Media query matches: <strong>${viewportInfo.matchesLgMediaQuery ? 'JA' : 'NEIN'}</strong></li>
+                </ul>
+            `;
+        }
+        
+        updateViewportInfo();
+        window.addEventListener('resize', updateViewportInfo);
+        
+        // Computed Styles
+        const sidebar = document.getElementById('test-sidebar');
+        const computedStyles = window.getComputedStyle(sidebar);
+        const relevantStyles = {
+            display: computedStyles.display,
+            visibility: computedStyles.visibility,
+            opacity: computedStyles.opacity,
+            width: computedStyles.width,
+            height: computedStyles.height,
+            position: computedStyles.position,
+            flexDirection: computedStyles.flexDirection,
+            zIndex: computedStyles.zIndex
+        };
+        document.getElementById('computed-styles').textContent = JSON.stringify(relevantStyles, null, 2);
+        
+        // CSS Support Tests
+        const cssSupport = {
+            flexbox: CSS.supports('display', 'flex'),
+            grid: CSS.supports('display', 'grid'),
+            customProperties: CSS.supports('--custom', 'property'),
+            overscrollBehavior: CSS.supports('overscroll-behavior', 'contain'),
+            touchAction: CSS.supports('touch-action', 'pan-y'),
+            willChange: CSS.supports('will-change', 'scroll-position'),
+            contain: CSS.supports('contain', 'layout'),
+            mediaQuerySupport: window.matchMedia('(min-width: 1024px)').matches
+        };
+        document.getElementById('css-support').textContent = JSON.stringify(cssSupport, null, 2);
+        
+        // Log to console
+        console.log('=== Firefox Sidebar Debug ===');
+        console.log('Browser:', browserInfo);
+        console.log('Viewport:', {
+            width: window.innerWidth,
+            height: window.innerHeight,
+            isDesktop: window.innerWidth >= 1024
+        });
+        console.log('Sidebar computed display:', computedStyles.display);
+        console.log('CSS Support:', cssSupport);
+    </script>
+</body>
+</html>

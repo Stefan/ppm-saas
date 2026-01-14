@@ -15,12 +15,17 @@ export const ENV_CONFIG = {
 } as const
 
 // Validate required environment variables
-if (!ENV_CONFIG.supabaseUrl || !ENV_CONFIG.supabaseAnonKey) {
-  console.warn('Missing Supabase environment variables. Some features may not work.')
+const hasValidConfig = !!(ENV_CONFIG.supabaseUrl && ENV_CONFIG.supabaseAnonKey &&
+  ENV_CONFIG.supabaseUrl !== 'https://placeholder.supabase.co' &&
+  ENV_CONFIG.supabaseAnonKey !== 'placeholder-anon-key')
+
+if (!hasValidConfig) {
+  console.warn('⚠️ Missing or invalid Supabase environment variables. Authentication will not work.')
+  console.warn('Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file')
 }
 
 // Create Supabase client with fallback for missing environment variables
-export const supabase: SupabaseClient = ENV_CONFIG.supabaseUrl && ENV_CONFIG.supabaseAnonKey 
+export const supabase: SupabaseClient = hasValidConfig
   ? createClient(
       ENV_CONFIG.supabaseUrl,
       ENV_CONFIG.supabaseAnonKey,
@@ -28,7 +33,9 @@ export const supabase: SupabaseClient = ENV_CONFIG.supabaseUrl && ENV_CONFIG.sup
         auth: {
           autoRefreshToken: true,
           persistSession: true,
-          detectSessionInUrl: true
+          detectSessionInUrl: true,
+          storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+          storageKey: 'supabase.auth.token',
         },
         realtime: {
           params: {

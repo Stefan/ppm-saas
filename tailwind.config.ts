@@ -231,6 +231,86 @@ const config: Config = {
         '.safe-area-inset-right': {
           paddingRight: 'env(safe-area-inset-right)',
         },
+        // Cross-browser vendor prefix utilities
+        '.flex-webkit': {
+          'display': 'flex'
+        },
+        '.transform-gpu': {
+          '-webkit-transform': 'translateZ(0)',
+          '-moz-transform': 'translateZ(0)',
+          'transform': 'translateZ(0)'
+        },
+        '.scroll-smooth-all': {
+          'scroll-behavior': 'smooth',
+          '-webkit-scroll-behavior': 'smooth',
+          '-moz-scroll-behavior': 'smooth'
+        },
+        '.flex-cross-browser': {
+          'display': 'flex'
+        },
+        '.flex-direction-column-cross-browser': {
+          '-webkit-box-orient': 'vertical',
+          '-webkit-box-direction': 'normal',
+          '-webkit-flex-direction': 'column',
+          '-ms-flex-direction': 'column',
+          'flex-direction': 'column'
+        },
+        '.flex-1-cross-browser': {
+          '-webkit-box-flex': '1',
+          '-webkit-flex': '1 1 0%',
+          '-ms-flex': '1 1 0%',
+          'flex': '1 1 0%'
+        },
+        '.grid-cross-browser': {
+          'display': 'grid'
+        },
+        '.transform-3d': {
+          '-webkit-transform': 'translate3d(0, 0, 0)',
+          '-moz-transform': 'translate3d(0, 0, 0)',
+          '-ms-transform': 'translate3d(0, 0, 0)',
+          'transform': 'translate3d(0, 0, 0)'
+        },
+        '.backface-hidden': {
+          '-webkit-backface-visibility': 'hidden',
+          '-moz-backface-visibility': 'hidden',
+          'backface-visibility': 'hidden'
+        },
+        '.transition-cross-browser': {
+          '-webkit-transition': 'all 0.3s ease',
+          '-moz-transition': 'all 0.3s ease',
+          '-ms-transition': 'all 0.3s ease',
+          'transition': 'all 0.3s ease'
+        },
+        '.user-select-none-cross-browser': {
+          '-webkit-user-select': 'none',
+          '-moz-user-select': 'none',
+          '-ms-user-select': 'none',
+          'user-select': 'none'
+        },
+        '.appearance-none-cross-browser': {
+          '-webkit-appearance': 'none',
+          '-moz-appearance': 'none',
+          'appearance': 'none'
+        },
+        '.box-shadow-cross-browser': {
+          '-webkit-box-shadow': '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          '-moz-box-shadow': '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          'box-shadow': '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+        },
+        '.border-radius-cross-browser': {
+          '-webkit-border-radius': '0.375rem',
+          '-moz-border-radius': '0.375rem',
+          'border-radius': '0.375rem'
+        },
+        '.overflow-scrolling-touch': {
+          '-webkit-overflow-scrolling': 'touch'
+        },
+        '.will-change-scroll': {
+          'will-change': 'scroll-position'
+        },
+        '.contain-layout': {
+          'contain': 'layout style paint'
+        }
       }
       addUtilities(newUtilities)
     },

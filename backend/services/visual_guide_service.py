@@ -18,8 +18,8 @@ from fastapi import HTTPException, UploadFile
 import asyncio
 import aiofiles
 
-from ..config.database import get_db
-from ..models.help_content import HelpContent
+from config.database import get_db
+from models.help_content import HelpContent
 
 
 @dataclass

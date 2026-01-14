@@ -1,0 +1,17 @@
+.test-flexbox {
+  display: flex;
+  flex-direction: column;
+}
+
+.test-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.test-transform {
+  transform: translateX(10px);
+}
+
+.test-transition {
+  transition: all 0.3s ease;
+}
