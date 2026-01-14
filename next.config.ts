@@ -6,11 +6,14 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
   
+  // Production optimizations
+  productionBrowserSourceMaps: false,
+  
   // Bundle optimization
   experimental: {
-    optimizePackageImports: ['lucide-react', 'recharts', '@headlessui/react', 'framer-motion'],
+    optimizePackageImports: ['lucide-react', 'recharts', '@headlessui/react'],
     optimizeCss: true,
-    webVitalsAttribution: ['CLS', 'LCP', 'FCP', 'FID', 'TTFB'],
+    webVitalsAttribution: ['CLS', 'LCP'],
   },
   
   // Turbopack configuration (empty to silence warnings)
@@ -102,6 +105,7 @@ const nextConfig: NextConfig = {
   // TypeScript configuration
   typescript: {
     ignoreBuildErrors: false,
+    tsconfigPath: './tsconfig.json',
   },
 
   // Image optimization

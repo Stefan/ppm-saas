@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run build:vercel",
   "outputDirectory": ".next",
-  "installCommand": "npm ci",
+  "installCommand": "npm ci --prefer-offline --no-audit --no-fund",
   "framework": "nextjs",
   "regions": ["fra1"],
   "functions": {
@@ -20,5 +20,9 @@
         }
       ]
     }
-  ]
+  ],
+  "crons": [],
+  "github": {
+    "silent": true
+  }
 }

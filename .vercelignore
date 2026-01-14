@@ -1,29 +1,62 @@
-<<<<<<< HEAD
-# Vercel ignore file for frontend
-node_modules
-.next
-.env.local
-.env
-*.log
-.DS_Store
-coverage
-.nyc_output
-.cache
-dist
-build
-*.tsbuildinfo
-=======
-# Ignore backend folder and files
+# Backend files
 backend/
 backend/**
 
-# Ignore other non-frontend files
+# Development and test files
+__tests__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+.hypothesis/
+.pytest_cache/
+playwright-report/
+test-results/
+coverage/
+
+# Documentation
 *.md
+!README.md
+docs/
+DEPLOYMENT.md
+CODEBASE_*.md
+chrome-scroll-*.md
+chrome-scroll-*.html
+
+# Git files
 .git/
 .gitignore
-.DS_Store
-node_modules/
+.gitmodules
 
-# Keep only frontend for deployment
-!frontend/
->>>>>>> ef1ad5de0699895bb99dd3fbe14779697c0bc8d7
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build artifacts
+.next/
+dist/
+build/
+*.tsbuildinfo
+.cache/
+.nyc_output/
+
+# Environment files (handled by Vercel)
+.env.local
+.env.production
+.env
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Misc
+node_modules/
+.vercel/
