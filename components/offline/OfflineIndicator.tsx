@@ -145,7 +145,7 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
   }
 
   return (
-    <div className={`fixed top-4 right-4 z-50 ${className}`}>
+    <div className={`fixed top-4 right-20 z-50 ${className}`}>
       <div
         className={`
           flex items-center space-x-2 px-3 py-2 rounded-lg shadow-lg text-white text-sm

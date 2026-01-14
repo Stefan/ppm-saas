@@ -324,13 +324,13 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
     }
   }
 
-  // Position classes
+  // Position classes - Avoid overlap with HelpChatToggle at top-right
   const getPositionClasses = () => {
     switch (position) {
       case 'bottom-left':
         return 'bottom-4 left-4'
       case 'top-right':
-        return 'top-4 right-4'
+        return 'top-20 right-4' // Moved down to avoid HelpChatToggle
       case 'top-left':
         return 'top-4 left-4'
       case 'bottom-right':
