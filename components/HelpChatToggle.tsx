@@ -49,7 +49,7 @@ export function HelpChatToggle({ className }: HelpChatToggleProps) {
     setShowTooltip(false)
   }
 
-  // Mobile version - Bottom right corner, stays fixed while scrolling
+  // Mobile version - Top right corner, stays fixed while scrolling
   if (isMobile) {
     return (
       <>
@@ -57,7 +57,7 @@ export function HelpChatToggle({ className }: HelpChatToggleProps) {
           ref={buttonRef}
           onClick={handleClick}
           className={cn(
-            'fixed bottom-4 right-4 z-[9999]',
+            'fixed top-4 right-4 z-[9999]',
             'w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white',
             'rounded-lg shadow-lg hover:shadow-xl',
             'flex items-center justify-center',
@@ -69,7 +69,7 @@ export function HelpChatToggle({ className }: HelpChatToggleProps) {
           )}
           style={{
             position: 'fixed',
-            bottom: '1rem',
+            top: '1rem',
             right: '1rem',
             zIndex: 9999
           }}
@@ -116,7 +116,7 @@ export function HelpChatToggle({ className }: HelpChatToggleProps) {
     )
   }
 
-  // Desktop version - Bottom right corner, stays fixed while scrolling
+  // Desktop version - Top right corner, stays fixed while scrolling
   return (
     <>
       <button
@@ -125,7 +125,7 @@ export function HelpChatToggle({ className }: HelpChatToggleProps) {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         className={cn(
-          'fixed bottom-4 right-4 z-[9999]',
+          'fixed top-4 right-4 z-[9999]',
           'w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white',
           'rounded-lg shadow-lg hover:shadow-xl',
           'flex items-center justify-center',
@@ -137,7 +137,7 @@ export function HelpChatToggle({ className }: HelpChatToggleProps) {
         )}
         style={{
           position: 'fixed',
-          bottom: '1rem',
+          top: '1rem',
           right: '1rem',
           zIndex: 9999
         }}
@@ -173,10 +173,10 @@ export function HelpChatToggle({ className }: HelpChatToggleProps) {
       {showTooltip && (
         <div
           ref={tooltipRef}
-          className="fixed bottom-4 right-20 z-[9999]"
+          className="fixed top-4 right-20 z-[9999]"
           style={{
             position: 'fixed',
-            bottom: '1rem',
+            top: '1rem',
             right: '5rem',
             zIndex: 9999
           }}
