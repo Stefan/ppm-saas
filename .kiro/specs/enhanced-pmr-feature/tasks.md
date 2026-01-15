@@ -47,7 +47,7 @@ This task list implements the Enhanced Project Monthly Report (PMR) feature that
   - Integrate with existing project data models
   - _Requirements: Predictive analytics, risk assessment, scenario planning_
 
-- [ ] 7. Export Pipeline Service
+- [x] 7. Export Pipeline Service
   - Create `backend/services/export_pipeline_service.py` for multi-format exports
   - Implement PDF generation using WeasyPrint with professional templates
   - Add Excel export with charts and data using openpyxl
@@ -55,7 +55,7 @@ This task list implements the Enhanced Project Monthly Report (PMR) feature that
   - Add Word document export with proper formatting
   - _Requirements: Multi-format export, professional templates, branding_
 
-- [ ] 8. Database Schema Extensions
+- [x] 8. Database Schema Extensions
   - Create migration `backend/migrations/021_enhanced_pmr_schema.sql`
   - Add tables for AI insights, collaboration sessions, export jobs
   - Extend existing PMR tables with new AI-powered fields

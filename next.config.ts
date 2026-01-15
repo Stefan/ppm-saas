@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
   
   // Bundle optimization
   experimental: {
-    optimizePackageImports: ['lucide-react', 'recharts', '@headlessui/react'],
+    optimizePackageImports: ['lucide-react', 'recharts', '@headlessui/react', '@heroicons/react'],
     optimizeCss: true,
     webVitalsAttribution: ['CLS', 'LCP'],
   },
