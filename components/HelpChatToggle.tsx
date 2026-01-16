@@ -68,11 +68,8 @@ export function HelpChatToggle({ className }: HelpChatToggleProps) {
             className
           )}
           style={{
-            position: 'fixed',
-            top: '1rem',
-            right: '1rem',
-            zIndex: 9999,
-            willChange: isAnimating ? 'transform' : 'auto'
+            willChange: isAnimating ? 'transform' : 'auto',
+            transform: 'translateZ(0)'
           }}
         >
           <div className="relative">
@@ -139,10 +136,7 @@ export function HelpChatToggle({ className }: HelpChatToggleProps) {
           className
         )}
         style={{
-          position: 'fixed',
-          top: '1rem',
-          right: '1rem',
-          zIndex: 9999
+          transform: 'translateZ(0)'
         }}
       >
         <div>

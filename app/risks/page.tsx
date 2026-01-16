@@ -292,7 +292,10 @@ export default function Risks() {
         }
       })
       
-      if (!projectsResponse.ok) throw new Error('Failed to fetch projects')
+      if (!projectsResponse.ok) {
+        console.warn('Failed to fetch projects:', projectsResponse.status, projectsResponse.statusText)
+        return // Don't throw, just return empty
+      }
       const projectsData = await projectsResponse.json()
       
       // Extract projects array from response

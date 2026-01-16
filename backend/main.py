@@ -41,6 +41,10 @@ from routers.shareable_urls import router as shareable_urls_router
 from routers.po_breakdown import router as po_breakdown_router
 from routers.feature_flags import router as feature_flags_router
 from routers.audit import router as audit_router
+from routers.admin_performance import router as admin_performance_router
+
+# Import performance tracking middleware
+from middleware.performance_tracker import PerformanceMiddleware, performance_tracker
 
 # Import AI agents and services
 try:
@@ -197,6 +201,11 @@ app.include_router(shareable_urls_router)
 app.include_router(po_breakdown_router)
 app.include_router(feature_flags_router)
 app.include_router(audit_router)
+app.include_router(admin_performance_router)
+
+# Add performance tracking middleware
+app.add_middleware(PerformanceMiddleware, tracker=performance_tracker)
+print("✅ Performance tracking middleware enabled")
 
 # Basic endpoints
 @app.get("/")

@@ -72,14 +72,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Preload critical fonts - Inter is loaded via next/font/google with automatic optimization */}
         {/* Next.js automatically inlines and optimizes Google Fonts, no manual preload needed */}
         
-        {/* Preload critical icons for faster LCP */}
-        <link rel="preload" href="/icon.svg" as="image" type="image/svg+xml" />
-        <link rel="preload" href="/apple-touch-icon.png" as="image" type="image/png" />
-        
-        {/* Preload critical CSS - Next.js handles this automatically via CSS-in-JS */}
-        {/* Preload critical JavaScript - Next.js handles this automatically via code splitting */}
-        
-        {/* Icons with proper dimensions */}
+        {/* Icons with proper dimensions - removed preload as they're not critical for LCP */}
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
         <link rel="icon" type="image/svg+xml" sizes="32x32" href="/favicon-32x32.svg" />
         <link rel="icon" type="image/svg+xml" sizes="16x16" href="/favicon-16x16.svg" />

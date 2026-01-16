@@ -1,0 +1,291 @@
+/**
+ * CLS (Cumulative Layout Shift) Prevention Styles
+ * 
+ * These styles help prevent layout shifts and improve Core Web Vitals
+ */
+
+/* Ensure all images have aspect ratio to prevent shifts */
+img:not([width]):not([height]):not([style*="aspect-ratio"]) {
+  aspect-ratio: 16 / 9;
+}
+
+/* Optimize font loading to prevent FOUT/FOIT */
+@font-face {
+  font-display: optional;
+}
+
+/* Prevent layout shifts from animations */
+.animate-pulse,
+.animate-bounce,
+.animate-spin,
+.animate-ping {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Stabilize fixed positioned elements */
+[class*="fixed"] {
+  will-change: transform;
+  transform: translateZ(0);
+  contain: layout style paint;
+}
+
+/* Reserve space for dynamic content */
+.dynamic-content {
+  min-height: 200px;
+  contain: layout;
+}
+
+/* Prevent shifts from lazy-loaded images */
+img[loading="lazy"] {
+  content-visibility: auto;
+}
+
+/* Stabilize skeleton loaders */
+.skeleton,
+[class*="skeleton"] {
+  contain: layout style paint;
+  will-change: auto;
+}
+
+/* Prevent shifts from modals and overlays */
+.modal-overlay,
+.overlay {
+  contain: layout style;
+}
+
+/* Optimize sidebar transitions */
+.sidebar-transition {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Prevent shifts from tooltips and popovers */
+[role="tooltip"],
+[role="popover"] {
+  contain: layout style paint;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Stabilize chart containers */
+.chart-container,
+[class*="chart"] {
+  min-height: 300px;
+  contain: layout;
+}
+
+/* Prevent shifts from loading states */
+.loading-container {
+  min-height: inherit;
+  contain: layout;
+}
+
+/* Optimize table rendering */
+table {
+  table-layout: fixed;
+  contain: layout;
+}
+
+/* Prevent shifts from dynamic lists */
+ul[class*="dynamic"],
+ol[class*="dynamic"] {
+  contain: layout;
+}
+
+/* Stabilize card grids */
+.grid {
+  contain: layout;
+}
+
+/* Prevent shifts from accordions */
+[role="region"][aria-expanded] {
+  contain: layout;
+}
+
+/* Optimize video embeds */
+iframe,
+video {
+  aspect-ratio: 16 / 9;
+  contain: layout;
+}
+
+/* Prevent shifts from ads or third-party content */
+.ad-container,
+.third-party-content {
+  min-height: 250px;
+  contain: layout style;
+}
+
+/* Stabilize navigation */
+nav {
+  contain: layout style;
+}
+
+/* Prevent shifts from badges and notifications */
+.badge,
+.notification-badge {
+  contain: layout style paint;
+}
+
+/* Optimize button rendering */
+button {
+  contain: layout style;
+}
+
+/* Prevent shifts from form elements */
+input,
+textarea,
+select {
+  contain: layout style;
+}
+
+/* Stabilize dropdown menus */
+[role="menu"],
+[role="listbox"] {
+  contain: layout style paint;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Prevent shifts from progress bars */
+[role="progressbar"],
+.progress-bar {
+  contain: layout style;
+}
+
+/* Optimize tab panels */
+[role="tabpanel"] {
+  contain: layout;
+  min-height: 200px;
+}
+
+/* Prevent shifts from alerts */
+[role="alert"],
+.alert {
+  contain: layout style;
+}
+
+/* Stabilize breadcrumbs */
+[aria-label="Breadcrumb"],
+.breadcrumb {
+  contain: layout style;
+}
+
+/* Prevent shifts from pagination */
+[role="navigation"][aria-label*="pagination"],
+.pagination {
+  contain: layout style;
+}
+
+/* Optimize search results */
+.search-results {
+  contain: layout;
+  min-height: 300px;
+}
+
+/* Prevent shifts from filters */
+.filters,
+[role="group"][aria-label*="filter"] {
+  contain: layout style;
+}
+
+/* Stabilize headers and footers */
+header,
+footer {
+  contain: layout style;
+}
+
+/* Prevent shifts from sticky elements */
+.sticky,
+[class*="sticky"] {
+  will-change: transform;
+  transform: translateZ(0);
+  contain: layout style;
+}
+
+/* Optimize mobile menu */
+.mobile-menu {
+  will-change: transform;
+  transform: translateZ(0);
+  contain: layout style paint;
+}
+
+/* Prevent shifts from carousels */
+.carousel,
+[class*="carousel"] {
+  contain: layout;
+  min-height: 400px;
+}
+
+/* Stabilize modal dialogs */
+[role="dialog"] {
+  contain: layout style paint;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Prevent shifts from loading spinners */
+.spinner,
+[class*="spinner"] {
+  contain: layout style paint;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Optimize dashboard widgets */
+.widget,
+.dashboard-widget {
+  contain: layout;
+  min-height: 150px;
+}
+
+/* Prevent shifts from data tables */
+.data-table {
+  contain: layout;
+  min-height: 400px;
+}
+
+/* Stabilize sidebar */
+.sidebar,
+aside {
+  contain: layout style;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Prevent shifts from main content area */
+main {
+  contain: layout;
+  min-height: 400px;
+}
+
+/* Optimize responsive images */
+picture {
+  display: block;
+  contain: layout;
+}
+
+picture img {
+  width: 100%;
+  height: auto;
+}
+
+/* Prevent shifts from lazy-loaded components */
+[data-lazy-loaded] {
+  contain: layout;
+  min-height: 200px;
+}
+
+/* Stabilize error boundaries */
+.error-boundary {
+  contain: layout style;
+  min-height: 200px;
+}
+
+/* Prevent shifts from suspense fallbacks */
+[data-suspense-fallback] {
+  contain: layout;
+  min-height: inherit;
+}

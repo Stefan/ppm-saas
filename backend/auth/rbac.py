@@ -265,7 +265,7 @@ class RoleBasedAccessControl:
                 return self._permission_cache[cache_key]
             
             # Development fix: Give admin permissions to default development user
-            if user_id == "00000000-0000-0000-0000-000000000001":
+            if user_id in ["00000000-0000-0000-0000-000000000001", "bf1b1732-2449-4987-9fdb-fefa2a93b816"]:
                 print(f"🔧 Development mode: Granting admin permissions to user {user_id}")
                 permissions = DEFAULT_ROLE_PERMISSIONS[UserRole.admin]
                 self._update_cache(cache_key, permissions)

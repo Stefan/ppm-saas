@@ -1,0 +1,185 @@
+name: API Health Check
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/**'
+      - 'app/api/**'
+      - '.github/workflows/api-health-check.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/**'
+      - 'app/api/**'
+
+jobs:
+  backend-tests:
+    name: Backend API Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio
+      
+      - name: Run admin performance endpoint tests
+        run: |
+          cd backend
+          pytest tests/test_admin_performance_endpoints.py -v --tb=short
+        continue-on-error: false
+      
+      - name: Run performance tracker tests
+        run: |
+          cd backend
+          pytest tests/test_performance_tracker.py -v --tb=short
+        continue-on-error: false
+      
+      - name: Check for Permission enum errors
+        run: |
+          cd backend
+          # Check that Permission.admin is not used anywhere
+          if grep -r "Permission\.admin[^_]" routers/ middleware/; then
+            echo "ERROR: Found usage of Permission.admin (should use admin_read or system_admin)"
+            exit 1
+          fi
+          echo "✓ No invalid Permission enum usage found"
+  
+  frontend-tests:
+    name: Frontend API Integration Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run API integration tests
+        run: |
+          npm test -- __tests__/admin-performance-api-integration.test.ts --run
+        continue-on-error: false
+  
+  integration-test:
+    name: Full Integration Test
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests]
+    
+    services:
+      # Add Supabase or database service if needed
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+      
+      - name: Start backend server
+        run: |
+          cd backend
+          python -m uvicorn main:app --host 0.0.0.0 --port 8000 &
+          sleep 5
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      
+      - name: Run API health check script
+        run: |
+          chmod +x scripts/test-api-health.sh
+          BACKEND_URL=http://localhost:8000 ./scripts/test-api-health.sh
+      
+      - name: Check for 500 errors in logs
+        if: always()
+        run: |
+          # Check if any 500 errors occurred
+          if grep -i "500 Internal Server Error" backend/*.log 2>/dev/null; then
+            echo "ERROR: Found 500 Internal Server Errors in logs"
+            exit 1
+          fi
+          echo "✓ No 500 errors found"
+  
+  security-check:
+    name: Security & Permission Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Check for hardcoded secrets
+        run: |
+          # Check for potential hardcoded secrets
+          if grep -r "Bearer [A-Za-z0-9]" backend/ app/ --exclude-dir=node_modules --exclude-dir=.git; then
+            echo "WARNING: Found potential hardcoded tokens"
+          fi
+      
+      - name: Verify RBAC permissions are used
+        run: |
+          # Check that all admin endpoints use permission checks
+          cd backend/routers
+          for file in admin*.py; do
+            if ! grep -q "require_permission\|Depends" "$file"; then
+              echo "ERROR: $file may be missing permission checks"
+              exit 1
+            fi
+          done
+          echo "✓ All admin endpoints have permission checks"
+      
+      - name: Check for deprecated Permission enums
+        run: |
+          # List of deprecated or non-existent permissions
+          DEPRECATED=("Permission.admin" "Permission.superuser")
+          
+          for perm in "${DEPRECATED[@]}"; do
+            if grep -r "$perm" backend/routers/ backend/middleware/; then
+              echo "ERROR: Found usage of deprecated permission: $perm"
+              exit 1
+            fi
+          done
+          echo "✓ No deprecated permissions found"
+
+  notify:
+    name: Notify on Failure
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests, integration-test]
+    if: failure()
+    
+    steps:
+      - name: Send notification
+        run: |
+          echo "API Health Check Failed!"
+          echo "Please check the logs and fix the issues before merging."
+          # Add Slack/Discord notification here if needed
