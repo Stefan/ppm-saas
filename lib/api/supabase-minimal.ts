@@ -19,7 +19,8 @@ const hasValidConfig = !!(ENV_CONFIG.supabaseUrl && ENV_CONFIG.supabaseAnonKey &
   ENV_CONFIG.supabaseUrl !== 'https://placeholder.supabase.co' &&
   ENV_CONFIG.supabaseAnonKey !== 'placeholder-anon-key')
 
-if (!hasValidConfig) {
+// Only warn in production or after initial module load to avoid false warnings during dev server startup
+if (!hasValidConfig && typeof window !== 'undefined') {
   console.warn('⚠️ Missing or invalid Supabase environment variables. Authentication will not work.')
   console.warn('Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file')
 }
