@@ -3,7 +3,7 @@
  * Tests for the comprehensive API integration service
  */
 
-import { HelpChatAPIService, helpChatAPI, createHelpChatError, isRetryableError, HELP_CHAT_CONFIG } from '../help-chat-api'
+import { HelpChatAPIService, helpChatAPI, createHelpChatError, isRetryableError, HELP_CHAT_CONFIG } from '../help-chat/api'
 import type {
   HelpQueryRequest,
   HelpQueryResponse,

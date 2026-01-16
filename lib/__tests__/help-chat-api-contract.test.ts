@@ -3,7 +3,7 @@
  * Validates that frontend API calls match backend expectations
  */
 
-import { HelpChatAPIService, HELP_CHAT_CONFIG } from '../help-chat-api'
+import { HelpChatAPIService, HELP_CHAT_CONFIG } from '../help-chat/api'
 
 describe('Help Chat API Contract Tests', () => {
   describe('API Endpoint Contracts', () => {

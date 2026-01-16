@@ -7,7 +7,7 @@ import type {
   HelpFeedbackRequest,
   FeedbackResponse
 } from '../types/help-chat'
-import { helpChatAPI } from './help-chat-api'
+import { helpChatAPI } from './help-chat/api'
 import { logger } from './monitoring/logger'
 
 export interface FeedbackMetrics {

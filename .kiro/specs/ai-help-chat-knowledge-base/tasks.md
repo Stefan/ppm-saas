@@ -6,7 +6,7 @@ This implementation plan breaks down the RAG-enhanced help chat system into disc
 
 ## Tasks
 
-- [ ] 1. Set up database schema and core models
+- [x] 1. Set up database schema and core models
   - Create PostgreSQL migration for `knowledge_documents` table with all required fields (id, title, content, category, keywords, metadata, access_control, timestamps, version)
   - Create PostgreSQL migration for `query_logs` table for analytics and monitoring
   - Install and configure pgvector extension for PostgreSQL
@@ -15,15 +15,15 @@ This implementation plan breaks down the RAG-enhanced help chat system into disc
   - Create Pydantic schemas in `backend/schemas/knowledge.py` for API validation
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-- [ ] 1.1 Write property test for document metadata completeness
+- [x] 1.1 Write property test for document metadata completeness
   - **Property 1: Document Metadata Completeness**
   - **Validates: Requirements 1.2**
 
-- [ ] 1.2 Write property test for valid category assignment
+- [x] 1.2 Write property test for valid category assignment
   - **Property 2: Valid Category Assignment**
   - **Validates: Requirements 1.3**
 
-- [ ] 2. Implement embedding service integration
+- [x] 2. Implement embedding service integration
   - Create `backend/services/embedding_service.py` with EmbeddingService class
   - Implement `embed_text()` method using OpenAI text-embedding-3-small API
   - Implement `embed_batch()` method for efficient batch processing
@@ -31,15 +31,15 @@ This implementation plan breaks down the RAG-enhanced help chat system into disc
   - Add configuration for embedding model and dimensions in settings
   - _Requirements: 2.4, 3.1, 8.5_
 
-- [ ] 2.1 Write property test for embedding generation consistency
+- [x] 2.1 Write property test for embedding generation consistency
   - **Property 7: Embedding Generation Consistency**
   - **Validates: Requirements 2.4, 3.1**
 
-- [ ] 2.2 Write property test for embedding batch processing
+- [x] 2.2 Write property test for embedding batch processing
   - **Property 25: Embedding Batch Processing**
   - **Validates: Requirements 8.5**
 
-- [ ] 3. Implement document parsing and chunking
+- [-] 3. Implement document parsing and chunking
   - Create `backend/services/document_parser.py` with DocumentParser class
   - Implement `parse_markdown()` to extract text and structure from Markdown
   - Implement `parse_json()` for structured JSON documentation
@@ -50,7 +50,7 @@ This implementation plan breaks down the RAG-enhanced help chat system into disc
   - Use tiktoken library for accurate token counting
   - _Requirements: 2.1, 2.2, 2.3_
 
-- [ ] 3.1 Write property test for multi-format parsing
+- [x] 3.1 Write property test for multi-format parsing
   - **Property 5: Multi-Format Parsing**
   - **Validates: Requirements 2.1**
 
@@ -79,7 +79,7 @@ This implementation plan breaks down the RAG-enhanced help chat system into disc
   - **Property 16: Cascade Deletion**
   - **Validates: Requirements 5.3**
 
-- [ ] 5. Implement document ingestion pipeline
+- [x] 5. Implement document ingestion pipeline
   - Create `backend/services/ingestion_orchestrator.py` with IngestionOrchestrator class
   - Implement `ingest_document()` method that coordinates: parse → chunk → embed → store
   - Add transaction handling to ensure atomicity (rollback on failure)
@@ -88,7 +88,7 @@ This implementation plan breaks down the RAG-enhanced help chat system into disc
   - Implement error handling for each pipeline stage
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 5.2_
 
-- [ ] 5.1 Write property test for update propagation to vector store
+- [x] 5.1 Write property test for update propagation to vector store
   - **Property 15: Update Propagation to Vector Store**
   - **Validates: Requirements 5.2**
 

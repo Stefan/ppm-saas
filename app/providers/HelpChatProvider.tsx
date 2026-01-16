@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { usePathname } from 'next/navigation'
 import { useAuth } from './SupabaseAuthProvider'
 import { useLanguage } from '../../hooks/useLanguage'
-import { helpChatAPI } from '../../lib/help-chat-api'
+import { helpChatAPI } from '../../lib/help-chat/api'
 import { helpChatFeedbackIntegration } from '../../lib/help-chat-feedback-integration'
 import type {
   HelpChatState,

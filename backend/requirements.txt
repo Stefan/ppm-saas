@@ -14,3 +14,12 @@ croniter==2.0.1
 
 # HTTP client for webhooks
 aiohttp==3.9.1
+
+# OpenAI for embeddings and LLM
+openai==1.12.0
+
+# Retry logic for API calls
+tenacity==8.2.3
+
+# Token counting for text chunking
+tiktoken==0.5.2

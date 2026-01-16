@@ -28,7 +28,7 @@ import type {
 } from '../types/help-chat'
 
 // Mock the API service
-jest.mock('../lib/help-chat-api', () => ({
+jest.mock('../lib/help-chat/api', () => ({
   helpChatAPI: {
     submitQuery: jest.fn(),
     submitFeedback: jest.fn(),
@@ -43,7 +43,7 @@ jest.mock('../lib/help-chat-api', () => ({
   }
 }))
 
-const mockHelpChatAPI = require('../lib/help-chat-api').helpChatAPI
+const mockHelpChatAPI = require('../lib/help-chat/api').helpChatAPI
 
 // Mock hooks
 const mockUseMediaQuery = jest.fn()

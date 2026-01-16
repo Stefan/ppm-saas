@@ -35,7 +35,7 @@ jest.mock('../../../hooks/useLanguage', () => ({
   })
 }))
 
-jest.mock('../../../lib/help-chat-api', () => ({
+jest.mock('../../../lib/help-chat/api', () => ({
   helpChatAPI: {
     setAuthToken: jest.fn(),
     submitQuery: jest.fn(() => Promise.resolve({
@@ -153,7 +153,7 @@ function OutsideProviderComponent() {
 
 describe('HelpChatProvider', () => {
   // Get references to the mocked functions
-  const { helpChatAPI } = require('../../../lib/help-chat-api')
+  const { helpChatAPI } = require('../../../lib/help-chat/api')
   const { helpChatFeedbackIntegration } = require('../../../lib/help-chat-feedback-integration')
 
   beforeEach(() => {

@@ -23,6 +23,13 @@ class Settings:
     # OpenAI Configuration
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     
+    # RAG System Configuration
+    RAG_ENABLED: bool = os.getenv("RAG_ENABLED", "false").lower() == "true"
+    EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
+    EMBEDDING_DIMENSIONS: int = int(os.getenv("EMBEDDING_DIMENSIONS", "1536"))
+    EMBEDDING_MAX_BATCH_SIZE: int = int(os.getenv("EMBEDDING_MAX_BATCH_SIZE", "100"))
+    EMBEDDING_MAX_RETRIES: int = int(os.getenv("EMBEDDING_MAX_RETRIES", "3"))
+    
     # Redis Configuration (optional)
     REDIS_URL: Optional[str] = os.getenv("REDIS_URL")
     

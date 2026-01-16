@@ -13,3 +13,4 @@ from .feedback import *
 from .help_content import *
 from .project_controls import *
 from .roche_construction import *
+from .knowledge import *
