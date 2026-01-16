@@ -6,28 +6,45 @@
 import { createClient } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-// Environment configuration
+// Environment configuration - use getters for runtime evaluation
 export const ENV_CONFIG = {
-  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-  isDevelopment: process.env.NODE_ENV === 'development',
-  isProduction: process.env.NODE_ENV === 'production',
-} as const
-
-// Validate required environment variables
-const hasValidConfig = !!(ENV_CONFIG.supabaseUrl && ENV_CONFIG.supabaseAnonKey &&
-  ENV_CONFIG.supabaseUrl !== 'https://placeholder.supabase.co' &&
-  ENV_CONFIG.supabaseAnonKey !== 'placeholder-anon-key')
-
-// Only warn in production or after initial module load to avoid false warnings during dev server startup
-if (!hasValidConfig && typeof window !== 'undefined') {
-  console.warn('⚠️ Missing or invalid Supabase environment variables. Authentication will not work.')
-  console.warn('Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file')
+  get supabaseUrl() {
+    return process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  },
+  get supabaseAnonKey() {
+    return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  },
+  get isDevelopment() {
+    return process.env.NODE_ENV === 'development'
+  },
+  get isProduction() {
+    return process.env.NODE_ENV === 'production'
+  },
 }
 
-// Create Supabase client with fallback for missing environment variables
-export const supabase: SupabaseClient = hasValidConfig
-  ? createClient(
+// Validate required environment variables at runtime
+const getValidConfig = () => {
+  return !!(ENV_CONFIG.supabaseUrl && ENV_CONFIG.supabaseAnonKey &&
+    ENV_CONFIG.supabaseUrl !== 'https://placeholder.supabase.co' &&
+    ENV_CONFIG.supabaseAnonKey !== 'placeholder-anon-key')
+}
+
+// Only warn in browser context where env vars should definitely be available
+if (typeof window !== 'undefined' && !getValidConfig()) {
+  console.warn('⚠️ Missing or invalid Supabase environment variables. Authentication will not work.')
+  console.warn('Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file')
+  console.warn('Current values:', {
+    url: ENV_CONFIG.supabaseUrl || '(empty)',
+    keyLength: ENV_CONFIG.supabaseAnonKey?.length || 0
+  })
+}
+
+// Create Supabase client factory function
+const createSupabaseClient = (): SupabaseClient => {
+  const hasValidConfig = getValidConfig()
+  
+  if (hasValidConfig) {
+    return createClient(
       ENV_CONFIG.supabaseUrl,
       ENV_CONFIG.supabaseAnonKey,
       {
@@ -45,17 +62,24 @@ export const supabase: SupabaseClient = hasValidConfig
         }
       }
     )
-  : createClient(
-      'https://placeholder.supabase.co', // Placeholder URL
-      'placeholder-anon-key', // Placeholder key
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-          detectSessionInUrl: false
-        }
+  }
+  
+  // Fallback client for missing configuration
+  return createClient(
+    'https://placeholder.supabase.co',
+    'placeholder-anon-key',
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+        detectSessionInUrl: false
       }
-    )
+    }
+  )
+}
+
+// Create and export Supabase client
+export const supabase: SupabaseClient = createSupabaseClient()
 
 // Database types (basic)
 export interface Database {
