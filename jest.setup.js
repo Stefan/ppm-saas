@@ -32,19 +32,130 @@ if (typeof indexedDB === 'undefined') {
 
 // Mock PerformanceObserver and performance APIs for diagnostic tests
 if (typeof PerformanceObserver === 'undefined') {
-  global.PerformanceObserver = jest.fn().mockImplementation(() => ({
-    observe: jest.fn(),
-    disconnect: jest.fn()
-  }))
+  global.PerformanceObserver = class MockPerformanceObserver {
+    constructor(callback) {
+      this.callback = callback
+      this.entryTypes = []
+    }
+    
+    observe(options) {
+      this.entryTypes = options.entryTypes || []
+      // Simulate some entries being observed
+      if (this.callback) {
+        const mockEntries = this.entryTypes.map(type => ({
+          entryType: type,
+          name: `mock-${type}`,
+          startTime: Date.now(),
+          duration: 0
+        }))
+        
+        if (mockEntries.length > 0) {
+          setTimeout(() => {
+            this.callback({
+              getEntries: () => mockEntries,
+              getEntriesByType: (type) => mockEntries.filter(e => e.entryType === type),
+              getEntriesByName: (name) => mockEntries.filter(e => e.name === name)
+            }, this)
+          }, 0)
+        }
+      }
+    }
+    
+    disconnect() {
+      this.entryTypes = []
+    }
+    
+    takeRecords() {
+      return []
+    }
+  }
+  
+  global.PerformanceObserver.supportedEntryTypes = [
+    'mark',
+    'measure',
+    'navigation',
+    'resource',
+    'longtask',
+    'paint',
+    'layout-shift',
+    'largest-contentful-paint',
+    'first-input'
+  ]
 }
 
-if (typeof performance === 'undefined') {
+if (typeof performance === 'undefined' || !performance.getEntriesByType) {
+  const performanceEntries = []
+  const marks = new Map()
+  const measures = new Map()
+  
   global.performance = {
     now: jest.fn(() => Date.now()),
-    mark: jest.fn(),
-    measure: jest.fn(),
-    getEntriesByName: jest.fn(() => []),
-    getEntriesByType: jest.fn(() => []),
+    mark: jest.fn((name) => {
+      const entry = {
+        name,
+        entryType: 'mark',
+        startTime: Date.now(),
+        duration: 0
+      }
+      marks.set(name, entry)
+      performanceEntries.push(entry)
+      return entry
+    }),
+    measure: jest.fn((name, startMark, endMark) => {
+      const start = marks.get(startMark)
+      const end = marks.get(endMark)
+      const entry = {
+        name,
+        entryType: 'measure',
+        startTime: start?.startTime || Date.now(),
+        duration: end ? end.startTime - (start?.startTime || 0) : 0
+      }
+      measures.set(name, entry)
+      performanceEntries.push(entry)
+      return entry
+    }),
+    getEntriesByName: jest.fn((name) => {
+      return performanceEntries.filter(e => e.name === name)
+    }),
+    getEntriesByType: jest.fn((type) => {
+      return performanceEntries.filter(e => e.entryType === type)
+    }),
+    getEntries: jest.fn(() => performanceEntries),
+    clearMarks: jest.fn((name) => {
+      if (name) {
+        marks.delete(name)
+      } else {
+        marks.clear()
+      }
+    }),
+    clearMeasures: jest.fn((name) => {
+      if (name) {
+        measures.delete(name)
+      } else {
+        measures.clear()
+      }
+    }),
+    clearResourceTimings: jest.fn(),
+    setResourceTimingBufferSize: jest.fn(),
+    toJSON: jest.fn(() => ({})),
+    timeOrigin: Date.now(),
+    timing: {
+      navigationStart: Date.now(),
+      loadEventEnd: Date.now() + 1000,
+      domContentLoadedEventEnd: Date.now() + 500,
+      fetchStart: Date.now(),
+      connectStart: Date.now() + 10,
+      connectEnd: Date.now() + 50,
+      requestStart: Date.now() + 60,
+      responseStart: Date.now() + 100,
+      responseEnd: Date.now() + 200,
+      domInteractive: Date.now() + 300,
+      domComplete: Date.now() + 800,
+    },
+    navigation: {
+      type: 0,
+      redirectCount: 0
+    },
     memory: {
       usedJSHeapSize: 1000000,
       totalJSHeapSize: 2000000,
@@ -244,6 +355,83 @@ jest.mock('./hooks/useEnhancedAIChat', () => ({
       analyzeRisks: jest.fn(() => Promise.resolve()),
     },
   })),
+}))
+
+// Mock web-vitals library
+jest.mock('web-vitals', () => ({
+  onCLS: jest.fn((callback) => {
+    // Simulate CLS metric
+    setTimeout(() => {
+      callback({
+        name: 'CLS',
+        value: 0.05,
+        rating: 'good',
+        delta: 0.05,
+        id: 'test-cls-id',
+        entries: []
+      })
+    }, 0)
+  }),
+  onFID: jest.fn((callback) => {
+    setTimeout(() => {
+      callback({
+        name: 'FID',
+        value: 50,
+        rating: 'good',
+        delta: 50,
+        id: 'test-fid-id',
+        entries: []
+      })
+    }, 0)
+  }),
+  onLCP: jest.fn((callback) => {
+    setTimeout(() => {
+      callback({
+        name: 'LCP',
+        value: 1500,
+        rating: 'good',
+        delta: 1500,
+        id: 'test-lcp-id',
+        entries: []
+      })
+    }, 0)
+  }),
+  onINP: jest.fn((callback) => {
+    setTimeout(() => {
+      callback({
+        name: 'INP',
+        value: 100,
+        rating: 'good',
+        delta: 100,
+        id: 'test-inp-id',
+        entries: []
+      })
+    }, 0)
+  }),
+  onTTFB: jest.fn((callback) => {
+    setTimeout(() => {
+      callback({
+        name: 'TTFB',
+        value: 200,
+        rating: 'good',
+        delta: 200,
+        id: 'test-ttfb-id',
+        entries: []
+      })
+    }, 0)
+  }),
+  onFCP: jest.fn((callback) => {
+    setTimeout(() => {
+      callback({
+        name: 'FCP',
+        value: 1000,
+        rating: 'good',
+        delta: 1000,
+        id: 'test-fcp-id',
+        entries: []
+      })
+    }, 0)
+  }),
 }))
 
 // Mock Mobile PMR Hook

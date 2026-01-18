@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { AlertTriangle, Clock, CheckCircle, AlertCircle, Activity, BarChart3, DollarSign, Target, Lightbulb, Bell, RefreshCw } from 'lucide-react'
+import { useTranslations } from '@/lib/i18n/context'
 
 // Types for monitoring dashboard
 interface ImplementationAlert {
@@ -80,6 +81,7 @@ export default function ImplementationMonitoringDashboard({
   refreshInterval = 30000, // 30 seconds
   onAlertAction 
 }: ImplementationMonitoringDashboardProps) {
+  const t = useTranslations('changes');
   const [alerts, setAlerts] = useState<ImplementationAlert[]>([])
   const [deviations, setDeviations] = useState<DeviationAlert[]>([])
   const [metrics, setMetrics] = useState<ImplementationMetrics | null>(null)
@@ -291,22 +293,22 @@ export default function ImplementationMonitoringDashboard({
       {/* Header with Refresh */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Implementation Monitoring Dashboard</h2>
+          <h2 className="text-xl font-semibold text-gray-900">{t('implementationMonitoring.title')}</h2>
           <p className="text-sm text-gray-600 mt-1">
-            Real-time monitoring of implementation progress and issues
+            {t('implementationMonitoring.subtitle')}
           </p>
         </div>
         
         <div className="flex items-center gap-3">
           <div className="text-sm text-gray-500">
-            Last updated: {lastRefresh.toLocaleTimeString()}
+            {t('implementationMonitoring.lastUpdated')}: {lastRefresh.toLocaleTimeString()}
           </div>
           <button
             onClick={handleRefresh}
             className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
           >
             <RefreshCw className="h-4 w-4" />
-            Refresh
+            {t('implementationMonitoring.refresh')}
           </button>
         </div>
       </div>
@@ -317,7 +319,7 @@ export default function ImplementationMonitoringDashboard({
           <div className="flex items-center">
             <AlertTriangle className="h-5 w-5 text-red-600" />
             <h3 className="ml-2 text-sm font-medium text-red-800">
-              Critical Alerts Require Immediate Attention ({criticalAlerts.length})
+              {t('implementationMonitoring.criticalAlerts', { count: criticalAlerts.length })}
             </h3>
           </div>
           <div className="mt-2 space-y-1">
@@ -328,7 +330,7 @@ export default function ImplementationMonitoringDashboard({
             ))}
             {criticalAlerts.length > 2 && (
               <div className="text-sm text-red-600 font-medium">
-                +{criticalAlerts.length - 2} more critical alerts
+                {t('implementationMonitoring.moreCriticalAlerts', { count: criticalAlerts.length - 2 })}
               </div>
             )}
           </div>
@@ -342,9 +344,9 @@ export default function ImplementationMonitoringDashboard({
             <div className="flex items-center">
               <Activity className="h-8 w-8 text-blue-600" />
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-500">Active Implementations</p>
+                <p className="text-sm font-medium text-gray-500">{t('implementationMonitoring.metrics.activeImplementations')}</p>
                 <p className="text-2xl font-semibold text-gray-900">{metrics.active_implementations}</p>
-                <p className="text-xs text-gray-500">of {metrics.total_implementations} total</p>
+                <p className="text-xs text-gray-500">{t('implementationMonitoring.metrics.of')} {metrics.total_implementations} {t('implementationMonitoring.metrics.total')}</p>
               </div>
             </div>
           </div>
@@ -353,9 +355,9 @@ export default function ImplementationMonitoringDashboard({
             <div className="flex items-center">
               <AlertCircle className="h-8 w-8 text-red-600" />
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-500">Overdue</p>
+                <p className="text-sm font-medium text-gray-500">{t('implementationMonitoring.metrics.overdue')}</p>
                 <p className="text-2xl font-semibold text-gray-900">{metrics.overdue_implementations}</p>
-                <p className="text-xs text-gray-500">implementations behind schedule</p>
+                <p className="text-xs text-gray-500">{t('implementationMonitoring.metrics.implementationsBehindSchedule')}</p>
               </div>
             </div>
           </div>
@@ -364,9 +366,9 @@ export default function ImplementationMonitoringDashboard({
             <div className="flex items-center">
               <CheckCircle className="h-8 w-8 text-green-600" />
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-500">Success Rate</p>
+                <p className="text-sm font-medium text-gray-500">{t('implementationMonitoring.metrics.successRate')}</p>
                 <p className="text-2xl font-semibold text-gray-900">{metrics.success_rate_percentage}%</p>
-                <p className="text-xs text-gray-500">completed on time & budget</p>
+                <p className="text-xs text-gray-500">{t('implementationMonitoring.metrics.completedOnTimeAndBudget')}</p>
               </div>
             </div>
           </div>
@@ -375,9 +377,9 @@ export default function ImplementationMonitoringDashboard({
             <div className="flex items-center">
               <Clock className="h-8 w-8 text-purple-600" />
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-500">Avg. Completion</p>
+                <p className="text-sm font-medium text-gray-500">{t('implementationMonitoring.metrics.avgCompletion')}</p>
                 <p className="text-2xl font-semibold text-gray-900">{metrics.average_completion_time_days}</p>
-                <p className="text-xs text-gray-500">days average</p>
+                <p className="text-xs text-gray-500">{t('implementationMonitoring.metrics.daysAverage')}</p>
               </div>
             </div>
           </div>
@@ -389,10 +391,10 @@ export default function ImplementationMonitoringDashboard({
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
             {[
-              { id: 'overview', label: 'Overview', icon: BarChart3, count: null },
-              { id: 'alerts', label: 'Alerts', icon: Bell, count: alerts.filter(a => !a.resolved).length },
-              { id: 'deviations', label: 'Deviations', icon: AlertTriangle, count: unresolvedDeviations.length },
-              { id: 'lessons', label: 'Lessons Learned', icon: Lightbulb, count: lessonsLearned.length }
+              { id: 'overview', label: t('implementationMonitoring.tabs.overview'), icon: BarChart3, count: null },
+              { id: 'alerts', label: t('implementationMonitoring.tabs.alerts'), icon: Bell, count: alerts.filter(a => !a.resolved).length },
+              { id: 'deviations', label: t('implementationMonitoring.tabs.deviations'), icon: AlertTriangle, count: unresolvedDeviations.length },
+              { id: 'lessons', label: t('implementationMonitoring.tabs.lessons'), icon: Lightbulb, count: lessonsLearned.length }
             ].map((tab) => {
               const Icon = tab.icon
               return (

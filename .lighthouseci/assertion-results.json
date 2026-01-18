@@ -2,11 +2,11 @@
   {
     "name": "maxNumericValue",
     "expected": 2500,
-    "actual": 2924.08465,
+    "actual": 3012.183,
     "values": [
-      2930.5180999999993,
-      2924.08465,
-      2928.75945
+      3018.7493999999997,
+      3013.9348,
+      3012.183
     ],
     "operator": "<=",
     "passed": false,
@@ -19,11 +19,11 @@
   {
     "name": "maxNumericValue",
     "expected": 2500,
-    "actual": 3312.4862000000003,
+    "actual": 3538.5542499999997,
     "values": [
-      3313.5502500000002,
-      3312.4862000000003,
-      3314.4076499999983
+      3539.113,
+      3543.6862500000007,
+      3538.5542499999997
     ],
     "operator": "<=",
     "passed": false,
@@ -35,12 +35,29 @@
   },
   {
     "name": "maxNumericValue",
-    "expected": 2500,
-    "actual": 4130.304,
+    "expected": 3500,
+    "actual": 3546.05425,
     "values": [
-      4130.304,
-      4281.5079000000005,
-      4287.8065
+      3546.6130000000003,
+      3551.1862500000007,
+      3546.05425
+    ],
+    "operator": "<=",
+    "passed": false,
+    "auditId": "interactive",
+    "level": "error",
+    "url": "http://localhost:3000/dashboards",
+    "auditTitle": "Time to Interactive",
+    "auditDocumentationLink": "https://developer.chrome.com/docs/lighthouse/performance/interactive/"
+  },
+  {
+    "name": "maxNumericValue",
+    "expected": 2500,
+    "actual": 4060.891750000001,
+    "values": [
+      4061.742750000001,
+      4062.6814999999997,
+      4060.891750000001
     ],
     "operator": "<=",
     "passed": false,
@@ -52,12 +69,29 @@
   },
   {
     "name": "maxNumericValue",
-    "expected": 2500,
-    "actual": 4208.385700000001,
+    "expected": 3500,
+    "actual": 4060.8917500000016,
     "values": [
-      4208.385700000001,
-      4209.3171,
-      4299.9086
+      4061.7427500000013,
+      4062.6814999999997,
+      4060.8917500000016
+    ],
+    "operator": "<=",
+    "passed": false,
+    "auditId": "interactive",
+    "level": "error",
+    "url": "http://localhost:3000/resources",
+    "auditTitle": "Time to Interactive",
+    "auditDocumentationLink": "https://developer.chrome.com/docs/lighthouse/performance/interactive/"
+  },
+  {
+    "name": "maxNumericValue",
+    "expected": 2500,
+    "actual": 4063.8587499999994,
+    "values": [
+      4065.83975,
+      4064.7164999999995,
+      4063.8587499999994
     ],
     "operator": "<=",
     "passed": false,
@@ -69,18 +103,52 @@
   },
   {
     "name": "maxNumericValue",
-    "expected": 2500,
-    "actual": 3444.1972499999993,
+    "expected": 3500,
+    "actual": 4063.8587499999994,
     "values": [
-      3449.4445,
-      3444.1972499999993,
-      3469.7007500000004
+      4065.83975,
+      4064.7164999999995,
+      4063.8587499999994
+    ],
+    "operator": "<=",
+    "passed": false,
+    "auditId": "interactive",
+    "level": "error",
+    "url": "http://localhost:3000/risks",
+    "auditTitle": "Time to Interactive",
+    "auditDocumentationLink": "https://developer.chrome.com/docs/lighthouse/performance/interactive/"
+  },
+  {
+    "name": "maxNumericValue",
+    "expected": 2500,
+    "actual": 3384.7712500000007,
+    "values": [
+      3385.8885,
+      3384.7712500000007,
+      3385.14775
     ],
     "operator": "<=",
     "passed": false,
     "auditId": "largest-contentful-paint",
     "level": "error",
     "url": "http://localhost:3000/scenarios",
+    "auditTitle": "Largest Contentful Paint",
+    "auditDocumentationLink": "https://developer.chrome.com/docs/lighthouse/performance/lighthouse-largest-contentful-paint/"
+  },
+  {
+    "name": "maxNumericValue",
+    "expected": 2500,
+    "actual": 3311.2442499999993,
+    "values": [
+      3311.2442499999993,
+      3311.6730000000002,
+      3312.6604999999995
+    ],
+    "operator": "<=",
+    "passed": false,
+    "auditId": "largest-contentful-paint",
+    "level": "error",
+    "url": "http://localhost:3000/admin/performance",
     "auditTitle": "Largest Contentful Paint",
     "auditDocumentationLink": "https://developer.chrome.com/docs/lighthouse/performance/lighthouse-largest-contentful-paint/"
   }

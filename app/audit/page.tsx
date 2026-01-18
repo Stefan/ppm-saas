@@ -5,6 +5,7 @@ import { useAuth } from '../providers/SupabaseAuthProvider'
 import AppLayout from '../../components/shared/AppLayout'
 import { AlertTriangle, Clock, FileText, Search, BarChart3, Download, RefreshCw, FileDown } from 'lucide-react'
 import { getApiUrl } from '../../lib/api/client'
+import { useTranslations } from '../../lib/i18n/context'
 
 // Tab types
 type TabType = 'dashboard' | 'timeline' | 'anomalies' | 'search'
@@ -21,6 +22,7 @@ interface DashboardStats {
 
 export default function AuditDashboard() {
   const { session } = useAuth()
+  const { t } = useTranslations()
   const [activeTab, setActiveTab] = useState<TabType>('dashboard')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -123,8 +125,8 @@ export default function AuditDashboard() {
             <div className="flex">
               <AlertTriangle className="h-5 w-5 text-yellow-400" />
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-yellow-800">Authentication Required</h3>
-                <p className="mt-1 text-sm text-yellow-700">Please log in to access the audit dashboard.</p>
+                <h3 className="text-sm font-medium text-yellow-800">{t('audit.authRequired')}</h3>
+                <p className="mt-1 text-sm text-yellow-700">{t('audit.authRequiredMessage')}</p>
               </div>
             </div>
           </div>
@@ -140,22 +142,22 @@ export default function AuditDashboard() {
         <div className="flex flex-col space-y-4">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-4 sm:space-y-0">
             <div className="min-w-0 flex-1">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Audit Trail</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('audit.title')}</h1>
               <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 text-sm text-gray-600">
                 {stats && (
                   <>
-                    <span>{stats.total_events} events</span>
-                    <span>{stats.anomalies_count} anomalies</span>
-                    <span>{stats.critical_events} critical</span>
+                    <span>{stats.total_events} {t('audit.events')}</span>
+                    <span>{stats.anomalies_count} {t('audit.anomalies')}</span>
+                    <span>{stats.critical_events} {t('audit.critical')}</span>
                   </>
                 )}
                 {lastUpdated && (
-                  <span>Updated: {lastUpdated.toLocaleTimeString()}</span>
+                  <span>{t('audit.updated')}: {lastUpdated.toLocaleTimeString()}</span>
                 )}
                 {autoRefresh && (
                   <span className="flex items-center text-green-600">
                     <div className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></div>
-                    Live
+                    {t('audit.live')}
                   </span>
                 )}
               </div>
@@ -172,7 +174,7 @@ export default function AuditDashboard() {
                 }`}
               >
                 <RefreshCw className={`h-4 w-4 mr-2 ${autoRefresh ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline">{autoRefresh ? 'Auto On' : 'Auto Off'}</span>
+                <span className="hidden sm:inline">{autoRefresh ? t('audit.autoOn') : t('audit.autoOff')}</span>
               </button>
               
               <button
@@ -181,7 +183,7 @@ export default function AuditDashboard() {
                 className="flex items-center justify-center min-h-[44px] px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 disabled:opacity-50 text-sm font-medium"
               >
                 <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline">Refresh</span>
+                <span className="hidden sm:inline">{t('audit.refresh')}</span>
               </button>
               
               <button
@@ -211,7 +213,7 @@ export default function AuditDashboard() {
             <div className="flex">
               <AlertTriangle className="h-5 w-5 text-red-400" />
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">Error</h3>
+                <h3 className="text-sm font-medium text-red-800">{t('audit.error')}</h3>
                 <p className="mt-1 text-sm text-red-700">{error}</p>
               </div>
             </div>
@@ -231,7 +233,7 @@ export default function AuditDashboard() {
                 }`}
               >
                 <BarChart3 className="h-4 w-4 mr-2" />
-                Dashboard
+                {t('audit.tabs.dashboard')}
               </button>
               
               <button
@@ -243,7 +245,7 @@ export default function AuditDashboard() {
                 }`}
               >
                 <Clock className="h-4 w-4 mr-2" />
-                Timeline
+                {t('audit.tabs.timeline')}
               </button>
               
               <button
@@ -255,7 +257,7 @@ export default function AuditDashboard() {
                 }`}
               >
                 <AlertTriangle className="h-4 w-4 mr-2" />
-                Anomalies
+                {t('audit.tabs.anomalies')}
                 {stats && stats.anomalies_count > 0 && (
                   <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-red-100 text-red-800 rounded-full">
                     {stats.anomalies_count}
@@ -272,7 +274,7 @@ export default function AuditDashboard() {
                 }`}
               >
                 <Search className="h-4 w-4 mr-2" />
-                Search
+                {t('audit.tabs.search')}
               </button>
             </nav>
           </div>
@@ -284,7 +286,7 @@ export default function AuditDashboard() {
                 {loading ? (
                   <div className="text-center py-12">
                     <RefreshCw className="h-8 w-8 animate-spin text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Loading dashboard...</p>
+                    <p className="text-gray-500">{t('audit.loadingDashboard')}</p>
                   </div>
                 ) : stats ? (
                   <>
@@ -293,7 +295,7 @@ export default function AuditDashboard() {
                       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium text-gray-600">Total Events</p>
+                            <p className="text-sm font-medium text-gray-600">{t('audit.stats.totalEvents')}</p>
                             <p className="text-2xl font-bold text-blue-600">{stats.total_events.toLocaleString()}</p>
                           </div>
                           <FileText className="h-8 w-8 text-blue-600" />
@@ -303,7 +305,7 @@ export default function AuditDashboard() {
                       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium text-gray-600">Anomalies</p>
+                            <p className="text-sm font-medium text-gray-600">{t('audit.stats.anomalies')}</p>
                             <p className="text-2xl font-bold text-red-600">{stats.anomalies_count.toLocaleString()}</p>
                           </div>
                           <AlertTriangle className="h-8 w-8 text-red-600" />
@@ -313,7 +315,7 @@ export default function AuditDashboard() {
                       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium text-gray-600">Critical Events</p>
+                            <p className="text-sm font-medium text-gray-600">{t('audit.stats.criticalEvents')}</p>
                             <p className="text-2xl font-bold text-orange-600">{stats.critical_events.toLocaleString()}</p>
                           </div>
                           <AlertTriangle className="h-8 w-8 text-orange-600" />
@@ -323,7 +325,7 @@ export default function AuditDashboard() {
                       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium text-gray-600">Event Rate</p>
+                            <p className="text-sm font-medium text-gray-600">{t('audit.stats.eventRate')}</p>
                             <p className="text-2xl font-bold text-green-600">
                               {stats.event_volume_24h.length > 0 
                                 ? Math.round(stats.total_events / 24) 
@@ -337,7 +339,7 @@ export default function AuditDashboard() {
 
                     {/* Category Breakdown Chart */}
                     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Category Breakdown</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('audit.categoryBreakdown')}</h3>
                       <div className="space-y-3">
                         {Object.entries(stats.category_breakdown).map(([category, count]) => {
                           const percentage = stats.total_events > 0 
@@ -376,7 +378,7 @@ export default function AuditDashboard() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {/* Top Users */}
                       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Users</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('audit.topUsers')}</h3>
                         <div className="space-y-3">
                           {stats.top_users.slice(0, 5).map((user, index) => (
                             <div key={user.user_id} className="flex items-center justify-between">
@@ -389,19 +391,19 @@ export default function AuditDashboard() {
                                 </span>
                               </div>
                               <span className="text-sm font-bold text-gray-900">
-                                {user.count} events
+                                {user.count} {t('audit.events')}
                               </span>
                             </div>
                           ))}
                           {stats.top_users.length === 0 && (
-                            <p className="text-sm text-gray-500 text-center py-4">No user data available</p>
+                            <p className="text-sm text-gray-500 text-center py-4">{t('audit.noUserData')}</p>
                           )}
                         </div>
                       </div>
 
                       {/* Top Event Types */}
                       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Event Types</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('audit.topEventTypes')}</h3>
                         <div className="space-y-3">
                           {stats.top_event_types.slice(0, 5).map((eventType, index) => (
                             <div key={eventType.event_type} className="flex items-center justify-between">
@@ -414,12 +416,12 @@ export default function AuditDashboard() {
                                 </span>
                               </div>
                               <span className="text-sm font-bold text-gray-900">
-                                {eventType.count} events
+                                {eventType.count} {t('audit.events')}
                               </span>
                             </div>
                           ))}
                           {stats.top_event_types.length === 0 && (
-                            <p className="text-sm text-gray-500 text-center py-4">No event type data available</p>
+                            <p className="text-sm text-gray-500 text-center py-4">{t('audit.noEventTypeData')}</p>
                           )}
                         </div>
                       </div>
@@ -427,7 +429,7 @@ export default function AuditDashboard() {
 
                     {/* Event Volume Chart (24h) */}
                     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Event Volume (Last 24 Hours)</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('audit.eventVolume24h')}</h3>
                       <div className="h-64">
                         {stats.event_volume_24h.length > 0 ? (
                           <div className="flex items-end justify-between h-full space-x-1">
@@ -441,7 +443,7 @@ export default function AuditDashboard() {
                                     <div
                                       className="w-full bg-blue-500 rounded-t hover:bg-blue-600 transition-colors cursor-pointer"
                                       style={{ height: `${height}%` }}
-                                      title={`${item.hour}: ${item.count} events`}
+                                      title={`${item.hour}: ${item.count} ${t('audit.events')}`}
                                     ></div>
                                   </div>
                                   <span className="text-xs text-gray-500 mt-2 truncate w-full text-center">
@@ -453,7 +455,7 @@ export default function AuditDashboard() {
                           </div>
                         ) : (
                           <div className="flex items-center justify-center h-full text-gray-500">
-                            No event volume data available
+                            {t('audit.noEventVolumeData')}
                           </div>
                         )}
                       </div>
@@ -461,7 +463,7 @@ export default function AuditDashboard() {
                   </>
                 ) : (
                   <div className="text-center py-12 text-gray-500">
-                    No dashboard data available
+                    {t('audit.noDashboardData')}
                   </div>
                 )}
               </div>
@@ -469,19 +471,19 @@ export default function AuditDashboard() {
             
             {activeTab === 'timeline' && (
               <div className="text-center py-12 text-gray-500">
-                Timeline view will be implemented in task 13
+                {t('audit.timelineView')}
               </div>
             )}
             
             {activeTab === 'anomalies' && (
               <div className="text-center py-12 text-gray-500">
-                Anomalies view will be implemented in task 14
+                {t('audit.anomaliesView')}
               </div>
             )}
             
             {activeTab === 'search' && (
               <div className="text-center py-12 text-gray-500">
-                Semantic search will be implemented in task 15
+                {t('audit.searchView')}
               </div>
             )}
           </div>

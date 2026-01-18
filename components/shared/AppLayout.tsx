@@ -4,10 +4,11 @@ import React, { useEffect, useRef, useState, lazy, Suspense } from 'react'
 import { useAuth } from '../../app/providers/SupabaseAuthProvider'
 import { HelpChatProvider } from '../../app/providers/HelpChatProvider'
 import { useRouter } from 'next/navigation'
-import { Menu } from 'lucide-react'
-import Sidebar from '../navigation/Sidebar'
+import TopBar from '../navigation/TopBar'
+import MobileNav from '../navigation/MobileNav'
 import HelpChatToggle from '../HelpChatToggle'
-import { useIsMobile } from '../../hooks/useMediaQuery'
+import { useIsMobile } from '@/hooks/useMediaQuery'
+import { useTranslations } from '@/lib/i18n/context'
 
 // Lazy load HelpChat for better performance
 const HelpChat = lazy(() => import('../HelpChat'))
@@ -20,14 +21,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const { session, loading } = useAuth()
   const router = useRouter()
   const mainContentRef = useRef<HTMLElement>(null)
+  const { t } = useTranslations()
   
-  // Mobile sidebar state management
+  // Mobile navigation state management
   const isMobile = useIsMobile()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   
-  // Toggle function for mobile sidebar
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen)
+  // Toggle function for mobile navigation
+  const toggleMobileNav = () => {
+    setMobileNavOpen(!mobileNavOpen)
   }
 
   useEffect(() => {
@@ -49,7 +51,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">Redirecting to login...</p>
+          <p className="text-gray-600 mb-4">{t('layout.redirecting')}</p>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
         </div>
       </div>
@@ -58,44 +60,22 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <HelpChatProvider>
-      <div className="flex h-screen bg-white">
-        {/* Sidebar - Fixed position on desktop */}
-        <Sidebar 
-          isOpen={isMobile ? sidebarOpen : true} 
-          onToggle={toggleSidebar}
-          isMobile={isMobile}
-        />
+      <div className="flex flex-col h-screen bg-gray-50">
+        {/* Top Bar Navigation */}
+        <TopBar onMenuToggle={toggleMobileNav} />
         
-        {/* Main Content - With left margin for fixed sidebar on desktop */}
-        <div 
-          className="flex-1 flex flex-col min-w-0"
-          style={{
-            marginLeft: isMobile ? 0 : '256px' // 256px = w-64
-          }}
+        {/* Mobile Navigation Drawer */}
+        <MobileNav isOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
+        
+        {/* Main Content Area */}
+        <main 
+          ref={mainContentRef}
+          className="flex-1 overflow-auto"
         >
-          {/* Mobile Header with Menu Button */}
-          {isMobile && (
-            <header className="lg:hidden bg-white border-b border-gray-200 p-4 flex items-center">
-              <button
-                onClick={toggleSidebar}
-                className="p-2 rounded-md hover:bg-gray-100 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-              >
-                <Menu className="h-6 w-6 text-gray-600" />
-              </button>
-              <h1 className="ml-3 text-lg font-semibold text-gray-900">PPM Dashboard</h1>
-            </header>
-          )}
-          
-          {/* Main Content Area */}
-          <main 
-            ref={mainContentRef}
-            className="flex-1 bg-white overflow-auto"
-          >
-            {children}
-          </main>
-        </div>
+          {children}
+        </main>
 
-        {/* Help Chat Toggle - Floating at bottom-left to avoid collisions */}
+        {/* Help Chat Toggle - Floating at bottom-right */}
         <HelpChatToggle />
 
         {/* Help Chat Integration - Lazy loaded */}

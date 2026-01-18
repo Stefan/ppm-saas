@@ -25,10 +25,16 @@ logger = logging.getLogger(__name__)
 class HelpContentService:
     """Service for managing help content with embedding generation and search capabilities"""
     
-    def __init__(self, supabase_client: Client, openai_api_key: str):
+    def __init__(self, supabase_client: Client, openai_api_key: str, base_url: str = None):
         self.supabase = supabase_client
-        self.openai_client = OpenAI(api_key=openai_api_key)
-        self.embedding_model = "text-embedding-ada-002"
+        # Initialize OpenAI client with optional custom base URL (for Grok, etc.)
+        if base_url:
+            self.openai_client = OpenAI(api_key=openai_api_key, base_url=base_url)
+        else:
+            self.openai_client = OpenAI(api_key=openai_api_key)
+        # Use configurable embedding model from environment or default
+        import os
+        self.embedding_model = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-ada-002")
         self.max_content_length = 8000
         self.supported_languages = ['en', 'de', 'fr']
     

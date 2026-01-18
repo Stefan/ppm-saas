@@ -1,5 +1,4 @@
 import React from 'react'
-import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { SupabaseAuthProvider } from './providers/SupabaseAuthProvider'
@@ -8,6 +7,13 @@ import PerformanceOptimizer from '../components/performance/PerformanceOptimizer
 import { ResourcePreloader } from '../components/performance/ResourcePreloader'
 import PredictivePrefetcher from '../components/performance/PredictivePrefetcher'
 import FirefoxSidebarFix from '../components/navigation/FirefoxSidebarFix'
+import { I18nProvider } from '@/lib/i18n/context'
+
+// Import critical CSS directly - Next.js will optimize and inline it automatically
+import './critical.css'
+
+// Import globals.css - Next.js will handle optimization
+import './globals.css'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -66,9 +72,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="msapplication-tap-highlight" content="no" />
         
         {/* Performance optimizations */}
-        <link rel="preconnect" href="https://orka-ppm.onrender.com" />
+        <link rel="preconnect" href="https://orka-ppm.onrender.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://orka-ppm.onrender.com" />
         
+        {/* Preload critical API endpoints for faster data fetching */}
+        <link rel="preconnect" href={process.env.NEXT_PUBLIC_API_URL || 'https://orka-ppm.onrender.com'} crossOrigin="anonymous" />
+        
+        {/* Next.js automatically handles JavaScript chunk preloading - no manual preload needed */}
         {/* Preload critical fonts - Inter is loaded via next/font/google with automatic optimization */}
         {/* Next.js automatically inlines and optimizes Google Fonts, no manual preload needed */}
         
@@ -78,7 +88,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" type="image/svg+xml" sizes="16x16" href="/favicon-16x16.svg" />
         <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#2563eb" />
         
-
+        {/* 
+          Critical CSS is automatically inlined by Next.js when imported at the top of this file.
+          Next.js optimizes CSS imports and inlines critical styles automatically.
+          No manual inlining needed - Next.js handles this during build.
+        */}
       </head>
       <body 
         className="font-sans antialiased bg-white min-h-screen chrome-optimized chrome-background-coverage" 
@@ -96,7 +110,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <PerformanceOptimizer>
           <ErrorBoundary>
             <SupabaseAuthProvider>
-              {children}
+              <I18nProvider>
+                {children}
+              </I18nProvider>
             </SupabaseAuthProvider>
           </ErrorBoundary>
         </PerformanceOptimizer>

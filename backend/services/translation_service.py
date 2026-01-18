@@ -73,11 +73,17 @@ class LanguageDetectionResult:
 class TranslationService:
     """Comprehensive translation service with caching and preference management"""
     
-    def __init__(self, supabase_client: Client, openai_api_key: str):
+    def __init__(self, supabase_client: Client, openai_api_key: str, base_url: str = None):
         self.supabase = supabase_client
-        self.openai_client = OpenAI(api_key=openai_api_key)
-        self.translation_model = "gpt-4"
-        self.detection_model = "gpt-3.5-turbo"
+        # Initialize OpenAI client with optional custom base URL (for Grok, etc.)
+        if base_url:
+            self.openai_client = OpenAI(api_key=openai_api_key, base_url=base_url)
+        else:
+            self.openai_client = OpenAI(api_key=openai_api_key)
+        # Use configurable model from environment or default
+        import os
+        self.translation_model = os.getenv("OPENAI_MODEL", "gpt-4")
+        self.detection_model = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
         self.cache_ttl_hours = 24 * 7  # 1 week cache
         
         # Language-specific configurations

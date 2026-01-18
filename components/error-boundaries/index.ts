@@ -1,4 +1,5 @@
 export { DashboardErrorBoundary } from './DashboardErrorBoundary'
 export { ComponentErrorBoundary } from './ComponentErrorBoundary'
+export { LazyComponentErrorBoundary } from './LazyComponentErrorBoundary'
 export type { ErrorFallbackProps } from './DashboardErrorBoundary'
 export type { ComponentErrorFallbackProps } from './ComponentErrorBoundary'

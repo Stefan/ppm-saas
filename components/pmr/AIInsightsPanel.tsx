@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useCallback, useMemo } from 'react'
+import { useTranslations } from '../../lib/i18n/context'
 import { 
   Brain, 
   TrendingUp, 
@@ -67,6 +68,7 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
   isLoading = false,
   className = ''
 }) => {
+  const { t } = useTranslations()
   const [expandedInsights, setExpandedInsights] = useState<Set<string>>(new Set())
   const [showFilters, setShowFilters] = useState(false)
   const [filters, setFilters] = useState<InsightFilters>({
@@ -124,9 +126,9 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
   }, [])
 
   const handleValidateInsight = useCallback((insight: AIInsight, isValid: boolean) => {
-    const notes = isValid ? 'Validated by user' : 'Marked as invalid by user'
+    const notes = isValid ? t('pmr.insights.card.validated') : t('pmr.insights.card.markInvalid')
     onInsightValidate(insight.id, isValid, notes)
-  }, [onInsightValidate])
+  }, [onInsightValidate, t])
 
   const getInsightIcon = (type: string) => {
     switch (type) {
@@ -202,7 +204,7 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
                     {insight.title}
                   </h4>
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(insight.priority)}`}>
-                    {insight.priority}
+                    {t(`pmr.insights.priorities.${insight.priority}`)}
                   </span>
                 </div>
                 <p className="text-sm text-gray-600 line-clamp-2">
@@ -210,12 +212,12 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
                 </p>
                 <div className="flex items-center space-x-4 mt-2">
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${getConfidenceColor(insight.confidence_score)}`}>
-                    {Math.round(insight.confidence_score * 100)}% confidence
+                    {t('pmr.insights.card.confidence', { percent: Math.round(insight.confidence_score * 100) })}
                   </span>
                   {insight.validated && (
                     <span className="flex items-center text-xs text-green-600">
                       <CheckCircle className="h-3 w-3 mr-1" />
-                      Validated
+                      {t('pmr.insights.card.validated')}
                     </span>
                   )}
                   <span className="text-xs text-gray-500">
@@ -239,14 +241,14 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
           <div className="border-t border-gray-200 p-4 space-y-4">
             {/* Full Content */}
             <div>
-              <h5 className="text-sm font-medium text-gray-900 mb-2">Details</h5>
+              <h5 className="text-sm font-medium text-gray-900 mb-2">{t('pmr.insights.card.details')}</h5>
               <p className="text-sm text-gray-700">{insight.content}</p>
             </div>
 
             {/* Predicted Impact */}
             {insight.predicted_impact && (
               <div>
-                <h5 className="text-sm font-medium text-gray-900 mb-2">Predicted Impact</h5>
+                <h5 className="text-sm font-medium text-gray-900 mb-2">{t('pmr.insights.card.predictedImpact')}</h5>
                 <p className="text-sm text-gray-700">{insight.predicted_impact}</p>
               </div>
             )}
@@ -254,7 +256,7 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
             {/* Recommended Actions */}
             {insight.recommended_actions.length > 0 && (
               <div>
-                <h5 className="text-sm font-medium text-gray-900 mb-2">Recommended Actions</h5>
+                <h5 className="text-sm font-medium text-gray-900 mb-2">{t('pmr.insights.card.recommendedActions')}</h5>
                 <ul className="space-y-1">
                   {insight.recommended_actions.map((action, index) => (
                     <li key={index} className="flex items-start space-x-2 text-sm text-gray-700">
@@ -269,7 +271,7 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
             {/* Supporting Data */}
             {Object.keys(insight.supporting_data).length > 0 && (
               <div>
-                <h5 className="text-sm font-medium text-gray-900 mb-2">Supporting Data</h5>
+                <h5 className="text-sm font-medium text-gray-900 mb-2">{t('pmr.insights.card.supportingData')}</h5>
                 <div className="bg-gray-50 rounded-lg p-3">
                   <pre className="text-xs text-gray-600 whitespace-pre-wrap">
                     {JSON.stringify(insight.supporting_data, null, 2)}
@@ -281,7 +283,7 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
             {/* Validation Notes */}
             {insight.validation_notes && (
               <div>
-                <h5 className="text-sm font-medium text-gray-900 mb-2">Validation Notes</h5>
+                <h5 className="text-sm font-medium text-gray-900 mb-2">{t('pmr.insights.card.validationNotes')}</h5>
                 <p className="text-sm text-gray-700">{insight.validation_notes}</p>
               </div>
             )}
@@ -297,14 +299,14 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
                       className="flex items-center space-x-1 px-3 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 transition-colors"
                     >
                       <CheckCircle className="h-3 w-3" />
-                      <span>Validate</span>
+                      <span>{t('pmr.insights.card.validate')}</span>
                     </button>
                     <button
                       onClick={() => handleValidateInsight(insight, false)}
                       className="flex items-center space-x-1 px-3 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 transition-colors"
                     >
                       <AlertTriangle className="h-3 w-3" />
-                      <span>Mark Invalid</span>
+                      <span>{t('pmr.insights.card.markInvalid')}</span>
                     </button>
                   </>
                 )}
@@ -315,7 +317,7 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
                   className="flex items-center space-x-1 px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 transition-colors"
                 >
                   <Zap className="h-3 w-3" />
-                  <span>Apply</span>
+                  <span>{t('pmr.insights.card.apply')}</span>
                 </button>
               </div>
 
@@ -328,7 +330,7 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
                       ? 'text-green-700 bg-green-100'
                       : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
                   }`}
-                  title="Mark as helpful"
+                  title={t('pmr.insights.card.markHelpful')}
                 >
                   <ThumbsUp className="h-4 w-4" />
                 </button>
@@ -339,7 +341,7 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
                       ? 'text-red-700 bg-red-100'
                       : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
                   }`}
-                  title="Mark as not helpful"
+                  title={t('pmr.insights.card.markNotHelpful')}
                 >
                   <ThumbsDown className="h-4 w-4" />
                 </button>
@@ -358,7 +360,7 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
             <Brain className="h-5 w-5 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900">AI Insights</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t('pmr.insights.title')}</h3>
           </div>
           <div className="flex items-center space-x-2">
             <button
@@ -366,7 +368,7 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
               className={`p-2 rounded-lg transition-colors ${
                 showFilters ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
-              title="Toggle filters"
+              title={t('pmr.insights.filters.toggle')}
             >
               <Filter className="h-4 w-4" />
             </button>
@@ -376,7 +378,7 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
               className="flex items-center space-x-1 px-3 py-1 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 disabled:opacity-50 transition-colors"
             >
               <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-              <span>Refresh</span>
+              <span>{t('pmr.insights.refresh')}</span>
             </button>
           </div>
         </div>
@@ -385,19 +387,19 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
             <div className="text-lg font-semibold text-gray-900">{filteredInsights.length}</div>
-            <div className="text-xs text-gray-500">Total Insights</div>
+            <div className="text-xs text-gray-500">{t('pmr.insights.totalInsights')}</div>
           </div>
           <div>
             <div className="text-lg font-semibold text-green-600">
               {filteredInsights.filter(i => i.validated).length}
             </div>
-            <div className="text-xs text-gray-500">Validated</div>
+            <div className="text-xs text-gray-500">{t('pmr.insights.validated')}</div>
           </div>
           <div>
             <div className="text-lg font-semibold text-orange-600">
               {filteredInsights.filter(i => i.priority === 'high' || i.priority === 'critical').length}
             </div>
-            <div className="text-xs text-gray-500">High Priority</div>
+            <div className="text-xs text-gray-500">{t('pmr.insights.highPriority')}</div>
           </div>
         </div>
       </div>
@@ -407,7 +409,7 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
         <div className="p-4 border-b border-gray-200 bg-gray-50 space-y-3">
           {/* Category Filter */}
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Categories</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">{t('pmr.insights.filters.categories')}</label>
             <div className="flex flex-wrap gap-1">
               {['budget', 'schedule', 'resource', 'risk', 'quality'].map(category => (
                 <button
@@ -426,7 +428,7 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
-                  {category}
+                  {t(`pmr.insights.categories.${category}`)}
                 </button>
               ))}
             </div>
@@ -435,7 +437,7 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
           {/* Confidence Filter */}
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
-              Min Confidence: {filters.minConfidence}%
+              {t('pmr.insights.filters.minConfidence')}: {filters.minConfidence}%
             </label>
             <input
               type="range"
@@ -458,7 +460,7 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
             })}
             className="text-xs text-blue-600 hover:text-blue-800"
           >
-            Clear all filters
+            {t('pmr.insights.filters.clearAll')}
           </button>
         </div>
       )}
@@ -469,18 +471,18 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
           <div className="flex items-center justify-center h-32">
             <div className="flex items-center space-x-2 text-gray-500">
               <RefreshCw className="h-5 w-5 animate-spin" />
-              <span>Generating insights...</span>
+              <span>{t('pmr.insights.generating')}</span>
             </div>
           </div>
         ) : filteredInsights.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-32 text-gray-500">
             <Brain className="h-8 w-8 mb-2" />
-            <p className="text-sm">No insights available</p>
+            <p className="text-sm">{t('pmr.insights.noInsights')}</p>
             <button
               onClick={() => onGenerateInsights()}
               className="mt-2 text-xs text-blue-600 hover:text-blue-800"
             >
-              Generate insights
+              {t('pmr.insights.generateInsights')}
             </button>
           </div>
         ) : (
@@ -490,7 +492,7 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({
                 <div className="flex items-center space-x-2 mb-3">
                   {getCategoryIcon(category)}
                   <h4 className="text-sm font-medium text-gray-900 capitalize">
-                    {category} ({categoryInsights.length})
+                    {t(`pmr.insights.categories.${category}`)} ({categoryInsights.length})
                   </h4>
                 </div>
                 <div className="space-y-3">

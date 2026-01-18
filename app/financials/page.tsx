@@ -5,6 +5,7 @@ import { useAuth } from '../providers/SupabaseAuthProvider'
 import { AlertTriangle } from 'lucide-react'
 import AppLayout from '../../components/shared/AppLayout'
 import { ResponsiveContainer } from '../../components/ui/molecules/ResponsiveContainer'
+import { useTranslations } from '../../lib/i18n/context'
 
 // Import modular components
 import FinancialHeader from './components/FinancialHeader'
@@ -30,6 +31,7 @@ const CommitmentsActualsView = lazy(() => import('./components/CommitmentsActual
 
 export default function Financials() {
   const { session } = useAuth()
+  const { t } = useTranslations()
   const [selectedCurrency, setSelectedCurrency] = React.useState('USD')
   const [dateRange, setDateRange] = React.useState('all')
   const [showFilters, setShowFilters] = React.useState(false)
@@ -96,7 +98,7 @@ export default function Financials() {
           <div className="flex">
             <AlertTriangle className="h-5 w-5 text-red-400" />
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Fehler beim Laden der Finanzdaten</h3>
+              <h3 className="text-sm font-medium text-red-800">{t('errors.loadFailed')}</h3>
               <p className="mt-1 text-sm text-red-700">{error}</p>
             </div>
           </div>
@@ -138,8 +140,8 @@ export default function Financials() {
         {financialAlerts.length > 0 && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-red-900">Budget-Warnungen</h3>
-              <span className="text-sm text-red-700">{financialAlerts.length} Warnung{financialAlerts.length !== 1 ? 'en' : ''}</span>
+              <h3 className="text-lg font-semibold text-red-900">{t('financials.budgetWarnings')}</h3>
+              <span className="text-sm text-red-700">{financialAlerts.length} {financialAlerts.length !== 1 ? t('financials.criticalAlerts') : t('financials.criticalAlert')}</span>
             </div>
             <div className="space-y-3">
               {financialAlerts.slice(0, 5).map((alert, index) => (
@@ -149,16 +151,16 @@ export default function Financials() {
                       <h4 className="font-medium text-gray-900">{alert.project_name}</h4>
                       <p className="text-sm text-gray-600 mt-1">{alert.message}</p>
                       <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-                        <span>Budget: {alert.budget.toLocaleString()} {selectedCurrency}</span>
-                        <span>Ausgegeben: {alert.actual_cost.toLocaleString()} {selectedCurrency}</span>
-                        <span>Auslastung: {alert.utilization_percentage.toFixed(1)}%</span>
+                        <span>{t('financials.budget')}: {alert.budget.toLocaleString()} {selectedCurrency}</span>
+                        <span>{t('financials.spent')}: {alert.actual_cost.toLocaleString()} {selectedCurrency}</span>
+                        <span>{t('financials.utilization')}: {alert.utilization_percentage.toFixed(1)}%</span>
                       </div>
                     </div>
                     <div className={`px-2 py-1 rounded text-xs font-medium ${
                       alert.alert_level === 'critical' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
                     }`}
                     >
-                      {alert.alert_level === 'critical' ? 'Kritisch' : 'Warnung'}
+                      {alert.alert_level === 'critical' ? t('financials.criticalAlert') : t('financials.warning')}
                     </div>
                   </div>
                 </div>
@@ -172,41 +174,41 @@ export default function Financials() {
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Zeitraum</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('financials.timeRange')}</label>
                 <select
                   value={dateRange}
                   onChange={(e) => setDateRange(e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
                 >
-                  <option value="all">Alle Zeit</option>
-                  <option value="30d">Letzte 30 Tage</option>
-                  <option value="90d">Letzte 90 Tage</option>
-                  <option value="1y">Letztes Jahr</option>
+                  <option value="all">{t('financials.allTime')}</option>
+                  <option value="30d">{t('financials.last30Days')}</option>
+                  <option value="90d">{t('financials.last90Days')}</option>
+                  <option value="1y">{t('financials.lastYear')}</option>
                 </select>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Budget-Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('financials.budgetStatus')}</label>
                 <select className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white">
-                  <option value="all">Alle Projekte</option>
-                  <option value="over">Über Budget</option>
-                  <option value="under">Unter Budget</option>
-                  <option value="on">Im Budget</option>
+                  <option value="all">{t('financials.allProjects')}</option>
+                  <option value="over">{t('financials.overBudgetOnly')}</option>
+                  <option value="under">{t('financials.underBudgetOnly')}</option>
+                  <option value="on">{t('financials.onBudget')}</option>
                 </select>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Warnstufe</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('financials.warningLevel')}</label>
                 <select className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white">
-                  <option value="all">Alle Stufen</option>
-                  <option value="critical">Nur Kritisch</option>
-                  <option value="warning">Nur Warnung</option>
+                  <option value="all">{t('financials.allLevels')}</option>
+                  <option value="critical">{t('financials.criticalOnly')}</option>
+                  <option value="warning">{t('financials.warningOnly')}</option>
                 </select>
               </div>
               
               <div className="flex items-end">
                 <button className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
-                  Filter zurücksetzen
+                  {t('financials.resetFilters')}
                 </button>
               </div>
             </div>

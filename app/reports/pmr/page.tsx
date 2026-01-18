@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '../../providers/SupabaseAuthProvider'
+import { useTranslations } from '../../../lib/i18n/context'
 import AppLayout from '../../../components/shared/AppLayout'
 import AIInsightsPanel from '../../../components/pmr/AIInsightsPanel'
 import CollaborationPanel from '../../../components/pmr/CollaborationPanel'
@@ -35,6 +36,7 @@ import type {
 
 export default function EnhancedPMRPage() {
   const { session, user } = useAuth()
+  const { t } = useTranslations()
   
   // Report state
   const [currentReport, setCurrentReport] = useState<PMRReport | null>(null)
@@ -262,7 +264,7 @@ export default function EnhancedPMRPage() {
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
             <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">Please sign in to access Enhanced PMR</p>
+            <p className="text-gray-600">{t('pmr.page.signInRequired')}</p>
           </div>
         </div>
       </AppLayout>
@@ -275,7 +277,7 @@ export default function EnhancedPMRPage() {
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
             <Loader className="h-12 w-12 text-blue-600 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Loading report...</p>
+            <p className="text-gray-600">{t('pmr.page.loadingReport')}</p>
           </div>
         </div>
       </AppLayout>
@@ -293,7 +295,7 @@ export default function EnhancedPMRPage() {
               onClick={() => window.location.reload()}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              Retry
+              {t('pmr.page.retry')}
             </button>
           </div>
         </div>
@@ -341,16 +343,16 @@ export default function EnhancedPMRPage() {
               <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
               <div className="min-w-0">
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
-                  {currentReport?.title || 'Enhanced PMR'}
+                  {currentReport?.title || t('pmr.page.title')}
                 </h1>
                 <div className="flex items-center space-x-2 mt-1">
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(currentReport?.status || 'draft')}`}>
-                    {currentReport?.status || 'draft'}
+                    {t(`pmr.status.${currentReport?.status || 'draft'}`)}
                   </span>
                   {lastSaved && (
                     <span className="text-xs text-gray-500 flex items-center">
                       <CheckCircle className="h-3 w-3 mr-1" />
-                      Saved {lastSaved.toLocaleTimeString()}
+                      {t('pmr.connection.saved', { time: lastSaved.toLocaleTimeString() })}
                     </span>
                   )}
                 </div>
@@ -370,10 +372,10 @@ export default function EnhancedPMRPage() {
                 }`} />
                 <span className="text-xs text-gray-600 hidden sm:inline">
                   {realtimeState.isConnected 
-                    ? 'Connected' 
+                    ? t('pmr.connection.connected')
                     : realtimeState.isReconnecting 
-                    ? 'Reconnecting...' 
-                    : 'Disconnected'}
+                    ? t('pmr.connection.reconnecting')
+                    : t('pmr.connection.disconnected')}
                 </span>
               </div>
               
@@ -417,7 +419,7 @@ export default function EnhancedPMRPage() {
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                <span className="hidden sm:inline">Save</span>
+                <span className="hidden sm:inline">{isSaving ? t('pmr.actions.saving') : t('pmr.actions.save')}</span>
               </button>
               
               <button
@@ -426,7 +428,7 @@ export default function EnhancedPMRPage() {
                 data-tour="export"
               >
                 <Download className="h-4 w-4" />
-                <span className="hidden sm:inline">Export</span>
+                <span className="hidden sm:inline">{t('pmr.actions.export')}</span>
                 <ContextualHelp
                   content={getPMRHelpContent('export')!}
                   position="bottom"
@@ -451,7 +453,7 @@ export default function EnhancedPMRPage() {
                   }`}
                 >
                   <Edit3 className="h-4 w-4" />
-                  <span>Editor</span>
+                  <span>{t('pmr.panels.editor')}</span>
                 </button>
                 <button
                   onClick={() => setActivePanel('insights')}
@@ -460,7 +462,7 @@ export default function EnhancedPMRPage() {
                   }`}
                 >
                   <Eye className="h-4 w-4" />
-                  <span>Insights</span>
+                  <span>{t('pmr.panels.insights')}</span>
                 </button>
                 <button
                   onClick={() => setActivePanel('collaboration')}
@@ -470,7 +472,7 @@ export default function EnhancedPMRPage() {
                   data-tour="preview"
                 >
                   <MessageSquare className="h-4 w-4" />
-                  <span>Collab</span>
+                  <span>{t('pmr.panels.collaboration')}</span>
                 </button>
               </div>
             </div>
@@ -480,7 +482,7 @@ export default function EnhancedPMRPage() {
           <div className={`flex-1 overflow-y-auto p-4 sm:p-6 ${isMobile && activePanel !== 'editor' ? 'hidden' : ''}`} data-tour="editor">
             <div className="max-w-4xl mx-auto">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">Report Sections</h2>
+                <h2 className="text-lg font-semibold text-gray-900">{t('pmr.page.reportSections')}</h2>
                 <ContextualHelp
                   content={getPMRHelpContent('editor')!}
                   position="left"
@@ -494,7 +496,7 @@ export default function EnhancedPMRPage() {
                     <h2 className="text-lg font-semibold text-gray-900">{section.title}</h2>
                     {section.ai_generated && section.confidence_score && (
                       <span className="text-xs text-gray-500">
-                        AI Generated ({Math.round(section.confidence_score * 100)}% confidence)
+                        {t('pmr.page.aiGenerated')} ({t('pmr.page.confidence', { percent: Math.round(section.confidence_score * 100) })})
                       </span>
                     )}
                   </div>
@@ -502,7 +504,7 @@ export default function EnhancedPMRPage() {
                     <p className="text-gray-700">{section.content}</p>
                   </div>
                   <div className="mt-4 flex items-center justify-between text-xs text-gray-500">
-                    <span>Last modified: {new Date(section.last_modified).toLocaleString()}</span>
+                    <span>{t('pmr.page.lastModified')}: {new Date(section.last_modified).toLocaleString()}</span>
                     <button className="text-blue-600 hover:text-blue-800">
                       <Edit3 className="h-4 w-4" />
                     </button>
@@ -513,7 +515,7 @@ export default function EnhancedPMRPage() {
               {(!currentReport?.sections || currentReport.sections.length === 0) && (
                 <div className="text-center py-12">
                   <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">No sections available</p>
+                  <p className="text-gray-600">{t('pmr.page.noSections')}</p>
                 </div>
               )}
             </div>
@@ -522,7 +524,7 @@ export default function EnhancedPMRPage() {
           {/* AI Insights Panel */}
           <div className={`${isMobile ? (activePanel === 'insights' ? 'w-full' : 'hidden') : 'w-96'}`} data-tour="ai-insights">
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-900">AI Insights</h3>
+              <h3 className="text-sm font-semibold text-gray-900">{t('pmr.page.aiInsights')}</h3>
               <ContextualHelp
                 content={getPMRHelpContent('aiInsights')!}
                 position="left"

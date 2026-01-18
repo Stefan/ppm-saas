@@ -153,29 +153,30 @@ const config: Config = {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
       keyframes: {
+        // All animations use only transform and opacity for GPU compositing
         fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
+          '0%': { opacity: '0', transform: 'translateZ(0)' },
+          '100%': { opacity: '1', transform: 'translateZ(0)' },
         },
         fadeOut: {
-          '0%': { opacity: '1' },
-          '100%': { opacity: '0' },
+          '0%': { opacity: '1', transform: 'translateZ(0)' },
+          '100%': { opacity: '0', transform: 'translateZ(0)' },
         },
         slideInUp: {
-          '0%': { transform: 'translateY(100%)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
+          '0%': { transform: 'translateY(100%) translateZ(0)', opacity: '0' },
+          '100%': { transform: 'translateY(0) translateZ(0)', opacity: '1' },
         },
         slideInDown: {
-          '0%': { transform: 'translateY(-100%)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
+          '0%': { transform: 'translateY(-100%) translateZ(0)', opacity: '0' },
+          '100%': { transform: 'translateY(0) translateZ(0)', opacity: '1' },
         },
         scaleIn: {
-          '0%': { transform: 'scale(0.9)', opacity: '0' },
-          '100%': { transform: 'scale(1)', opacity: '1' },
+          '0%': { transform: 'scale(0.9) translateZ(0)', opacity: '0' },
+          '100%': { transform: 'scale(1) translateZ(0)', opacity: '1' },
         },
         bounceGentle: {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-10px)' },
+          '0%, 100%': { transform: 'translateY(0) translateZ(0)' },
+          '50%': { transform: 'translateY(-10px) translateZ(0)' },
         },
       },
       boxShadow: {
@@ -306,7 +307,7 @@ const config: Config = {
           '-webkit-overflow-scrolling': 'touch'
         },
         '.will-change-scroll': {
-          'will-change': 'scroll-position'
+          'will-change': 'transform'
         },
         '.contain-layout': {
           'contain': 'layout style paint'

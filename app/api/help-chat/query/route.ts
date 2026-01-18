@@ -1,67 +1,77 @@
-/**
- * Help Chat Query API Endpoint
- * Handles AI-powered help queries
- */
-
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { query, context: _context, sessionId } = body
+    const { query, context, language = 'en', include_proactive_tips = false } = await request.json()
     
-    // Mock AI response for help queries
-    const mockResponse = {
-      id: `response-${Date.now()}`,
-      query,
-      response: `I understand you're asking about "${query}". Based on your current context, here are some suggestions:
-
-• Check the dashboard for real-time project status
-• Review the variance alerts for budget optimization opportunities  
-• Use the AI-enhanced view for better insights
-• Consider cross-device sync to access your data anywhere
-
-Is there a specific aspect you'd like me to help you with?`,
-      confidence: 0.85,
-      sources: [
-        {
-          title: 'Dashboard Guide',
-          url: '/help/dashboard',
-          relevance: 0.9
-        },
-        {
-          title: 'Budget Management',
-          url: '/help/budget',
-          relevance: 0.8
-        }
-      ],
-      suggestedActions: [
-        {
-          label: 'View Dashboard',
-          action: 'navigate',
-          target: '/dashboards'
-        },
-        {
-          label: 'Check Alerts',
-          action: 'navigate', 
-          target: '/alerts'
-        }
-      ],
-      sessionId,
-      timestamp: new Date().toISOString()
+    if (!query || !query.trim()) {
+      return NextResponse.json(
+        { error: 'Query is required' },
+        { status: 400 }
+      )
     }
     
-    return NextResponse.json(mockResponse, {
-      status: 200,
+    // Supabase Client mit User Auth
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          headers: {
+            Authorization: request.headers.get('Authorization') || ''
+          }
+        }
+      }
+    )
+
+    // User Session holen
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Backend API Call (mit Supabase Caching)
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+    const response = await fetch(`${backendUrl}/ai/help/query`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': request.headers.get('Authorization') || ''
       },
+      body: JSON.stringify({ 
+        query,
+        context: context || {},
+        language,
+        include_proactive_tips
+      })
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.detail || 'Backend request failed')
+    }
+
+    const data = await response.json()
+    
+    return NextResponse.json(data, {
+      headers: {
+        // Cache-Header für CDN (optional)
+        // Cached responses können länger gecacht werden
+        'Cache-Control': data.is_cached 
+          ? 'public, s-maxage=300, stale-while-revalidate=600' 
+          : 'no-cache, no-store, must-revalidate',
+        'X-Cache-Status': data.is_cached ? 'HIT' : 'MISS'
+      }
     })
   } catch (error) {
-    console.error('Help chat query error:', error)
+    console.error('Help chat error:', error)
     return NextResponse.json(
       { 
-        error: 'Failed to process help query',
+        error: 'Internal server error',
         message: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }

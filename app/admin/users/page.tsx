@@ -5,6 +5,7 @@ import { useAuth } from '../../providers/SupabaseAuthProvider'
 import { Users, UserPlus, UserMinus, UserX, Search, Filter, Shield, AlertTriangle, CheckCircle, XCircle, RefreshCw } from 'lucide-react'
 import AppLayout from '../../../components/shared/AppLayout'
 import { getApiUrl } from '../../../lib/api'
+import { useTranslations } from '@/lib/i18n/context'
 
 interface User {
   id: string
@@ -37,6 +38,7 @@ interface UserFilters {
 
 export default function AdminUsers() {
   const { session } = useAuth()
+  const t = useTranslations('adminUsers')
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -117,10 +119,10 @@ export default function AdminUsers() {
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         console.warn('Request timed out')
-        setError('Request timed out. Please try again.')
+        setError(t('errors.timeout'))
       } else {
         console.error('Error fetching users:', error)
-        setError(error instanceof Error ? error.message : 'Failed to fetch users')
+        setError(error instanceof Error ? error.message : t('errors.fetchFailed'))
       }
     } finally {
       setLoading(false)
@@ -174,7 +176,7 @@ export default function AdminUsers() {
       
     } catch (error) {
       console.error(`Error ${action} user:`, error)
-      setError(error instanceof Error ? error.message : `Failed to ${action} user`)
+      setError(error instanceof Error ? error.message : t('errors.actionFailed', { action }))
     } finally {
       setActionLoading(null)
     }
@@ -220,8 +222,8 @@ export default function AdminUsers() {
   }
 
   const getStatusText = (user: User) => {
-    if (!user.is_active) return 'Inactive'
-    return 'Active'
+    if (!user.is_active) return t('inactive')
+    return t('active')
   }
 
   const getRoleColor = (role: string) => {
@@ -234,7 +236,7 @@ export default function AdminUsers() {
   }
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Never'
+    if (!dateString) return t('never')
     return new Date(dateString).toLocaleDateString('de-DE', {
       year: 'numeric',
       month: 'short',
@@ -263,9 +265,9 @@ export default function AdminUsers() {
             <div className="flex items-center space-x-3">
               <Users className="h-8 w-8 text-blue-600" />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
+                <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
                 <p className="text-sm text-gray-600">
-                  {pagination.total_count} users total
+                  {pagination.total_count} {t('usersTotal')}
                 </p>
               </div>
             </div>
@@ -277,7 +279,7 @@ export default function AdminUsers() {
               className="flex items-center px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               <Filter className="h-4 w-4 mr-2" />
-              Filters
+              {t('filters')}
             </button>
             
             <button
@@ -286,7 +288,7 @@ export default function AdminUsers() {
               className="flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
+              {t('refresh')}
             </button>
             
             <button
@@ -294,7 +296,7 @@ export default function AdminUsers() {
               className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               <UserPlus className="h-4 w-4 mr-2" />
-              Invite User
+              {t('inviteUser')}
             </button>
           </div>
         </div>
@@ -305,7 +307,7 @@ export default function AdminUsers() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Search by email
+                  {t('searchByEmail')}
                 </label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -313,7 +315,7 @@ export default function AdminUsers() {
                     type="text"
                     value={filters.search}
                     onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                    placeholder="Enter email..."
+                    placeholder={t('enterEmail')}
                     className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -321,34 +323,34 @@ export default function AdminUsers() {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Status
+                  {t('status')}
                 </label>
                 <select
                   value={filters.status}
                   onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="">All statuses</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="deactivated">Deactivated</option>
+                  <option value="">{t('allStatuses')}</option>
+                  <option value="active">{t('active')}</option>
+                  <option value="inactive">{t('inactive')}</option>
+                  <option value="deactivated">{t('deactivated')}</option>
                 </select>
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Role
+                  {t('role')}
                 </label>
                 <select
                   value={filters.role}
                   onChange={(e) => setFilters(prev => ({ ...prev, role: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="">All roles</option>
-                  <option value="admin">Admin</option>
-                  <option value="manager">Manager</option>
-                  <option value="user">User</option>
-                  <option value="viewer">Viewer</option>
+                  <option value="">{t('allRoles')}</option>
+                  <option value="admin">{t('admin')}</option>
+                  <option value="manager">{t('manager')}</option>
+                  <option value="user">{t('user')}</option>
+                  <option value="viewer">{t('viewer')}</option>
                 </select>
               </div>
             </div>
@@ -360,7 +362,7 @@ export default function AdminUsers() {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-blue-900">
-                {selectedUsers.length} user{selectedUsers.length !== 1 ? 's' : ''} selected
+                {selectedUsers.length} {t('usersSelected')}
               </span>
               <div className="flex items-center space-x-2">
                 <button
@@ -368,27 +370,27 @@ export default function AdminUsers() {
                   disabled={actionLoading === 'bulk'}
                   className="px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 disabled:opacity-50 text-sm"
                 >
-                  Activate
+                  {t('activate')}
                 </button>
                 <button
                   onClick={() => handleBulkAction('deactivate')}
                   disabled={actionLoading === 'bulk'}
                   className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 disabled:opacity-50 text-sm"
                 >
-                  Deactivate
+                  {t('deactivate')}
                 </button>
                 <button
                   onClick={() => handleBulkAction('delete')}
                   disabled={actionLoading === 'bulk'}
                   className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 disabled:opacity-50 text-sm"
                 >
-                  Delete
+                  {t('delete')}
                 </button>
                 <button
                   onClick={() => setSelectedUsers([])}
                   className="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm"
                 >
-                  Clear
+                  {t('clear')}
                 </button>
               </div>
             </div>
@@ -432,22 +434,22 @@ export default function AdminUsers() {
                     />
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    User
+                    {t('tableHeaders.user')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Role
+                    {t('tableHeaders.role')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                    {t('tableHeaders.status')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Last Login
+                    {t('tableHeaders.lastLogin')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Created
+                    {t('tableHeaders.created')}
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                    {t('tableHeaders.actions')}
                   </th>
                 </tr>
               </thead>
@@ -480,7 +482,7 @@ export default function AdminUsers() {
                         <div className="ml-3">
                           <div className="text-sm font-medium text-gray-900">{user.email}</div>
                           {user.sso_provider && (
-                            <div className="text-xs text-gray-500">SSO: {user.sso_provider}</div>
+                            <div className="text-xs text-gray-500">{t('sso')}: {user.sso_provider}</div>
                           )}
                         </div>
                       </div>
@@ -498,7 +500,7 @@ export default function AdminUsers() {
                       </div>
                       {user.deactivated_at && (
                         <div className="text-xs text-gray-500 mt-1">
-                          Deactivated: {formatDate(user.deactivated_at)}
+                          {t('deactivatedAt')}: {formatDate(user.deactivated_at)}
                         </div>
                       )}
                     </td>
@@ -515,7 +517,7 @@ export default function AdminUsers() {
                             onClick={() => handleUserAction(user.id, 'deactivate', 'Admin deactivation')}
                             disabled={actionLoading === user.id}
                             className="text-yellow-600 hover:text-yellow-900 disabled:opacity-50"
-                            title="Deactivate user"
+                            title={t('deactivateUser')}
                           >
                             <UserMinus className="h-4 w-4" />
                           </button>
@@ -524,7 +526,7 @@ export default function AdminUsers() {
                             onClick={() => handleUserAction(user.id, 'activate')}
                             disabled={actionLoading === user.id}
                             className="text-green-600 hover:text-green-900 disabled:opacity-50"
-                            title="Activate user"
+                            title={t('activateUser')}
                           >
                             <UserPlus className="h-4 w-4" />
                           </button>
@@ -532,13 +534,13 @@ export default function AdminUsers() {
                         
                         <button
                           onClick={() => {
-                            if (confirm(`Are you sure you want to delete ${user.email}? This action cannot be undone.`)) {
+                            if (confirm(t('deleteConfirm', { email: user.email }))) {
                               handleUserAction(user.id, 'delete')
                             }
                           }}
                           disabled={actionLoading === user.id}
                           className="text-red-600 hover:text-red-900 disabled:opacity-50"
-                          title="Delete user"
+                          title={t('deleteUser')}
                         >
                           <UserX className="h-4 w-4" />
                         </button>
@@ -553,11 +555,11 @@ export default function AdminUsers() {
           {users.length === 0 && !loading && (
             <div className="text-center py-12">
               <Users className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No users found</h3>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">{t('noUsersFound')}</h3>
               <p className="mt-1 text-sm text-gray-500">
                 {filters.search || filters.status || filters.role 
-                  ? 'Try adjusting your filters' 
-                  : 'Get started by inviting your first user'
+                  ? t('tryAdjustingFilters')
+                  : t('getStartedInvite')
                 }
               </p>
             </div>
@@ -568,9 +570,9 @@ export default function AdminUsers() {
         {pagination.total_pages > 1 && (
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-700">
-              Showing {((pagination.page - 1) * pagination.per_page) + 1} to{' '}
-              {Math.min(pagination.page * pagination.per_page, pagination.total_count)} of{' '}
-              {pagination.total_count} users
+              {t('showing')} {((pagination.page - 1) * pagination.per_page) + 1} {t('to')}{' '}
+              {Math.min(pagination.page * pagination.per_page, pagination.total_count)} {t('of')}{' '}
+              {pagination.total_count} {t('users')}
             </div>
             
             <div className="flex items-center space-x-2">
@@ -579,11 +581,11 @@ export default function AdminUsers() {
                 disabled={pagination.page === 1}
                 className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Previous
+                {t('previous')}
               </button>
               
               <span className="px-3 py-2 text-sm text-gray-700">
-                Page {pagination.page} of {pagination.total_pages}
+                {t('page')} {pagination.page} {t('of')} {pagination.total_pages}
               </span>
               
               <button
@@ -591,7 +593,7 @@ export default function AdminUsers() {
                 disabled={pagination.page === pagination.total_pages}
                 className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Next
+                {t('next')}
               </button>
             </div>
           </div>

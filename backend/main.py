@@ -49,15 +49,16 @@ from middleware.performance_tracker import PerformanceMiddleware, performance_tr
 # Import AI agents and services
 try:
     from ai_agents import create_ai_agents
-    ai_agents = create_ai_agents(supabase, settings.OPENAI_API_KEY) if supabase and settings.OPENAI_API_KEY else None
+    ai_agents = create_ai_agents(supabase, settings.OPENAI_API_KEY, settings.OPENAI_BASE_URL) if supabase and settings.OPENAI_API_KEY else None
     if ai_agents:
         print("✅ AI agents initialized successfully")
+        if settings.OPENAI_BASE_URL:
+            print(f"   Using custom API endpoint: {settings.OPENAI_BASE_URL}")
     else:
         print("⚠️ AI agents not available - missing dependencies or configuration")
 except ImportError as e:
     print(f"⚠️ AI agents not available: {e}")
     ai_agents = None
-
 # Import and initialize help chat performance service
 try:
     from services.help_chat_performance import initialize_help_chat_performance

@@ -1,16 +1,30 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense, useRef, startTransition, useMemo } from 'react'
 import { useAuth } from '../../providers/SupabaseAuthProvider'
-import { 
-  BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer
-} from 'recharts'
 import AppLayout from '../../../components/shared/AppLayout'
 import { 
   Clock, AlertTriangle, CheckCircle, 
   RefreshCw, Trash2, Database, Globe, X
 } from 'lucide-react'
 import { getApiUrl } from '../../../lib/api'
+import { useTranslations } from '@/lib/i18n/context'
+import ChartSkeleton from '../../../components/admin/ChartSkeleton'
+import TableSkeleton from '../../../components/admin/TableSkeleton'
+import StatsSkeleton from '../../../components/admin/StatsSkeleton'
+import { usePerformanceMonitoring } from '../../../hooks/usePerformanceMonitoring'
+import { LazyComponentErrorBoundary } from '../../../components/error-boundaries'
+
+// Lazy load ChartSection to reduce initial bundle size
+const ChartSection = lazy(() => import('../../../components/admin/ChartSection').then(module => ({
+  default: module.ChartSection
+})))
+
+// Lazy load SlowQueriesTable to reduce initial bundle size
+const SlowQueriesTable = lazy(() => import('../../../components/admin/SlowQueriesTable'))
+
+// Lazy load CacheStatsCard to reduce initial bundle size
+const CacheStatsCard = lazy(() => import('../../../components/admin/CacheStatsCard'))
 
 interface PerformanceStats {
   endpoint_stats: Record<string, {
@@ -57,6 +71,7 @@ interface CacheStats {
 
 export default function PerformanceDashboard() {
   const { session } = useAuth()
+  const t = useTranslations('adminPerformance')
   const [stats, setStats] = useState<PerformanceStats | null>(null)
   const [health, setHealth] = useState<HealthStatus | null>(null)
   const [cacheStats, setCacheStats] = useState<CacheStats | null>(null)
@@ -65,12 +80,38 @@ export default function PerformanceDashboard() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
 
+  // AbortController ref to cancel pending requests
+  const abortControllerRef = useRef<AbortController | null>(null)
+
+  // Initialize performance monitoring
+  const performanceMonitoring = usePerformanceMonitoring({
+    enabled: true,
+    reportInterval: 30000, // Report every 30 seconds
+    analyticsEndpoint: getApiUrl('/api/analytics/performance'),
+    onReport: (report) => {
+      // Log metrics in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Performance Report:', {
+          webVitals: report.webVitals,
+          longTasks: report.longTasks.length,
+          customMetrics: report.customMetrics
+        })
+      }
+    }
+  })
+
   useEffect(() => {
     if (session) {
       fetchPerformanceData()
       // Auto-refresh every 30 seconds
       const interval = setInterval(fetchPerformanceData, 30000)
-      return () => clearInterval(interval)
+      return () => {
+        clearInterval(interval)
+        // Cancel any pending requests on unmount
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort()
+        }
+      }
     }
     return undefined
   }, [session])
@@ -78,58 +119,98 @@ export default function PerformanceDashboard() {
   async function fetchPerformanceData(isManualRefresh = false) {
     if (!session?.access_token) return
     
+    // Cancel any pending requests before starting new ones
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+    
+    // Create new AbortController for this fetch cycle
+    abortControllerRef.current = new AbortController()
+    
     try {
-      const [statsResponse, healthResponse, cacheResponse] = await Promise.all([
+      // Measure API call performance
+      const fetchStart = performance.now()
+      
+      // Prioritize critical data (health and stats) over cache stats
+      // Fetch health and stats first in parallel, then cache stats separately
+      const [statsResponse, healthResponse] = await Promise.all([
         fetch(getApiUrl('/admin/performance/stats'), {
-          headers: { 'Authorization': `Bearer ${session?.access_token || ''}` }
+          headers: { 'Authorization': `Bearer ${session?.access_token || ''}` },
+          signal: abortControllerRef.current.signal,
+          cache: 'no-store'
         }),
         fetch(getApiUrl('/admin/performance/health'), {
-          headers: { 'Authorization': `Bearer ${session?.access_token || ''}` }
-        }),
-        fetch(getApiUrl('/admin/cache/stats'), {
-          headers: { 'Authorization': `Bearer ${session?.access_token || ''}` }
+          headers: { 'Authorization': `Bearer ${session?.access_token || ''}` },
+          signal: abortControllerRef.current.signal,
+          cache: 'no-store'
         })
       ])
 
+      const fetchDuration = performance.now() - fetchStart
+      
+      // Record API call metrics
+      performanceMonitoring.recordCustomMetric('api_fetch_duration', fetchDuration)
+      performanceMonitoring.recordAPICall('/admin/performance/stats', fetchDuration, statsResponse.status)
+      performanceMonitoring.recordAPICall('/admin/performance/health', fetchDuration, healthResponse.status)
+
+      // Process critical responses immediately
       if (statsResponse.ok) {
         const statsData = await statsResponse.json()
-        // Validate the data structure before setting state
         if (statsData && typeof statsData === 'object') {
-          setStats(statsData)
-        } else {
-          console.warn('Invalid stats data structure received:', statsData)
+          startTransition(() => {
+            setStats(statsData)
+          })
         }
-      } else {
-        console.error(`Stats API error: ${statsResponse.status} ${statsResponse.statusText}`)
       }
 
       if (healthResponse.ok) {
         const healthData = await healthResponse.json()
         if (healthData && typeof healthData === 'object') {
-          setHealth(healthData)
-        } else {
-          console.warn('Invalid health data structure received:', healthData)
+          startTransition(() => {
+            setHealth(healthData)
+          })
         }
-      } else {
-        console.error(`Health API error: ${healthResponse.status} ${healthResponse.statusText}`)
       }
 
-      if (cacheResponse.ok) {
-        const cacheData = await cacheResponse.json()
-        if (cacheData && typeof cacheData === 'object') {
-          setCacheStats(cacheData)
-        } else {
-          console.warn('Invalid cache data structure received:', cacheData)
-        }
-      } else {
-        console.error(`Cache API error: ${cacheResponse.status} ${cacheResponse.statusText}`)
-      }
+      // Fetch cache stats with lower priority (non-blocking, fetched after critical data)
+      fetch(getApiUrl('/admin/cache/stats'), {
+        headers: { 'Authorization': `Bearer ${session?.access_token || ''}` },
+        signal: abortControllerRef.current.signal,
+        cache: 'no-store'
+      })
+        .then(async (cacheResponse) => {
+          const cacheDuration = performance.now() - fetchStart
+          performanceMonitoring.recordAPICall('/admin/cache/stats', cacheDuration, cacheResponse.status)
+          
+          if (cacheResponse.ok) {
+            const cacheData = await cacheResponse.json()
+            if (cacheData && typeof cacheData === 'object') {
+              startTransition(() => {
+                setCacheStats(cacheData)
+              })
+            }
+          }
+        })
+        .catch((err) => {
+          if (err instanceof Error && err.name !== 'AbortError') {
+            console.error('Cache stats fetch error:', err)
+          }
+        })
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch performance data')
+      // Don't set error if request was aborted (expected behavior)
+      if (err instanceof Error && err.name === 'AbortError') {
+        console.log('Request cancelled')
+        return
+      }
+      setError(err instanceof Error ? err.message : t('errors.fetchFailed'))
+      
+      // Record error metric
+      performanceMonitoring.recordMetric('api_error', 1, { 
+        error: err instanceof Error ? err.message : 'unknown' 
+      })
     } finally {
       setLoading(false)
-      // Only manage refreshing state if this is not a manual refresh
       if (!isManualRefresh) {
         setRefreshing(false)
       }
@@ -158,7 +239,7 @@ export default function PerformanceDashboard() {
         console.log('Cache cleared successfully:', result)
         
         // Show success message
-        setSuccessMessage('Cache cleared successfully!')
+        setSuccessMessage(t('cacheCleared'))
         
         // Refresh data after clearing cache
         await fetchPerformanceData(true)
@@ -171,7 +252,7 @@ export default function PerformanceDashboard() {
       }
     } catch (err) {
       console.error('Cache clear error:', err)
-      setError(err instanceof Error ? err.message : 'Failed to clear cache')
+      setError(err instanceof Error ? err.message : t('errors.clearCacheFailed'))
     } finally {
       setRefreshing(false)
     }
@@ -183,27 +264,35 @@ export default function PerformanceDashboard() {
     try {
       await fetchPerformanceData(true) // Pass true to indicate manual refresh
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to refresh data')
+      setError(err instanceof Error ? err.message : t('errors.refreshFailed'))
     } finally {
       setRefreshing(false)
     }
   }
 
-  // Prepare chart data
-  const endpointData = stats && stats.endpoint_stats ? Object.entries(stats.endpoint_stats).map(([endpoint, data]) => ({
-    endpoint: endpoint.length > 30 ? endpoint.substring(0, 30) + '...' : endpoint,
-    fullEndpoint: endpoint, // Keep full endpoint for tooltips
-    avg_duration: Math.round(data.avg_duration * 1000), // Convert to ms
-    requests: data.total_requests,
-    error_rate: data.error_rate,
-    rpm: data.requests_per_minute
-  })).slice(0, 10) : []
+  // Prepare chart data - memoized to prevent recalculation on every render
+  const endpointData = useMemo(() => {
+    if (!stats?.endpoint_stats) return []
+    
+    return Object.entries(stats.endpoint_stats).map(([endpoint, data]) => ({
+      endpoint: endpoint.length > 30 ? endpoint.substring(0, 30) + '...' : endpoint,
+      fullEndpoint: endpoint, // Keep full endpoint for tooltips
+      avg_duration: Math.round(data.avg_duration * 1000), // Convert to ms
+      requests: data.total_requests,
+      error_rate: data.error_rate,
+      rpm: data.requests_per_minute
+    })).slice(0, 10)
+  }, [stats?.endpoint_stats])
 
-  const slowQueriesData = stats?.recent_slow_queries?.map(query => ({
-    endpoint: query.endpoint,
-    duration: Math.round(query.duration * 1000),
-    time: new Date(query.timestamp).toLocaleTimeString()
-  })) || []
+  const slowQueriesData = useMemo(() => {
+    if (!stats?.recent_slow_queries) return []
+    
+    return stats.recent_slow_queries.map(query => ({
+      endpoint: query.endpoint,
+      duration: Math.round(query.duration * 1000),
+      time: new Date(query.timestamp).toLocaleTimeString()
+    }))
+  }, [stats?.recent_slow_queries])
 
   const getHealthColor = (status: string) => {
     switch (status) {
@@ -223,6 +312,10 @@ export default function PerformanceDashboard() {
     }
   }
 
+  const getStatusText = (status: string) => {
+    return t(`status.${status}` as any) || t('status.unknown')
+  }
+
   if (loading) return (
     <AppLayout>
       <div className="flex items-center justify-center h-64">
@@ -237,8 +330,8 @@ export default function PerformanceDashboard() {
         {/* Header */}
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Performance Dashboard</h1>
-            <p className="text-gray-600 mt-1">API performance monitoring and optimization</p>
+            <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
+            <p className="text-gray-600 mt-1">{t('subtitle')}</p>
           </div>
           
           <div className="flex items-center space-x-2">
@@ -248,7 +341,7 @@ export default function PerformanceDashboard() {
               className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-              Refresh
+              {t('refresh')}
             </button>
             
             <button
@@ -257,7 +350,7 @@ export default function PerformanceDashboard() {
               className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              Clear Cache
+              {t('clearCache')}
             </button>
           </div>
         </div>
@@ -306,29 +399,29 @@ export default function PerformanceDashboard() {
                 )}
                 <div>
                   <h3 className={`text-lg font-semibold ${getHealthColor(health?.status || 'unknown')}`}>
-                    System Status: {health?.status ? (health.status.charAt(0).toUpperCase() + health.status.slice(1)) : 'Unknown'}
+                    {t('systemStatus')}: {getStatusText(health?.status || 'unknown')}
                   </h3>
                   <p className="text-sm text-gray-600">
-                    Last updated: {health?.timestamp ? new Date(health.timestamp).toLocaleString() : 'Never'}
+                    {t('lastUpdated')}: {health?.timestamp ? new Date(health.timestamp).toLocaleString() : 'Never'}
                   </p>
                 </div>
               </div>
               
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-600">Total Requests:</span>
+                  <span className="text-gray-600">{t('totalRequests')}:</span>
                   <span className="ml-2 font-medium">{health?.metrics?.total_requests?.toLocaleString() || '0'}</span>
                 </div>
                 <div>
-                  <span className="text-gray-600">Error Rate:</span>
+                  <span className="text-gray-600">{t('errorRate')}:</span>
                   <span className="ml-2 font-medium">{health?.metrics?.error_rate || '0'}%</span>
                 </div>
                 <div>
-                  <span className="text-gray-600">Slow Queries:</span>
+                  <span className="text-gray-600">{t('slowQueries')}:</span>
                   <span className="ml-2 font-medium">{health?.metrics?.slow_queries || '0'}</span>
                 </div>
                 <div>
-                  <span className="text-gray-600">Cache:</span>
+                  <span className="text-gray-600">{t('cache')}:</span>
                   <span className="ml-2 font-medium">{health?.cache_status || 'Unknown'}</span>
                 </div>
               </div>
@@ -341,7 +434,7 @@ export default function PerformanceDashboard() {
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Requests</p>
+                <p className="text-sm font-medium text-gray-600">{t('totalRequests')}</p>
                 <p className="text-2xl font-bold text-blue-600">
                   {stats?.total_requests?.toLocaleString() || '0'}
                 </p>
@@ -353,7 +446,7 @@ export default function PerformanceDashboard() {
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Errors</p>
+                <p className="text-sm font-medium text-gray-600">{t('totalErrors')}</p>
                 <p className="text-2xl font-bold text-red-600">
                   {stats?.total_errors || 0}
                 </p>
@@ -365,7 +458,7 @@ export default function PerformanceDashboard() {
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Slow Queries</p>
+                <p className="text-sm font-medium text-gray-600">{t('slowQueries')}</p>
                 <p className="text-2xl font-bold text-yellow-600">
                   {stats?.slow_queries_count || 0}
                 </p>
@@ -377,7 +470,7 @@ export default function PerformanceDashboard() {
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Cache Hit Rate</p>
+                <p className="text-sm font-medium text-gray-600">{t('cacheHitRate')}</p>
                 <p className="text-2xl font-bold text-green-600">
                   {cacheStats?.hit_rate ? `${cacheStats.hit_rate}%` : 'N/A'}
                 </p>
@@ -387,144 +480,72 @@ export default function PerformanceDashboard() {
           </div>
         </div>
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Endpoint Performance */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Endpoint Performance</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={endpointData}>
-                <XAxis dataKey="endpoint" />
-                <YAxis />
-                <Tooltip 
-                  formatter={(value, name) => [
-                    name === 'avg_duration' ? `${value}ms` : value,
-                    name === 'avg_duration' ? 'Avg Duration' : 
-                    name === 'requests' ? 'Total Requests' : 
-                    name === 'error_rate' ? 'Error Rate %' : 'RPM'
-                  ]}
-                  labelFormatter={(label, payload) => {
-                    const data = payload?.[0]?.payload;
-                    return data?.fullEndpoint || label;
-                  }}
-                />
-                <Legend />
-                <Bar dataKey="avg_duration" fill="#3B82F6" name="Avg Duration (ms)" />
-                <Bar dataKey="error_rate" fill="#EF4444" name="Error Rate %" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Request Volume */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Request Volume</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={endpointData}>
-                <XAxis dataKey="endpoint" />
-                <YAxis />
-                <Tooltip 
-                  labelFormatter={(label, payload) => {
-                    const data = payload?.[0]?.payload;
-                    return data?.fullEndpoint || label;
-                  }}
-                />
-                <Legend />
-                <Bar dataKey="requests" fill="#10B981" name="Total Requests" />
-                <Bar dataKey="rpm" fill="#F59E0B" name="Requests/Min" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Slow Queries */}
-        {slowQueriesData.length > 0 && (
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Slow Queries</h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2">
-                      Endpoint
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
-                      Duration
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
-                      Time
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {slowQueriesData.map((query, index) => (
-                    <tr key={index}>
-                      <td className="px-6 py-4 text-sm text-gray-900 break-words max-w-0">
-                        <div 
-                          className="font-mono text-xs bg-gray-100 px-2 py-1 rounded cursor-help" 
-                          title={query.endpoint}
-                        >
-                          {query.endpoint}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-medium">
-                        {query.duration}ms
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {query.time}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        {/* Charts - Lazy Loaded */}
+        <LazyComponentErrorBoundary 
+          componentName="ChartSection"
+          fallbackMessage={t('errors.chartLoadFailed') || 'Unable to load charts'}
+        >
+          <Suspense fallback={
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ChartSkeleton />
+              <ChartSkeleton />
             </div>
-          </div>
+          }>
+            <ChartSection 
+              endpointData={endpointData}
+              slowQueriesData={slowQueriesData}
+              translations={{
+                endpointPerformance: t('endpointPerformance'),
+                avgDuration: t('avgDuration'),
+                totalRequestsLabel: t('totalRequestsLabel'),
+                errorRate: t('errorRate'),
+                requestsPerMin: t('requestsPerMin'),
+                requestVolume: t('requestVolume')
+              }}
+            />
+          </Suspense>
+        </LazyComponentErrorBoundary>
+
+        {/* Slow Queries - Lazy Loaded */}
+        {slowQueriesData.length > 0 && (
+          <LazyComponentErrorBoundary 
+            componentName="SlowQueriesTable"
+            fallbackMessage={t('errors.tableLoadFailed') || 'Unable to load slow queries table'}
+          >
+            <Suspense fallback={<TableSkeleton />}>
+              <SlowQueriesTable 
+                slowQueriesData={slowQueriesData}
+                translations={{
+                  recentSlowQueries: t('recentSlowQueries'),
+                  endpoint: t('endpoint'),
+                  duration: t('duration'),
+                  time: t('time')
+                }}
+              />
+            </Suspense>
+          </LazyComponentErrorBoundary>
         )}
 
-        {/* Cache Statistics */}
+        {/* Cache Statistics - Lazy Loaded */}
         {cacheStats && (
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Cache Statistics</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">
-                  {cacheStats?.type?.toUpperCase() || 'UNKNOWN'}
-                </div>
-                <div className="text-sm text-gray-600">Cache Type</div>
-              </div>
-              
-              {cacheStats?.type === 'redis' ? (
-                <>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">
-                      {cacheStats?.hit_rate || 0}%
-                    </div>
-                    <div className="text-sm text-gray-600">Hit Rate</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">
-                      {cacheStats?.used_memory || 'N/A'}
-                    </div>
-                    <div className="text-sm text-gray-600">Memory Used</div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">
-                      {cacheStats?.entries || 0}
-                    </div>
-                    <div className="text-sm text-gray-600">Cache Entries</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">
-                      {cacheStats?.timestamps || 0}
-                    </div>
-                    <div className="text-sm text-gray-600">Timestamps</div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
+          <LazyComponentErrorBoundary 
+            componentName="CacheStatsCard"
+            fallbackMessage={t('errors.cacheStatsLoadFailed') || 'Unable to load cache statistics'}
+          >
+            <Suspense fallback={<StatsSkeleton />}>
+              <CacheStatsCard 
+                cacheStats={cacheStats}
+                translations={{
+                  cacheStatistics: t('cacheStatistics'),
+                  cacheType: t('cacheType'),
+                  hitRate: t('hitRate'),
+                  memoryUsed: t('memoryUsed'),
+                  cacheEntries: t('cacheEntries'),
+                  timestamps: t('timestamps')
+                }}
+              />
+            </Suspense>
+          </LazyComponentErrorBoundary>
         )}
       </div>
     </AppLayout>

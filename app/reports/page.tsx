@@ -4,7 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../providers/SupabaseAuthProvider'
 import { FileText, Loader, Send, Bot, User, AlertTriangle, RefreshCw, Sparkles, CheckCircle, XCircle } from 'lucide-react'
 import AppLayout from '../../components/shared/AppLayout'
-import { getApiUrl } from '../../lib/api/client'
+import { getApiUrl } from '@/lib/api/client'
+import { useTranslations } from '@/lib/i18n/context'
 
 interface ChatMessage {
   id: string
@@ -53,6 +54,7 @@ interface ErrorRecoveryState {
 
 export default function Reports() {
   const { session } = useAuth()
+  const { t } = useTranslations()
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -439,8 +441,8 @@ export default function Reports() {
             <div className="flex items-center space-x-3 min-w-0">
               <Bot className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
               <div className="min-w-0">
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">AI-Powered Reports</h1>
-                <p className="text-sm text-gray-700 hidden sm:block">Ask questions about your portfolio, get instant insights</p>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{t('reports.title')}</h1>
+                <p className="text-sm text-gray-700 hidden sm:block">{t('reports.subtitle')}</p>
               </div>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
@@ -453,15 +455,15 @@ export default function Reports() {
                 }`}
               >
                 <Sparkles className="w-4 h-4 flex-shrink-0" />
-                <span className="hidden sm:inline">PMR Mode</span>
+                <span className="hidden sm:inline">{t('reports.pmrMode')}</span>
               </button>
               <button
                 onClick={() => setShowReportOptions(!showReportOptions)}
                 className="flex items-center space-x-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
               >
                 <FileText className="w-4 h-4 flex-shrink-0" />
-                <span className="hidden sm:inline">Bericht erstellen</span>
-                <span className="sm:hidden">Bericht</span>
+                <span className="hidden sm:inline">{t('reports.generateReport')}</span>
+                <span className="sm:hidden">{t('common.export')}</span>
               </button>
             </div>
           </div>
@@ -471,14 +473,14 @@ export default function Reports() {
       {showReportOptions && (
         <div className="bg-blue-50 border-b border-blue-200 px-4 sm:px-6 py-4">
           <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
-            <span className="text-sm font-medium text-blue-900">Berichtsformat:</span>
+            <span className="text-sm font-medium text-blue-900">{t('reports.format')}:</span>
             <div className="flex items-center space-x-2 sm:space-x-4">
               <select
                 value={reportFormat}
                 onChange={(e) => setReportFormat(e.target.value)}
                 className="px-3 py-1 border border-blue-300 rounded text-sm flex-1 sm:flex-none text-gray-900 bg-white"
               >
-                <option value="text">Text</option>
+                <option value="text">{t('reports.text')}</option>
                 <option value="markdown">Markdown</option>
                 <option value="json">JSON</option>
               </select>
@@ -487,13 +489,13 @@ export default function Reports() {
                 disabled={!currentQuery.trim() || isLoading}
                 className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50"
               >
-                Erstellen
+                {t('reports.generateReport')}
               </button>
               <button
                 onClick={() => setShowReportOptions(false)}
                 className="text-blue-600 text-sm hover:text-blue-800"
               >
-                Abbrechen
+                {t('common.close')}
               </button>
             </div>
           </div>
@@ -765,7 +767,7 @@ export default function Reports() {
               <div className="bg-white border border-gray-200 rounded-lg px-3 sm:px-4 py-2 sm:py-3">
                 <div className="flex items-center space-x-2">
                   <Loader className="w-4 h-4 animate-spin text-blue-600 flex-shrink-0" />
-                  <span className="text-gray-700 text-sm sm:text-base">Analysiere Ihre Anfrage...</span>
+                  <span className="text-sm text-gray-700 text-sm sm:text-base">{t('common.loading')}</span>
                 </div>
               </div>
             </div>
@@ -781,7 +783,7 @@ export default function Reports() {
               value={currentQuery}
               onChange={(e) => setCurrentQuery(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Fragen Sie nach Ihren Projekten, Ressourcen, Budgets, Risiken oder fordern Sie einen benutzerdefinierten Bericht an..."
+              placeholder={t('reports.typeMessage')}
               className="textarea-field w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
               rows={isMobile ? 2 : 3}
               disabled={isLoading}
@@ -793,7 +795,7 @@ export default function Reports() {
             className="px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-sm sm:text-base"
           >
             <Send className="w-4 h-4 flex-shrink-0" />
-            <span>Senden</span>
+            <span>{t('reports.send')}</span>
           </button>
         </div>
         

@@ -2,7 +2,17 @@
 
 import React, { useState, useCallback, useEffect } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
+// Import only the extensions we actually use instead of full StarterKit
+import Document from '@tiptap/extension-document'
+import Paragraph from '@tiptap/extension-paragraph'
+import Text from '@tiptap/extension-text'
+import Bold from '@tiptap/extension-bold'
+import Italic from '@tiptap/extension-italic'
+import Heading from '@tiptap/extension-heading'
+import BulletList from '@tiptap/extension-bullet-list'
+import OrderedList from '@tiptap/extension-ordered-list'
+import ListItem from '@tiptap/extension-list-item'
+import History from '@tiptap/extension-history'
 import Placeholder from '@tiptap/extension-placeholder'
 import {
   Menu,
@@ -55,7 +65,23 @@ const MobilePMREditor: React.FC<MobilePMREditorProps> = ({
   // Initialize editor
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      // Core extensions (required)
+      Document,
+      Paragraph,
+      Text,
+      // Formatting extensions (minimal for mobile)
+      Bold,
+      Italic,
+      Heading.configure({
+        levels: [1, 2, 3],
+      }),
+      // List extensions
+      BulletList,
+      OrderedList,
+      ListItem,
+      // History (undo/redo)
+      History,
+      // Placeholder
       Placeholder.configure({
         placeholder: 'Tap to start editing...',
       }),

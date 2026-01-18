@@ -135,13 +135,13 @@ export const CHROME_CSS_PROPERTIES: ChromeCSSPropertyConfig[] = [
     requirements: ['4.4']
   },
   
-  // Requirement 4.5: will-change: scroll-position
+  // Requirement 4.5: will-change: transform (valid CSS property)
   {
     property: 'willChange',
-    expectedValues: ['scroll-position', 'scroll-position, transform', 'auto'],
+    expectedValues: ['transform', 'transform, opacity', 'auto'],
     webkitProperty: 'webkitWillChange',
     required: true,
-    description: 'Chrome scroll optimization',
+    description: 'Chrome scroll optimization with valid will-change values',
     requirements: ['4.5']
   },
   

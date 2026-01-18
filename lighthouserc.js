@@ -12,7 +12,8 @@ module.exports = {
         'http://localhost:3000/dashboards',
         'http://localhost:3000/resources',
         'http://localhost:3000/risks',
-        'http://localhost:3000/scenarios'
+        'http://localhost:3000/scenarios',
+        'http://localhost:3000/admin/performance'
       ],
       
       // Collection settings
@@ -55,10 +56,11 @@ module.exports = {
         'categories:seo': ['error', { minScore: 0.8 }],
         
         // Specific metrics
-        'first-contentful-paint': ['error', { maxNumericValue: 2000 }],
+        'first-contentful-paint': ['error', { maxNumericValue: 1500 }],
         'largest-contentful-paint': ['error', { maxNumericValue: 2500 }],
         'cumulative-layout-shift': ['error', { maxNumericValue: 0.1 }],
-        'total-blocking-time': ['error', { maxNumericValue: 300 }],
+        'total-blocking-time': ['error', { maxNumericValue: 200 }],
+        'interactive': ['error', { maxNumericValue: 3500 }],
         
         // Resource budgets
         'resource-summary:document:size': ['error', { maxNumericValue: 50000 }],

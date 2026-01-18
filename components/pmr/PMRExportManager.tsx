@@ -12,6 +12,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
+import { useTranslations } from '../../lib/i18n/context'
 import { ExportJob, PMRReport, PMRTemplate } from './types'
 
 // Export format options
@@ -72,6 +73,8 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
   onDeleteExport,
   className = ''
 }) => {
+  const { t } = useTranslations()
+  
   // State management
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('pdf')
   const [selectedTemplate, setSelectedTemplate] = useState<string>('')
@@ -109,13 +112,7 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
 
   // Get format label
   const getFormatLabel = (format: ExportFormat): string => {
-    const labels = {
-      pdf: 'PDF Document',
-      excel: 'Excel Spreadsheet',
-      powerpoint: 'PowerPoint Presentation',
-      word: 'Word Document'
-    }
-    return labels[format] || format
+    return t(`pmr.export.formats.${format}`)
   }
 
   // Get job status color
@@ -188,9 +185,9 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
     <div className={`pmr-export-manager bg-white rounded-lg shadow-lg ${className}`}>
       {/* Header */}
       <div className="border-b border-gray-200 px-6 py-4">
-        <h2 className="text-2xl font-bold text-gray-900">Export Report</h2>
+        <h2 className="text-2xl font-bold text-gray-900">{t('pmr.export.title')}</h2>
         <p className="text-sm text-gray-600 mt-1">
-          Configure and export your PMR report in multiple formats
+          {t('pmr.export.subtitle')}
         </p>
       </div>
 
@@ -205,7 +202,7 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
-            Configure Export
+            {t('pmr.export.tabs.configure')}
           </button>
           <button
             onClick={() => setActiveTab('queue')}
@@ -215,7 +212,7 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
-            Export Queue
+            {t('pmr.export.tabs.queue')}
             {exportJobs.length > 0 && (
               <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-600 rounded-full">
                 {exportJobs.length}
@@ -232,7 +229,7 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
             {/* Format Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
-                Export Format
+                {t('pmr.export.formats.label')}
               </label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {availableFormats.map(format => (
@@ -258,7 +255,7 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
             {filteredTemplates.length > 0 && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Template (Optional)
+                  {t('pmr.export.templates.label')}
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <button
@@ -269,9 +266,9 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    <div className="font-medium text-gray-900">Default Template</div>
+                    <div className="font-medium text-gray-900">{t('pmr.export.templates.default')}</div>
                     <div className="text-sm text-gray-600 mt-1">
-                      Standard format with all sections
+                      {t('pmr.export.templates.defaultDescription')}
                     </div>
                   </button>
                   {filteredTemplates.map(template => (
@@ -290,7 +287,7 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
                       </div>
                       {template.isDefault && (
                         <span className="inline-block mt-2 px-2 py-1 text-xs bg-green-100 text-green-700 rounded">
-                          Recommended
+                          {t('pmr.export.templates.recommended')}
                         </span>
                       )}
                     </button>
@@ -302,7 +299,7 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
             {/* Export Options */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
-                Export Options
+                {t('pmr.export.options.label')}
               </label>
               <div className="space-y-3">
                 <label className="flex items-center">
@@ -313,7 +310,7 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <span className="ml-2 text-sm text-gray-700">
-                    Include charts and visualizations
+                    {t('pmr.export.options.includeCharts')}
                   </span>
                 </label>
                 <label className="flex items-center">
@@ -324,7 +321,7 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <span className="ml-2 text-sm text-gray-700">
-                    Include raw data tables
+                    {t('pmr.export.options.includeRawData')}
                   </span>
                 </label>
               </div>
@@ -335,21 +332,21 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <label className="block text-sm font-medium text-gray-700">
-                    Sections to Include
+                    {t('pmr.export.sections.label')}
                   </label>
                   <div className="space-x-2">
                     <button
                       onClick={selectAllSections}
                       className="text-xs text-blue-600 hover:text-blue-700"
                     >
-                      Select All
+                      {t('pmr.export.sections.selectAll')}
                     </button>
                     <span className="text-gray-300">|</span>
                     <button
                       onClick={deselectAllSections}
                       className="text-xs text-blue-600 hover:text-blue-700"
                     >
-                      Deselect All
+                      {t('pmr.export.sections.deselectAll')}
                     </button>
                   </div>
                 </div>
@@ -374,12 +371,12 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
             {/* Branding Configuration */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
-                Branding (Optional)
+                {t('pmr.export.branding.label')}
               </label>
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">
-                    Company Name
+                    {t('pmr.export.branding.companyName')}
                   </label>
                   <input
                     type="text"
@@ -390,13 +387,13 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
                         companyName: e.target.value
                       }))
                     }
-                    placeholder="Enter company name"
+                    placeholder={t('pmr.export.branding.companyNamePlaceholder')}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">
-                    Logo URL
+                    {t('pmr.export.branding.logoUrl')}
                   </label>
                   <input
                     type="text"
@@ -407,13 +404,13 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
                         logoUrl: e.target.value
                       }))
                     }
-                    placeholder="https://example.com/logo.png"
+                    placeholder={t('pmr.export.branding.logoUrlPlaceholder')}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">
-                    Color Scheme
+                    {t('pmr.export.branding.colorScheme')}
                   </label>
                   <select
                     value={brandingConfig.colorScheme}
@@ -425,9 +422,9 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="corporate_blue">Corporate Blue</option>
-                    <option value="professional_gray">Professional Gray</option>
-                    <option value="modern_green">Modern Green</option>
+                    <option value="corporate_blue">{t('pmr.export.branding.schemes.corporateBlue')}</option>
+                    <option value="professional_gray">{t('pmr.export.branding.schemes.professionalGray')}</option>
+                    <option value="modern_green">{t('pmr.export.branding.schemes.modernGreen')}</option>
                   </select>
                 </div>
               </div>
@@ -462,10 +459,10 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       />
                     </svg>
-                    Exporting...
+                    {t('pmr.export.actions.exporting')}
                   </span>
                 ) : (
-                  `Export as ${getFormatLabel(selectedFormat)}`
+                  t('pmr.export.actions.export', { format: getFormatLabel(selectedFormat) })
                 )}
               </button>
             </div>
@@ -477,10 +474,10 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
               <div className="text-center py-12">
                 <div className="text-4xl mb-4">📦</div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No exports yet
+                  {t('pmr.export.queue.empty')}
                 </h3>
                 <p className="text-sm text-gray-600">
-                  Configure and start an export to see it here
+                  {t('pmr.export.queue.emptyDescription')}
                 </p>
               </div>
             ) : (
@@ -497,10 +494,10 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
                         </span>
                         <div>
                           <h4 className="font-medium text-gray-900">
-                            {getFormatLabel(job.export_format)} Export
+                            {getFormatLabel(job.export_format)} {t('pmr.export.title')}
                           </h4>
                           <p className="text-sm text-gray-600">
-                            Started {new Date(job.started_at).toLocaleString()}
+                            {t('pmr.export.queue.started', { date: new Date(job.started_at).toLocaleString() })}
                           </p>
                         </div>
                       </div>
@@ -512,7 +509,7 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
                             job.status
                           )}`}
                         >
-                          {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                          {t(`pmr.export.status.${job.status}`)}
                         </span>
                       </div>
 
@@ -531,14 +528,14 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
                       {/* File info for completed */}
                       {job.status === 'completed' && job.file_size && (
                         <p className="text-xs text-gray-500 mt-2">
-                          File size: {(job.file_size / 1024).toFixed(2)} KB
+                          {t('pmr.export.queue.fileSize', { size: (job.file_size / 1024).toFixed(2) })}
                         </p>
                       )}
 
                       {/* Error message */}
                       {job.status === 'failed' && job.error_message && (
                         <p className="text-xs text-red-600 mt-2">
-                          Error: {job.error_message}
+                          {t('pmr.export.queue.error', { message: job.error_message })}
                         </p>
                       )}
                     </div>
@@ -550,7 +547,7 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
                           onClick={() => onDownload(job.id)}
                           className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
                         >
-                          Download
+                          {t('pmr.export.actions.download')}
                         </button>
                       )}
                       {job.status === 'processing' && onCancelExport && (
@@ -558,7 +555,7 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
                           onClick={() => onCancelExport(job.id)}
                           className="px-3 py-1.5 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
                         >
-                          Cancel
+                          {t('pmr.export.actions.cancel')}
                         </button>
                       )}
                       {(job.status === 'completed' || job.status === 'failed') &&
@@ -567,7 +564,7 @@ export const PMRExportManager: React.FC<PMRExportManagerProps> = ({
                             onClick={() => onDeleteExport(job.id)}
                             className="px-3 py-1.5 text-sm text-red-600 hover:text-red-700 transition-colors"
                           >
-                            Delete
+                            {t('pmr.export.actions.delete')}
                           </button>
                         )}
                     </div>

@@ -1,6 +1,7 @@
 import React from 'react'
 import { cn } from '@/lib/design-system'
 import { AlertCircle, AlertTriangle, Info, CheckCircle, X } from 'lucide-react'
+import { useTranslations } from '@/lib/i18n/context'
 
 interface ErrorMessageProps {
   title?: string
@@ -134,6 +135,7 @@ export const ValidationError: React.FC<ValidationErrorProps> = ({
   errors,
   className
 }) => {
+  const { t } = useTranslations()
   const errorCount = Object.keys(errors).length
 
   if (errorCount === 0) return null
@@ -142,8 +144,8 @@ export const ValidationError: React.FC<ValidationErrorProps> = ({
     <div className={cn('space-y-2', className)}>
       <ErrorMessage
         type="error"
-        title={`${errorCount} validation ${errorCount === 1 ? 'error' : 'errors'} found`}
-        message="Please correct the following issues:"
+        title={errorCount === 1 ? t('form.validation.title', { count: errorCount }) : t('form.validation.titlePlural', { count: errorCount })}
+        message={t('form.validation.correctIssues')}
       />
       
       <ul className="space-y-1 ml-8">

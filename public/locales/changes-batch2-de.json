@@ -1,0 +1,157 @@
+{
+  "changes": {
+    "implementationTracker": {
+      "title": "Implementierungsverfolgung",
+      "changeRequest": "Änderungsantrag",
+      "assignedTo": "Zugewiesen an",
+      "overallProgress": "Gesamtfortschritt",
+      "daysRemaining": "Verbleibende Tage",
+      "scheduleStatus": "Zeitplanstatus",
+      "implementationProgress": "Implementierungsfortschritt",
+      "complete": "Abgeschlossen",
+      "tabs": {
+        "overview": "Übersicht",
+        "tasks": "Aufgaben",
+        "gantt": "Gantt-Diagramm",
+        "milestones": "Meilensteine",
+        "progress": "Fortschrittsnotizen"
+      },
+      "summary": {
+        "totalTasks": "Aufgaben gesamt",
+        "completed": "Abgeschlossen",
+        "inProgress": "In Bearbeitung",
+        "pending": "Ausstehend"
+      },
+      "scheduleStatusSection": {
+        "title": "Zeitplanstatus",
+        "plannedEndDate": "Geplantes Enddatum",
+        "projectedEndDate": "Prognostiziertes Enddatum",
+        "scheduleVariance": "Zeitplanabweichung",
+        "days": "Tage"
+      },
+      "deviations": {
+        "title": "Aktive Abweichungen",
+        "count": "Aktive Abweichungen ({count})"
+      },
+      "tasks": {
+        "title": "Implementierungsaufgaben",
+        "addTask": "Aufgabe hinzufügen",
+        "taskNumber": "#{number}",
+        "assignedTo": "Zugewiesen an",
+        "estimated": "geschätzt",
+        "actual": "tatsächlich",
+        "progress": "Fortschritt",
+        "dependencies": "Abhängigkeiten",
+        "dependenciesCount": "{count} Aufgabe(n)",
+        "deliverables": "Liefergegenstände",
+        "updateProgress": "Fortschritt aktualisieren"
+      },
+      "gantt": {
+        "title": "Gantt-Diagrammansicht",
+        "task": "Aufgabe"
+      },
+      "milestones": {
+        "title": "Implementierungsmeilensteine",
+        "addMilestone": "Meilenstein hinzufügen",
+        "target": "Ziel",
+        "actual": "Tatsächlich"
+      },
+      "progressNotes": {
+        "title": "Fortschrittsnotizen",
+        "addNote": "Notiz hinzufügen",
+        "progress": "Fortschritt"
+      },
+      "progressModal": {
+        "title": "Fortschritt aktualisieren",
+        "progressPercentage": "Fortschritt in Prozent",
+        "actualEffortHours": "Tatsächlicher Aufwand (Stunden)",
+        "progressNotes": "Fortschrittsnotizen",
+        "notesPlaceholder": "Notizen zu Fortschritt, Problemen oder Erfolgen hinzufügen...",
+        "cancel": "Abbrechen",
+        "update": "Fortschritt aktualisieren"
+      },
+      "resourceAllocation": {
+        "title": "Ressourcenzuweisung",
+        "addResource": "Ressource hinzufügen",
+        "totalResources": "Ressourcen gesamt",
+        "totalAllocatedHours": "Zugewiesene Stunden gesamt",
+        "totalCost": "Gesamtkosten",
+        "resource": "Ressource",
+        "type": "Typ",
+        "allocation": "Zuweisung",
+        "utilization": "Auslastung",
+        "cost": "Kosten",
+        "period": "Zeitraum",
+        "allocated": "zugewiesen",
+        "utilized": "genutzt",
+        "total": "gesamt",
+        "noResources": "Keine Ressourcen zugewiesen",
+        "getStarted": "Beginnen Sie, indem Sie Ressourcen zu dieser Implementierung hinzufügen.",
+        "addResourceModal": {
+          "title": "Ressource hinzufügen",
+          "resourceType": "Ressourcentyp",
+          "resourceName": "Ressourcenname",
+          "resourceNamePlaceholder": "Ressourcenname eingeben",
+          "allocatedHours": "Zugewiesene Stunden",
+          "costPerHour": "Kosten pro Stunde",
+          "startDate": "Startdatum",
+          "endDate": "Enddatum",
+          "totalCost": "Gesamtkosten",
+          "cancel": "Abbrechen",
+          "add": "Ressource hinzufügen",
+          "types": {
+            "human": "Personalressource",
+            "equipment": "Ausrüstung",
+            "material": "Material",
+            "contractor": "Auftragnehmer"
+          }
+        }
+      },
+      "progressReporting": {
+        "title": "Fortschrittsberichte",
+        "generateReport": "Bericht erstellen",
+        "reportDate": "Fortschrittsbericht",
+        "complete": "abgeschlossen",
+        "tasks": "Aufgaben",
+        "scheduleVariance": "Zeitplanabweichung",
+        "costVariance": "Kostenabweichung",
+        "keyAchievements": "Wichtige Erfolge",
+        "upcomingMilestones": "Bevorstehende Meilensteine",
+        "viewFullReport": "Vollständigen Bericht anzeigen",
+        "noReports": "Keine Fortschrittsberichte",
+        "generateFirst": "Erstellen Sie Ihren ersten Fortschrittsbericht, um den Implementierungsstatus zu verfolgen.",
+        "reportModal": {
+          "title": "Fortschrittsbericht",
+          "progressSummary": "Fortschrittszusammenfassung",
+          "overallProgress": "Gesamtfortschritt",
+          "tasksCompleted": "Abgeschlossene Aufgaben",
+          "scheduleVariance": "Zeitplanabweichung",
+          "costVariance": "Kostenabweichung",
+          "keyAchievements": "Wichtige Erfolge",
+          "upcomingMilestones": "Bevorstehende Meilensteine",
+          "risksAndIssues": "Risiken und Probleme",
+          "nextPeriodFocus": "Fokus für nächsten Zeitraum"
+        }
+      },
+      "statuses": {
+        "planned": "Geplant",
+        "in_progress": "In Bearbeitung",
+        "completed": "Abgeschlossen",
+        "on_hold": "Pausiert",
+        "cancelled": "Abgebrochen",
+        "on_track": "im Plan",
+        "at_risk": "gefährdet",
+        "behind": "im Rückstand"
+      },
+      "severities": {
+        "low": "Niedrig",
+        "medium": "Mittel",
+        "high": "Hoch",
+        "critical": "Kritisch"
+      },
+      "noImplementationPlan": "Kein Implementierungsplan",
+      "noImplementationPlanMessage": "Dieser Änderungsantrag hat keinen aktiven Implementierungsplan.",
+      "loading": "Lädt..."
+    }
+  }
+}

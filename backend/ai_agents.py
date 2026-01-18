@@ -22,9 +22,13 @@ logger = logging.getLogger(__name__)
 class AIAgentBase:
     """Base class for all AI agents with common functionality"""
     
-    def __init__(self, supabase_client: Client, openai_api_key: str):
+    def __init__(self, supabase_client: Client, openai_api_key: str, base_url: Optional[str] = None):
         self.supabase = supabase_client
-        self.openai_client = OpenAI(api_key=openai_api_key)
+        # Initialize OpenAI client with optional custom base URL (for Grok, etc.)
+        if base_url:
+            self.openai_client = OpenAI(api_key=openai_api_key, base_url=base_url)
+        else:
+            self.openai_client = OpenAI(api_key=openai_api_key)
         self.agent_type = self.__class__.__name__.lower()
         
         # Import AI model management here to avoid circular imports
@@ -101,10 +105,12 @@ class AIAgentBase:
 class RAGReporterAgent(AIAgentBase):
     """Natural Language Reporting Agent using RAG (Retrieval-Augmented Generation)"""
     
-    def __init__(self, supabase_client: Client, openai_api_key: str):
-        super().__init__(supabase_client, openai_api_key)
-        self.embedding_model = "text-embedding-ada-002"
-        self.chat_model = "gpt-4"
+    def __init__(self, supabase_client: Client, openai_api_key: str, base_url: Optional[str] = None):
+        super().__init__(supabase_client, openai_api_key, base_url)
+        # Use configurable models from environment or defaults
+        import os
+        self.embedding_model = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-ada-002")
+        self.chat_model = os.getenv("OPENAI_MODEL", "gpt-4")
         self.max_context_length = 8000
     
     async def generate_embedding(self, text: str) -> List[float]:
@@ -660,9 +666,11 @@ class RAGReporterAgent(AIAgentBase):
 class ResourceOptimizerAgent(AIAgentBase):
     """AI agent for optimizing resource allocation and utilization"""
     
-    def __init__(self, supabase_client: Client, openai_api_key: str):
-        super().__init__(supabase_client, openai_api_key)
-        self.optimization_model = "gpt-4"
+    def __init__(self, supabase_client: Client, openai_api_key: str, base_url: Optional[str] = None):
+        super().__init__(supabase_client, openai_api_key, base_url)
+        # Use configurable model from environment or default
+        import os
+        self.optimization_model = os.getenv("OPENAI_MODEL", "gpt-4")
         self.skill_match_threshold = 0.6
         self.utilization_target_min = 60.0
         self.utilization_target_max = 85.0
@@ -1520,8 +1528,8 @@ class ResourceOptimizerAgent(AIAgentBase):
 class RiskForecasterAgent(AIAgentBase):
     """AI agent for predicting and forecasting project risks"""
     
-    def __init__(self, supabase_client: Client, openai_api_key: str):
-        super().__init__(supabase_client, openai_api_key)
+    def __init__(self, supabase_client: Client, openai_api_key: str, base_url: Optional[str] = None):
+        super().__init__(supabase_client, openai_api_key, base_url)
     
     async def forecast_project_risks(self, user_id: str, project_id: str = None) -> Dict[str, Any]:
         """Forecast potential risks for projects"""
@@ -1662,8 +1670,8 @@ class RiskForecasterAgent(AIAgentBase):
 class HallucinationValidator(AIAgentBase):
     """AI agent for validating AI-generated content and detecting hallucinations"""
     
-    def __init__(self, supabase_client: Client, openai_api_key: str):
-        super().__init__(supabase_client, openai_api_key)
+    def __init__(self, supabase_client: Client, openai_api_key: str, base_url: Optional[str] = None):
+        super().__init__(supabase_client, openai_api_key, base_url)
     
     async def validate_response(self, response: str, sources: List[Dict], 
                               context_data: Dict = None) -> Dict[str, Any]:
@@ -1840,11 +1848,11 @@ class HallucinationValidator(AIAgentBase):
             return 0.0
 
 # Factory function to create AI agents
-def create_ai_agents(supabase_client: Client, openai_api_key: str) -> Dict[str, AIAgentBase]:
-    """Create all AI agents"""
+def create_ai_agents(supabase_client: Client, openai_api_key: str, base_url: Optional[str] = None) -> Dict[str, AIAgentBase]:
+    """Create all AI agents with optional custom base URL for OpenAI-compatible APIs (e.g., Grok)"""
     return {
-        "rag_reporter": RAGReporterAgent(supabase_client, openai_api_key),
-        "resource_optimizer": ResourceOptimizerAgent(supabase_client, openai_api_key),
-        "risk_forecaster": RiskForecasterAgent(supabase_client, openai_api_key),
-        "hallucination_validator": HallucinationValidator(supabase_client, openai_api_key)
+        "rag_reporter": RAGReporterAgent(supabase_client, openai_api_key, base_url),
+        "resource_optimizer": ResourceOptimizerAgent(supabase_client, openai_api_key, base_url),
+        "risk_forecaster": RiskForecasterAgent(supabase_client, openai_api_key, base_url),
+        "hallucination_validator": HallucinationValidator(supabase_client, openai_api_key, base_url)
     }

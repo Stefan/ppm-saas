@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Plus, Trash2, Edit, Save, Settings, Users, DollarSign, Clock, CheckCircle, ArrowDown, Copy, ChevronDown, ChevronRight } from 'lucide-react'
+import { useTranslations } from '@/lib/i18n/context'
 
 // Types based on the design document
 interface ApprovalRule {
@@ -118,6 +119,7 @@ interface WorkflowTemplate {
 }
 
 export default function ApprovalWorkflowConfiguration() {
+  const t = useTranslations('changes');
   const [activeTab, setActiveTab] = useState<'rules' | 'authority' | 'templates'>('rules')
   const [approvalRules, setApprovalRules] = useState<ApprovalRule[]>([])
   const [authorityMatrix, setAuthorityMatrix] = useState<ApprovalAuthorityMatrix[]>([])
@@ -507,8 +509,8 @@ export default function ApprovalWorkflowConfiguration() {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Approval Workflow Configuration</h2>
-            <p className="text-gray-600 mt-1">Manage approval rules, authority matrix, and workflow templates</p>
+            <h2 className="text-2xl font-bold text-gray-900">{t('approvalWorkflowConfiguration.title')}</h2>
+            <p className="text-gray-600 mt-1">{t('approvalWorkflowConfiguration.subtitle')}</p>
           </div>
           <div className="flex items-center gap-2">
             <Settings className="h-5 w-5 text-gray-500" />

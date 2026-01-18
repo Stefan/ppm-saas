@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   
   // Production optimizations
-  productionBrowserSourceMaps: false,
+  productionBrowserSourceMaps: true, // Enable source maps for debugging
   
   // Bundle optimization
   experimental: {
@@ -33,6 +33,9 @@ const nextConfig: NextConfig = {
   webpack: (config, { dev, isServer }) => {
     // Only optimize in production
     if (!dev && !isServer) {
+      // Configure hidden source maps for production (loaded only when DevTools is open)
+      config.devtool = 'hidden-source-map'
+      
       // Minimize bundle size
       config.optimization.usedExports = true
       config.optimization.sideEffects = false
@@ -40,10 +43,12 @@ const nextConfig: NextConfig = {
       // Split vendor bundles for better caching
       config.optimization.splitChunks = {
         chunks: 'all',
+        maxInitialRequests: 25,
+        minSize: 20000,
         cacheGroups: {
           // React and React-DOM in separate chunk
           react: {
-            test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
+            test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
             name: 'react-vendor',
             priority: 40,
             reuseExistingChunk: true,
@@ -52,27 +57,41 @@ const nextConfig: NextConfig = {
           charts: {
             test: /[\\/]node_modules[\\/](recharts|d3-.*)[\\/]/,
             name: 'charts-vendor',
-            priority: 30,
+            priority: 35,
             reuseExistingChunk: true,
           },
-          // Rich text editor in separate chunk
+          // Rich text editor in separate chunk (TipTap)
           editor: {
-            test: /[\\/]node_modules[\\/](@tiptap)[\\/]/,
+            test: /[\\/]node_modules[\\/](@tiptap|prosemirror-.*)[\\/]/,
             name: 'editor-vendor',
-            priority: 30,
+            priority: 35,
             reuseExistingChunk: true,
           },
           // Supabase in separate chunk
           supabase: {
             test: /[\\/]node_modules[\\/](@supabase)[\\/]/,
             name: 'supabase-vendor',
-            priority: 25,
+            priority: 30,
             reuseExistingChunk: true,
           },
           // Lucide icons in separate chunk
           icons: {
             test: /[\\/]node_modules[\\/](lucide-react)[\\/]/,
             name: 'icons-vendor',
+            priority: 25,
+            reuseExistingChunk: true,
+          },
+          // Markdown rendering libraries
+          markdown: {
+            test: /[\\/]node_modules[\\/](react-markdown|remark-.*|rehype-.*|unified|micromark.*|mdast.*|hast.*|unist.*)[\\/]/,
+            name: 'markdown-vendor',
+            priority: 25,
+            reuseExistingChunk: true,
+          },
+          // Date picker library
+          datepicker: {
+            test: /[\\/]node_modules[\\/](react-datepicker|date-fns)[\\/]/,
+            name: 'datepicker-vendor',
             priority: 20,
             reuseExistingChunk: true,
           },
@@ -82,12 +101,14 @@ const nextConfig: NextConfig = {
             name: 'vendor',
             priority: 10,
             reuseExistingChunk: true,
+            minChunks: 2,
           },
           // Common code shared across pages
           common: {
             minChunks: 2,
             priority: 5,
             reuseExistingChunk: true,
+            minSize: 10000,
           },
         },
       }

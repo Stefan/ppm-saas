@@ -9,6 +9,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, AlertCircle, Plus, GitCompare, Edit2, Trash2 } from 'lucide-react';
+import { useTranslations } from '@/lib/i18n/context';
 
 interface ScenarioImpact {
   timeline?: {
@@ -56,6 +57,7 @@ export default function WhatIfScenarioPanel({
   onScenarioCreate,
   onScenarioCompare 
 }: WhatIfScenarioPanelProps) {
+  const { t } = useTranslations();
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedScenarios, setSelectedScenarios] = useState<string[]>([]);
@@ -143,7 +145,7 @@ export default function WhatIfScenarioPanel({
       impacts.push(
         <div key="resource" className="flex items-center gap-1 text-xs text-amber-600">
           <AlertCircle className="w-3 h-3" />
-          <span>{scenario.resource_impact.over_allocated_resources.length} over-allocated</span>
+          <span>{t('scenarios.overAllocated', { count: scenario.resource_impact.over_allocated_resources.length })}</span>
         </div>
       );
     }
@@ -174,9 +176,9 @@ export default function WhatIfScenarioPanel({
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">What-If Scenarios</h2>
+            <h2 className="text-xl font-semibold text-gray-900">{t('scenarios.whatIfScenarios')}</h2>
             <p className="text-sm text-gray-600 mt-1">
-              Analyze project parameter changes and their impacts
+              {t('scenarios.analyzeParameterChanges')}
             </p>
           </div>
           <button
@@ -184,7 +186,7 @@ export default function WhatIfScenarioPanel({
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Plus className="w-4 h-4" />
-            New Scenario
+            {t('scenarios.newScenario')}
           </button>
         </div>
       </div>
@@ -195,16 +197,16 @@ export default function WhatIfScenarioPanel({
             <div className="text-gray-400 mb-4">
               <GitCompare className="w-16 h-16 mx-auto" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No scenarios yet</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">{t('scenarios.noScenariosYet')}</h3>
             <p className="text-gray-600 mb-4">
-              Create your first what-if scenario to explore different project outcomes
+              {t('scenarios.createFirstWhatIf')}
             </p>
             <button
               onClick={() => setShowCreateModal(true)}
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="w-4 h-4" />
-              Create Scenario
+              {t('scenarios.createScenarioButton')}
             </button>
           </div>
         ) : (
@@ -232,7 +234,7 @@ export default function WhatIfScenarioPanel({
                           <h3 className="font-medium text-gray-900">{scenario.name}</h3>
                           {scenario.is_baseline && (
                             <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded">
-                              Baseline
+                              {t('scenarios.baseline')}
                             </span>
                           )}
                         </div>
@@ -245,13 +247,13 @@ export default function WhatIfScenarioPanel({
                     <div className="flex items-center gap-2 ml-4">
                       <button
                         className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-                        title="Edit scenario"
+                        title={t('scenarios.editScenario')}
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                        title="Delete scenario"
+                        title={t('scenarios.deleteScenario')}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -264,14 +266,14 @@ export default function WhatIfScenarioPanel({
             {selectedScenarios.length >= 2 && (
               <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="text-sm text-blue-900">
-                  {selectedScenarios.length} scenarios selected for comparison
+                  {t('scenarios.scenariosSelectedForComparison', { count: selectedScenarios.length })}
                 </div>
                 <button
                   onClick={handleCompare}
                   className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <GitCompare className="w-4 h-4" />
-                  Compare Scenarios
+                  {t('scenarios.compareScenarios')}
                 </button>
               </div>
             )}

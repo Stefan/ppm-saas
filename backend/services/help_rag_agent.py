@@ -81,10 +81,12 @@ class TranslatedContent:
 class HelpRAGAgent(RAGReporterAgent):
     """Enhanced RAG Agent specialized for PPM help chat system"""
     
-    def __init__(self, supabase_client: Client, openai_api_key: str):
-        super().__init__(supabase_client, openai_api_key)
-        self.help_model = "gpt-4"
-        self.translation_model = "gpt-3.5-turbo"
+    def __init__(self, supabase_client: Client, openai_api_key: str, base_url: str = None):
+        super().__init__(supabase_client, openai_api_key, base_url)
+        # Use configurable models from environment or defaults
+        import os
+        self.help_model = os.getenv("OPENAI_MODEL", "gpt-4")
+        self.translation_model = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
         self.max_help_context_length = 6000
         self.ppm_domain_keywords = [
             "project", "portfolio", "resource", "budget", "schedule", "risk", "issue",

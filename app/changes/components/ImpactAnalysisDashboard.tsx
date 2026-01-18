@@ -5,6 +5,7 @@ import { BarChart, Bar, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, 
 import { DollarSign, Calendar, Users, AlertTriangle, Target, Activity, BarChart3, Settings, Download, RefreshCw, Info } from 'lucide-react'
 import { ImpactAnalysisData, mockDataService } from '../lib/mockData'
 import { useAsyncData, SkeletonChart } from '../lib/loadingStates'
+import { useTranslations } from '@/lib/i18n/context'
 
 interface ImpactAnalysisDashboardProps {
   changeId: string
@@ -19,6 +20,7 @@ export default function ImpactAnalysisDashboard({
   editable = false,
   onDataUpdate: _onDataUpdate
 }: ImpactAnalysisDashboardProps) {
+  const t = useTranslations('changes');
   const [activeView, setActiveView] = useState<'overview' | 'cost' | 'schedule' | 'resources' | 'risks' | 'scenarios'>('overview')
   const [refreshing, setRefreshing] = useState(false)
 
@@ -56,7 +58,7 @@ export default function ImpactAnalysisDashboard({
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <p className="text-gray-500">{error || 'No impact analysis available'}</p>
+          <p className="text-gray-500">{error || t('impactAnalysis.noData')}</p>
         </div>
       </div>
     )
@@ -122,9 +124,9 @@ export default function ImpactAnalysisDashboard({
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Impact Analysis Dashboard</h2>
+            <h2 className="text-2xl font-bold text-gray-900">{t('impactAnalysis.title')}</h2>
             <p className="text-gray-600 mt-1">
-              Comprehensive impact analysis for change request {changeId}
+              {t('impactAnalysis.subtitle', { changeId })}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -134,19 +136,19 @@ export default function ImpactAnalysisDashboard({
               className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-              Refresh
+              {t('impactAnalysis.refresh')}
             </button>
             <button
               onClick={handleExport}
               className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               <Download className="h-4 w-4" />
-              Export
+              {t('impactAnalysis.export')}
             </button>
             {editable && (
               <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
                 <Settings className="h-4 w-4" />
-                Configure
+                {t('impactAnalysis.configure')}
               </button>
             )}
           </div>

@@ -10,6 +10,7 @@ import { Plus, BarChart3, TrendingUp, TrendingDown, DollarSign, Clock, Users, Al
 import { ResponsiveContainer } from '../../components/ui/molecules/ResponsiveContainer'
 import { AdaptiveGrid } from '../../components/ui/molecules/AdaptiveGrid'
 import { TouchButton } from '../../components/ui/atoms/TouchButton'
+import { useTranslations } from '@/lib/i18n/context'
 
 interface Project {
   id: string
@@ -71,6 +72,7 @@ interface ScenarioComparison {
 
 export default function ScenariosPage() {
   const { session } = useAuth()
+  const { t } = useTranslations()
   const [projects, setProjects] = useState<Project[]>([])
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [scenarios, setScenarios] = useState<ScenarioAnalysis[]>([])
@@ -93,10 +95,16 @@ export default function ScenariosPage() {
 
   const loadProjects = async () => {
     try {
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      }
+      
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`
+      }
+      
       const response = await fetch(getApiUrl('/projects'), {
-        headers: {
-          'Content-Type': 'application/json',
-        }
+        headers
       })
       
       if (!response.ok) throw new Error('Failed to fetch projects')
@@ -120,10 +128,16 @@ export default function ScenariosPage() {
 
   const loadProjectScenarios = async (projectId: string) => {
     try {
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      }
+      
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`
+      }
+      
       const response = await fetch(getApiUrl(`/projects/${projectId}/scenarios`), {
-        headers: {
-          'Content-Type': 'application/json',
-        }
+        headers
       })
       
       if (!response.ok) throw new Error('Failed to fetch scenarios')
@@ -178,7 +192,7 @@ export default function ScenariosPage() {
   }
 
   const deleteScenario = async (scenarioId: string) => {
-    if (!confirm('Are you sure you want to delete this scenario?')) return
+    if (!confirm(t('scenarios.deleteConfirm'))) return
     
     try {
       const response = await fetch(getApiUrl(`/simulations/what-if/${scenarioId}`), {
@@ -250,9 +264,9 @@ export default function ScenariosPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-4 sm:space-y-0">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">What-If Scenarios</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('scenarios.title')}</h1>
             <p className="mt-2 text-gray-600">
-              Model the impact of project parameter changes on timeline, cost, and resources
+              {t('scenarios.subtitle')}
             </p>
           </div>
           
@@ -265,12 +279,12 @@ export default function ScenariosPage() {
                 className="bg-purple-600 text-white hover:bg-purple-700"
                 leftIcon={<BarChart3 className="h-4 w-4" />}
               >
-                Compare ({selectedScenarios.length})
+                {t('scenarios.compareScenarios')} ({selectedScenarios.length})
               </TouchButton>
             ) : selectedScenarios.length === 1 ? (
               <div className="text-sm text-gray-500 flex items-center">
                 <AlertTriangle className="h-4 w-4 mr-2" />
-                Select one more scenario to compare
+                {t('scenarios.selectAtLeast2')}
               </div>
             ) : null}
             
@@ -281,7 +295,7 @@ export default function ScenariosPage() {
               size="md"
               leftIcon={<Plus className="h-4 w-4" />}
             >
-              New Scenario
+              {t('scenarios.createScenario')}
             </TouchButton>
           </div>
         </div>
@@ -303,13 +317,13 @@ export default function ScenariosPage() {
           {/* Project Selection */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Select Project</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t('scenarios.selectProject')}</h3>
             </div>
             <div className="p-6">
               {!Array.isArray(projects) || projects.length === 0 ? (
                 <div className="text-center py-8">
                   <GitBranch className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No projects available</p>
+                  <p className="text-gray-500">{t('scenarios.errorLoading')}</p>
                 </div>
               ) : (
                 <VirtualizedProjectSelector
@@ -329,12 +343,13 @@ export default function ScenariosPage() {
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Scenarios {selectedProject && `for ${selectedProject.name}`}
+                  {selectedProject ? t('scenarios.scenariosFor', { projectName: selectedProject.name }) : t('scenarios.scenariosTitle')}
                 </h3>
                 {scenarios.length > 0 && (
                   <button
                     onClick={() => selectedProject && loadProjectScenarios(selectedProject.id)}
                     className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                    aria-label={t('common.refresh')}
                   >
                     <RefreshCw className="h-4 w-4" />
                   </button>
@@ -346,18 +361,18 @@ export default function ScenariosPage() {
               {!selectedProject ? (
                 <div className="text-center py-12">
                   <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">Select a project to view scenarios</p>
+                  <p className="text-gray-500">{t('scenarios.selectProject')}</p>
                 </div>
               ) : !Array.isArray(scenarios) || scenarios.length === 0 ? (
                 <div className="text-center py-12">
                   <Zap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 mb-4">No scenarios created yet</p>
+                  <p className="text-gray-500 mb-4">{t('scenarios.noScenarios')}</p>
                   <button
                     onClick={() => setShowCreateModal(true)}
                     className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     <Plus className="h-4 w-4 mr-2" />
-                    Create First Scenario
+                    {t('scenarios.createFirst')}
                   </button>
                 </div>
               ) : (
@@ -404,7 +419,7 @@ export default function ScenariosPage() {
                                         {formatDuration(scenario.timeline_impact.duration_change)}
                                       </span>
                                     </div>
-                                    <div className="text-xs text-gray-500">Timeline</div>
+                                    <div className="text-xs text-gray-500">{t('scenarios.timeline')}</div>
                                   </div>
                                 </div>
                               )}
@@ -420,7 +435,7 @@ export default function ScenariosPage() {
                                         {scenario.cost_impact.cost_change_percentage.toFixed(1)}%
                                       </span>
                                     </div>
-                                    <div className="text-xs text-gray-500">Budget</div>
+                                    <div className="text-xs text-gray-500">{t('scenarios.budget')}</div>
                                   </div>
                                 </div>
                               )}
@@ -433,14 +448,14 @@ export default function ScenariosPage() {
                                     <div className="text-sm font-medium text-gray-700">
                                       {Object.keys(scenario.resource_impact.utilization_changes).length}
                                     </div>
-                                    <div className="text-xs text-gray-500">Resources</div>
+                                    <div className="text-xs text-gray-500">{t('scenarios.resources')}</div>
                                   </div>
                                 </div>
                               )}
                             </div>
                             
                             <div className="mt-3 text-xs text-gray-500">
-                              Created {new Date(scenario.created_at).toLocaleDateString()}
+                              {t('scenarios.created')} {new Date(scenario.created_at).toLocaleDateString()}
                             </div>
                           </div>
                         </div>
@@ -473,10 +488,11 @@ export default function ScenariosPage() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Scenario Comparison</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{t('scenarios.scenarioComparison')}</h3>
                 <button
                   onClick={() => setShowComparisonView(false)}
                   className="text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label={t('common.close')}
                 >
                   ×
                 </button>
@@ -489,16 +505,16 @@ export default function ScenariosPage() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Scenario
+                        {t('scenarios.scenario')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Timeline Impact
+                        {t('scenarios.timelineImpact')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Cost Impact
+                        {t('scenarios.costImpact')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Resource Changes
+                        {t('scenarios.resourceChanges')}
                       </th>
                     </tr>
                   </thead>
@@ -517,7 +533,7 @@ export default function ScenariosPage() {
                               {formatDuration(scenario.timeline_impact.duration_change)}
                             </div>
                           ) : (
-                            <span className="text-gray-400">No change</span>
+                            <span className="text-gray-400">{t('scenarios.noChange')}</span>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -529,16 +545,16 @@ export default function ScenariosPage() {
                               </div>
                             </div>
                           ) : (
-                            <span className="text-gray-400">No change</span>
+                            <span className="text-gray-400">{t('scenarios.noChange')}</span>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {scenario.resource_impact ? (
                             <div className="text-sm">
-                              {Object.keys(scenario.resource_impact.utilization_changes).length} resources affected
+                              {t('scenarios.resourcesAffected', { count: Object.keys(scenario.resource_impact.utilization_changes).length })}
                             </div>
                           ) : (
-                            <span className="text-gray-400">No change</span>
+                            <span className="text-gray-400">{t('scenarios.noChange')}</span>
                           )}
                         </td>
                       </tr>
@@ -549,7 +565,7 @@ export default function ScenariosPage() {
               
               {(comparison?.recommendations || []).length > 0 && (
                 <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                  <h4 className="font-medium text-blue-900 mb-2">Recommendations</h4>
+                  <h4 className="font-medium text-blue-900 mb-2">{t('scenarios.recommendations')}</h4>
                   <ul className="space-y-1">
                     {(comparison?.recommendations || []).map((rec, index) => (
                       <li key={index} className="text-sm text-blue-800">• {rec}</li>

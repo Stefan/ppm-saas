@@ -93,13 +93,16 @@ const MOCK_DATA = {
 
 // Get mock data for an endpoint
 function getMockData(endpoint: string): any {
+  // Normalize endpoint for matching
+  const normalizedEndpoint = endpoint.replace(/\?.*$/, '') // Remove query params
+  
   // Handle parameterized endpoints
-  if (endpoint.includes('/projects/') && endpoint.includes('/scenarios')) {
+  if (normalizedEndpoint.includes('/projects/') && normalizedEndpoint.includes('/scenarios')) {
     return {
       "scenarios": [
         {
           "id": "scenario-1",
-          "project_id": endpoint.split('/')[2],
+          "project_id": normalizedEndpoint.split('/')[2],
           "name": "Accelerated Timeline",
           "description": "Complete project 2 weeks earlier by adding resources",
           "timeline_impact": {
@@ -122,14 +125,25 @@ function getMockData(endpoint: string): any {
     }
   }
   
-  return MOCK_DATA[endpoint as keyof typeof MOCK_DATA] || null
+  // Handle optimized dashboard endpoints
+  if (normalizedEndpoint.includes('/optimized/dashboard')) {
+    if (normalizedEndpoint.includes('quick-stats')) {
+      return MOCK_DATA['/optimized/dashboard/quick-stats']
+    }
+    if (normalizedEndpoint.includes('projects-summary')) {
+      return MOCK_DATA['/optimized/dashboard/projects-summary']
+    }
+  }
+  
+  // Direct match
+  return MOCK_DATA[normalizedEndpoint as keyof typeof MOCK_DATA] || null
 }
 
-// API configuration with fallbacks - Use local development server
+// API configuration with fallbacks - Use backend server
 export const API_CONFIG = {
   baseURL: process.env.NODE_ENV === 'production' 
     ? 'https://orka-ppm.onrender.com' 
-    : 'http://localhost:3000', // Local Next.js development server
+    : 'http://localhost:8000', // Local FastAPI backend server
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -142,7 +156,7 @@ export function getApiUrl(endpoint: string): string {
   
   if (!baseUrl) {
     console.warn('API_URL not configured, using localhost fallback')
-    return `http://localhost:3000/api${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`
+    return `http://localhost:8000${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`
   }
   
   // Validate URL format
@@ -156,10 +170,10 @@ export function getApiUrl(endpoint: string): string {
   // Ensure endpoint starts with /
   const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
   
-  // Remove trailing slash from baseUrl and combine with /api prefix
+  // Remove trailing slash from baseUrl
   const cleanBaseUrl = baseUrl.replace(/\/$/, '')
   
-  const fullUrl = `${cleanBaseUrl}/api${normalizedEndpoint}`
+  const fullUrl = `${cleanBaseUrl}${normalizedEndpoint}`
   
   // Validate final URL
   try {
@@ -188,6 +202,13 @@ export async function apiRequest<T = unknown>(
     })
     
     if (!response.ok) {
+      // Try mock data fallback before throwing error
+      const mockData = getMockData(endpoint)
+      if (mockData) {
+        console.warn(`🔄 Using mock data for ${endpoint} (API returned ${response.status})`)
+        return mockData as T
+      }
+      
       throw new Error(`API request failed: ${response.status} ${response.statusText}`)
     }
     

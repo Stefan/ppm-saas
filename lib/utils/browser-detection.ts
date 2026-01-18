@@ -89,7 +89,7 @@ function checkFeatureSupport(feature: string): boolean {
     case 'contain':
       return CSS.supports('contain', 'layout')
     case 'willChange':
-      return CSS.supports('will-change', 'scroll-position')
+      return CSS.supports('will-change', 'transform')
     default:
       return false
   }

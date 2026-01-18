@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { getApiUrl } from '../../lib/api/client'
+import { getApiUrl } from '@/lib/api/client'
 import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react'
+import { useTranslations } from '@/lib/i18n/context';
 
 interface ApiStatus {
   url: string
@@ -12,6 +13,7 @@ interface ApiStatus {
 }
 
 export default function ApiDebugger() {
+  const t = useTranslations();
   const [apiStatus, setApiStatus] = useState<ApiStatus>({
     url: '',
     status: 'checking',
@@ -26,7 +28,7 @@ export default function ApiDebugger() {
       setApiStatus({
         url,
         status: 'checking',
-        message: 'Checking API connection...'
+        message: t('shared.apiDebugger.checking')
       })
 
       const response = await fetch(url, {
@@ -43,14 +45,14 @@ export default function ApiDebugger() {
         setApiStatus({
           url,
           status: 'success',
-          message: `API connected successfully: ${data.message || 'OK'}`,
+          message: t('shared.apiDebugger.connectedSuccessfully', { message: data.message || 'OK' }),
           responseTime
         })
       } else {
         setApiStatus({
           url,
           status: 'error',
-          message: `API error: ${response.status} ${response.statusText}`,
+          message: t('shared.apiDebugger.apiError', { status: response.status, statusText: response.statusText }),
           responseTime
         })
       }
@@ -59,11 +61,11 @@ export default function ApiDebugger() {
       setApiStatus({
         url: getApiUrl('/'),
         status: 'error',
-        message: `Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        message: t('shared.apiDebugger.connectionFailed', { error: error instanceof Error ? error.message : 'Unknown error' }),
         responseTime
       })
     }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     checkApiConnection()
@@ -95,37 +97,37 @@ export default function ApiDebugger() {
     <div className={`p-4 rounded-lg border ${getStatusColor()}`}>
       <div className="flex items-center space-x-2 mb-2">
         {getStatusIcon()}
-        <h3 className="font-medium text-gray-900">API Connection Status</h3>
+        <h3 className="font-medium text-gray-900">{t('shared.apiDebugger.title')}</h3>
         <button
           onClick={checkApiConnection}
           className="text-sm text-blue-600 hover:text-blue-800"
         >
-          Retry
+          {t('shared.apiDebugger.retry')}
         </button>
       </div>
       
       <div className="space-y-1 text-sm">
         <div>
-          <span className="font-medium">URL:</span> {apiStatus.url}
+          <span className="font-medium">{t('shared.apiDebugger.url')}:</span> {apiStatus.url}
         </div>
         <div>
-          <span className="font-medium">Status:</span> {apiStatus.message}
+          <span className="font-medium">{t('shared.apiDebugger.status')}:</span> {apiStatus.message}
         </div>
         {apiStatus.responseTime && (
           <div>
-            <span className="font-medium">Response Time:</span> {apiStatus.responseTime}ms
+            <span className="font-medium">{t('shared.apiDebugger.responseTime')}:</span> {apiStatus.responseTime}ms
           </div>
         )}
       </div>
 
       {apiStatus.status === 'error' && (
         <div className="mt-3 p-3 bg-red-100 rounded border border-red-200">
-          <h4 className="font-medium text-red-800 mb-2">Troubleshooting:</h4>
+          <h4 className="font-medium text-red-800 mb-2">{t('shared.apiDebugger.troubleshooting.title')}</h4>
           <ul className="text-sm text-red-700 space-y-1">
-            <li>• Check if the backend API is running</li>
-            <li>• Verify NEXT_PUBLIC_API_URL environment variable</li>
-            <li>• Check network connectivity</li>
-            <li>• Ensure CORS is properly configured on the backend</li>
+            <li>• {t('shared.apiDebugger.troubleshooting.checkBackend')}</li>
+            <li>• {t('shared.apiDebugger.troubleshooting.verifyEnvVar')}</li>
+            <li>• {t('shared.apiDebugger.troubleshooting.checkNetwork')}</li>
+            <li>• {t('shared.apiDebugger.troubleshooting.ensureCors')}</li>
           </ul>
         </div>
       )}

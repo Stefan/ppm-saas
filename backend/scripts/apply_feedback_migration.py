@@ -28,7 +28,7 @@ def apply_feedback_migration():
         print("✅ Connected to Supabase")
         
         # Read migration file
-        migration_path = "migrations/008_feedback_system.sql"
+        migration_path = "migrations/025_feedback_system.sql"
         with open(migration_path, 'r') as f:
             migration_sql = f.read()
         
@@ -61,7 +61,7 @@ def apply_feedback_migration():
         
         # Verify tables were created
         print("\n=== Verifying Tables ===")
-        tables = ['features', 'bugs', 'notifications', 'feature_votes', 'feature_comments']
+        tables = ['feature_requests', 'bug_reports', 'feedback_notifications', 'feature_votes', 'feature_comments']
         for table in tables:
             try:
                 result = supabase.table(table).select('count', count='exact').limit(1).execute()

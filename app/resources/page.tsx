@@ -1,16 +1,19 @@
 'use client'
 
-import { useEffect, useState, useMemo, useDeferredValue, useReducer } from 'react'
+import { useEffect, useState, useMemo, useDeferredValue, useReducer, lazy, Suspense } from 'react'
 import { useAuth } from '../providers/SupabaseAuthProvider'
 import { Users, Plus, Search, Filter, TrendingUp, AlertCircle, BarChart3, PieChart as PieChartIcon, Target, Zap, RefreshCw, Download, MapPin } from 'lucide-react'
 import AppLayout from '../../components/shared/AppLayout'
-import AIResourceOptimizer from '../../components/ai/AIResourceOptimizer'
 import ResourceCard from './components/ResourceCard'
-import VirtualizedResourceTable from '../../components/ui/VirtualizedResourceTable'
 import { getApiUrl } from '../../lib/api/client'
-import MobileOptimizedChart from '../../components/charts/MobileOptimizedChart'
 import { SkeletonCard, SkeletonChart } from '../../components/ui/skeletons'
-import { useDebounce } from '../../hooks/useDebounce'
+import { useDebounce } from '@/hooks/useDebounce'
+import { useTranslations } from '@/lib/i18n/context'
+
+// Lazy load heavy components for better code splitting
+const AIResourceOptimizer = lazy(() => import('../../components/ai/AIResourceOptimizer'))
+const VirtualizedResourceTable = lazy(() => import('../../components/ui/VirtualizedResourceTable'))
+const MobileOptimizedChart = lazy(() => import('../../components/charts/MobileOptimizedChart'))
 
 interface Resource {
   id: string
@@ -70,6 +73,7 @@ function filterReducer(state: ResourceFilters, action: FilterAction): ResourceFi
 
 export default function Resources() {
   const { session } = useAuth()
+  const { t } = useTranslations()
   const [resources, setResources] = useState<Resource[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -334,7 +338,7 @@ export default function Resources() {
           <div className="flex">
             <AlertCircle className="h-5 w-5 text-red-400" />
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Error loading resources</h3>
+              <h3 className="text-sm font-medium text-red-800">{t('resources.errorLoading')}</h3>
               <p className="mt-1 text-sm text-red-700">{error}</p>
             </div>
           </div>
@@ -351,28 +355,28 @@ export default function Resources() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-4 sm:space-y-0">
             <div className="min-w-0 flex-1">
               <div className="flex flex-col space-y-2">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Resource Management</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('resources.title')}</h1>
                 <div className="flex flex-wrap items-center gap-2">
                   {analyticsData.overallocatedResources > 0 && (
                     <div className="flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
                       <AlertCircle className="h-4 w-4 mr-1 flex-shrink-0" />
-                      <span>{analyticsData.overallocatedResources} Overallocated</span>
+                      <span>{analyticsData.overallocatedResources} {t('resources.overallocated')}</span>
                     </div>
                   )}
                   {autoRefresh && (
                     <div className="flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
                       <RefreshCw className="h-4 w-4 mr-1 animate-spin flex-shrink-0" />
-                      <span>Live</span>
+                      <span>{t('resources.live')}</span>
                     </div>
                   )}
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 text-sm text-gray-600">
-                <span>{filteredResources.length} of {resources.length} resources</span>
-                <span>Avg: {analyticsData.averageUtilization.toFixed(1)}%</span>
-                <span>{analyticsData.availableResources} available</span>
+                <span>{filteredResources.length} {t('resources.of')} {resources.length} {t('nav.resources').toLowerCase()}</span>
+                <span>{t('resources.avg')}: {analyticsData.averageUtilization.toFixed(1)}%</span>
+                <span>{analyticsData.availableResources} {t('resources.available')}</span>
                 {lastRefresh && (
-                  <span className="hidden sm:inline">Updated: {lastRefresh.toLocaleTimeString()}</span>
+                  <span className="hidden sm:inline">{t('dashboard.updated')}: {lastRefresh.toLocaleTimeString()}</span>
                 )}
               </div>
             </div>
@@ -506,14 +510,16 @@ export default function Resources() {
 
         {/* AI Optimization Panel */}
         {showOptimization && (
-          <AIResourceOptimizer
-            authToken={session?.access_token || ''}
-            onOptimizationApplied={(_suggestionId) => {
-              // Refresh resources data when optimization is applied
-              fetchResources()
-            }}
-            className="mb-6"
-          />
+          <Suspense fallback={<SkeletonCard variant="stat" />}>
+            <AIResourceOptimizer
+              authToken={session?.access_token || ''}
+              onOptimizationApplied={(_suggestionId) => {
+                // Refresh resources data when optimization is applied
+                fetchResources()
+              }}
+              className="mb-6"
+            />
+          </Suspense>
         )}
 
         {/* Enhanced Mobile-First Filter Panel */}
@@ -614,76 +620,84 @@ export default function Resources() {
         )}
 
         {/* Analytics Charts - Mobile Optimized */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <MobileOptimizedChart
-            type="pie"
-            data={analyticsData.utilizationDistribution}
-            title="Utilization Distribution"
-            dataKey="value"
-            nameKey="name"
-            colors={analyticsData.utilizationDistribution.map(item => item.color)}
-            height={250}
-            enablePinchZoom={true}
-            enablePan={true}
-            enableExport={true}
-            showLegend={true}
-            className="bg-white shadow-sm"
-            onDataPointClick={(data) => {
-              // Filter resources based on clicked utilization category
-              const utilizationRanges = {
-                'Under-utilized (0-50%)': [0, 50],
-                'Well-utilized (51-80%)': [51, 80],
-                'Highly-utilized (81-100%)': [81, 100],
-                'Over-utilized (>100%)': [101, 200]
-              }
-              const range = utilizationRanges[data.name as keyof typeof utilizationRanges]
-              if (range) {
-                handleFilterChange('utilization_range', range)
+        <Suspense fallback={
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <SkeletonChart variant="pie" height="h-64" />
+            <SkeletonChart variant="bar" height="h-64" />
+            <SkeletonChart variant="pie" height="h-64" />
+          </div>
+        }>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <MobileOptimizedChart
+              type="pie"
+              data={analyticsData.utilizationDistribution}
+              title="Utilization Distribution"
+              dataKey="value"
+              nameKey="name"
+              colors={analyticsData.utilizationDistribution.map(item => item.color)}
+              height={250}
+              enablePinchZoom={true}
+              enablePan={true}
+              enableExport={true}
+              showLegend={true}
+              className="bg-white shadow-sm"
+              onDataPointClick={(data) => {
+                // Filter resources based on clicked utilization category
+                const utilizationRanges = {
+                  'Under-utilized (0-50%)': [0, 50],
+                  'Well-utilized (51-80%)': [51, 80],
+                  'Highly-utilized (81-100%)': [81, 100],
+                  'Over-utilized (>100%)': [101, 200]
+                }
+                const range = utilizationRanges[data.name as keyof typeof utilizationRanges]
+                if (range) {
+                  handleFilterChange('utilization_range', range)
+                  setShowFilters(true)
+                }
+              }}
+            />
+
+            <MobileOptimizedChart
+              type="bar"
+              data={analyticsData.topSkills.slice(0, 5)}
+              title="Top Skills"
+              dataKey="value"
+              nameKey="name"
+              colors={['#3B82F6']}
+              height={250}
+              enablePinchZoom={true}
+              enablePan={true}
+              enableExport={true}
+              showLegend={false}
+              className="bg-white shadow-sm"
+              onDataPointClick={(data) => {
+                // Filter resources by clicked skill
+                handleFilterChange('skills', [data.name])
                 setShowFilters(true)
-              }
-            }}
-          />
+              }}
+            />
 
-          <MobileOptimizedChart
-            type="bar"
-            data={analyticsData.topSkills.slice(0, 5)}
-            title="Top Skills"
-            dataKey="value"
-            nameKey="name"
-            colors={['#3B82F6']}
-            height={250}
-            enablePinchZoom={true}
-            enablePan={true}
-            enableExport={true}
-            showLegend={false}
-            className="bg-white shadow-sm"
-            onDataPointClick={(data) => {
-              // Filter resources by clicked skill
-              handleFilterChange('skills', [data.name])
-              setShowFilters(true)
-            }}
-          />
-
-          <MobileOptimizedChart
-            type="pie"
-            data={analyticsData.roleDistribution}
-            title="Role Distribution"
-            dataKey="value"
-            nameKey="name"
-            colors={analyticsData.roleDistribution.map(item => item.color)}
-            height={250}
-            enablePinchZoom={true}
-            enablePan={true}
-            enableExport={true}
-            showLegend={true}
-            className="bg-white shadow-sm"
-            onDataPointClick={(data) => {
-              // Filter resources by clicked role
-              handleFilterChange('role', data.name === 'Unassigned' ? 'all' : data.name)
-              setShowFilters(true)
-            }}
-          />
-        </div>
+            <MobileOptimizedChart
+              type="pie"
+              data={analyticsData.roleDistribution}
+              title="Role Distribution"
+              dataKey="value"
+              nameKey="name"
+              colors={analyticsData.roleDistribution.map(item => item.color)}
+              height={250}
+              enablePinchZoom={true}
+              enablePan={true}
+              enableExport={true}
+              showLegend={true}
+              className="bg-white shadow-sm"
+              onDataPointClick={(data) => {
+                // Filter resources by clicked role
+                handleFilterChange('role', data.name === 'Unassigned' ? 'all' : data.name)
+                setShowFilters(true)
+              }}
+            />
+          </div>
+        </Suspense>
 
         {/* Mobile-First Resource Cards */}
         {viewMode === 'cards' && (
@@ -695,11 +709,13 @@ export default function Resources() {
         )}
 
         {viewMode === 'table' && (
-          <VirtualizedResourceTable 
-            resources={filteredResources}
-            height={600}
-            itemHeight={80}
-          />
+          <Suspense fallback={<SkeletonCard variant="resource" />}>
+            <VirtualizedResourceTable 
+              resources={filteredResources}
+              height={600}
+              itemHeight={80}
+            />
+          </Suspense>
         )}
 
         {/* Enhanced Touch-Optimized Heatmap */}

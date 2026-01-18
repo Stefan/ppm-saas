@@ -7,7 +7,8 @@ import AppLayout from '../../components/shared/AppLayout'
 import { AlertTriangle, Shield, TrendingUp, Activity, Clock, User, Calendar, Target, Filter, Download, RefreshCw, BarChart3, Plus, Search, SortAsc, SortDesc, Zap } from 'lucide-react'
 import { getApiUrl } from '../../lib/api/client'
 import { SkeletonCard, SkeletonChart, SkeletonTable } from '../../components/ui/skeletons'
-import { useDebounce } from '../../hooks/useDebounce'
+import { useDebounce } from '@/hooks/useDebounce'
+import { useTranslations } from '@/lib/i18n/context'
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, ScatterChart, Scatter, AreaChart, Area } from 'recharts'
 
 // Dynamic imports for heavy components (code splitting)
@@ -104,6 +105,7 @@ function filterSortReducer(state: FilterSortState, action: FilterSortAction): Fi
 
 export default function Risks() {
   const { session } = useAuth()
+  const { t } = useTranslations()
   const [risks, setRisks] = useState<Risk[]>([])
   const [metrics, setMetrics] = useState<RiskMetrics | null>(null)
   const [alerts, setAlerts] = useState<RiskAlert[]>([])
@@ -633,12 +635,12 @@ export default function Risks() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-4 sm:space-y-0">
             <div className="min-w-0 flex-1">
               <div className="flex flex-col space-y-2">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Risk Management</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('risks.title')}</h1>
                 <div className="flex flex-wrap items-center gap-2">
                   {alerts.length > 0 && (
                     <div className="flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
                       <AlertTriangle className="h-4 w-4 mr-1 flex-shrink-0" />
-                      <span>{alerts.length} Alert{alerts.length !== 1 ? 's' : ''}</span>
+                      <span>{alerts.length} {t('risks.alert')}{alerts.length !== 1 ? 's' : ''}</span>
                     </div>
                   )}
                 </div>
@@ -646,10 +648,10 @@ export default function Risks() {
               <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 text-sm text-gray-600">
                 {metrics && (
                   <>
-                    <span>Total: {metrics.total_risks}</span>
-                    <span>High Risk: {metrics.high_risk_count}</span>
-                    <span>Avg: {(metrics.average_risk_score * 100).toFixed(1)}%</span>
-                    <span>{filteredRisks.length} filtered</span>
+                    <span>{t('risks.total')}: {metrics.total_risks}</span>
+                    <span>{t('risks.highRisk')}: {metrics.high_risk_count}</span>
+                    <span>{t('risks.avg')}: {(metrics.average_risk_score * 100).toFixed(1)}%</span>
+                    <span>{filteredRisks.length} {t('risks.filtered')}</span>
                   </>
                 )}
               </div>
@@ -670,9 +672,9 @@ export default function Risks() {
                  viewMode === 'trends' ? <TrendingUp className="h-4 w-4 mr-2 flex-shrink-0" /> :
                  <Activity className="h-4 w-4 mr-2 flex-shrink-0" />}
                 <span className="hidden sm:inline">
-                  {viewMode === 'overview' ? 'Matrix' : 
-                   viewMode === 'matrix' ? 'Trends' : 
-                   viewMode === 'trends' ? 'Detailed' : 'Overview'}
+                  {viewMode === 'overview' ? t('risks.matrix') : 
+                   viewMode === 'matrix' ? t('risks.trends') : 
+                   viewMode === 'trends' ? t('risks.detailed') : t('risks.overview')}
                 </span>
               </button>
               
@@ -685,8 +687,8 @@ export default function Risks() {
                 }`}
               >
                 <Zap className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span className="hidden sm:inline">AI Analysis</span>
-                <span className="sm:hidden">AI</span>
+                <span className="hidden sm:inline">{t('risks.aiAnalysis')}</span>
+                <span className="sm:hidden">{t('risks.ai')}</span>
               </button>
               
               <button
@@ -695,8 +697,8 @@ export default function Risks() {
                 className="flex items-center justify-center min-h-[44px] px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 active:bg-purple-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
               >
                 <Zap className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span className="hidden sm:inline">Monte Carlo</span>
-                <span className="sm:hidden">MC</span>
+                <span className="hidden sm:inline">{t('risks.monteCarlo')}</span>
+                <span className="sm:hidden">{t('risks.mc')}</span>
               </button>
               
               <button
@@ -704,7 +706,7 @@ export default function Risks() {
                 className="flex items-center justify-center min-h-[44px] px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 active:bg-green-300 text-sm font-medium"
               >
                 <Download className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span className="hidden sm:inline">Export</span>
+                <span className="hidden sm:inline">{t('risks.export')}</span>
               </button>
               
               <button
@@ -712,7 +714,7 @@ export default function Risks() {
                 className="flex items-center justify-center min-h-[44px] px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 active:bg-blue-300 text-sm font-medium"
               >
                 <RefreshCw className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span className="hidden sm:inline">Refresh</span>
+                <span className="hidden sm:inline">{t('risks.refresh')}</span>
               </button>
               
               <button
@@ -724,7 +726,7 @@ export default function Risks() {
                 }`}
               >
                 <Filter className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span className="hidden sm:inline">Filters</span>
+                <span className="hidden sm:inline">{t('risks.filters')}</span>
               </button>
             </div>
           </div>
@@ -734,8 +736,8 @@ export default function Risks() {
         {alerts.length > 0 && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-red-900">Risk Alerts</h3>
-              <span className="text-sm text-red-700">{alerts.length} alert{alerts.length !== 1 ? 's' : ''}</span>
+              <h3 className="text-lg font-semibold text-red-900">{t('risks.riskAlerts')}</h3>
+              <span className="text-sm text-red-700">{alerts.length} {t('risks.alert')}{alerts.length !== 1 ? 's' : ''}</span>
             </div>
             <div className="space-y-3">
               {alerts.map((alert, index) => (
@@ -745,8 +747,8 @@ export default function Risks() {
                       <h4 className="font-medium text-gray-900">{alert.risk_title}</h4>
                       <p className="text-sm text-gray-600 mt-1">{alert.message}</p>
                       <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-                        <span>Project: {alert.project_name}</span>
-                        <span>Date: {new Date(alert.created_at).toLocaleDateString()}</span>
+                        <span>{t('risks.project')}: {alert.project_name}</span>
+                        <span>{t('risks.date')}: {new Date(alert.created_at).toLocaleDateString()}</span>
                       </div>
                     </div>
                     <div className={`px-2 py-1 rounded text-xs font-medium ${
@@ -769,61 +771,61 @@ export default function Risks() {
           <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <div className="sm:col-span-2 lg:col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('risks.search')}</label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search risks..."
+                    placeholder={t('risks.search') + '...'}
                     className="input-field w-full min-h-[44px] pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
                   />
                 </div>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('risks.category')}</label>
                 <select
                   value={filterCategory}
                   onChange={(e) => dispatchFilterSort({ type: 'SET_FILTER_CATEGORY', value: e.target.value })}
                   className="w-full min-h-[44px] p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
                 >
-                  <option value="all">All Categories</option>
-                  <option value="technical">Technical</option>
-                  <option value="financial">Financial</option>
-                  <option value="resource">Resource</option>
-                  <option value="schedule">Schedule</option>
-                  <option value="external">External</option>
+                  <option value="all">{t('risks.allCategories')}</option>
+                  <option value="technical">{t('risks.technical')}</option>
+                  <option value="financial">{t('risks.financial')}</option>
+                  <option value="resource">{t('risks.resource')}</option>
+                  <option value="schedule">{t('risks.schedule')}</option>
+                  <option value="external">{t('risks.external')}</option>
                 </select>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('risks.status')}</label>
                 <select
                   value={filterStatus}
                   onChange={(e) => dispatchFilterSort({ type: 'SET_FILTER_STATUS', value: e.target.value })}
                   className="w-full min-h-[44px] p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
                 >
-                  <option value="all">All Statuses</option>
-                  <option value="identified">Identified</option>
-                  <option value="analyzing">Analyzing</option>
-                  <option value="mitigating">Mitigating</option>
-                  <option value="closed">Closed</option>
+                  <option value="all">{t('risks.allStatus')}</option>
+                  <option value="identified">{t('risks.identified')}</option>
+                  <option value="analyzing">{t('risks.analyzing')}</option>
+                  <option value="mitigating">{t('risks.mitigating')}</option>
+                  <option value="closed">{t('risks.closed')}</option>
                 </select>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('risks.sortBy')}</label>
                 <div className="flex space-x-2">
                   <select
                     value={sortBy}
                     onChange={(e) => dispatchFilterSort({ type: 'SET_SORT_BY', value: e.target.value as any })}
                     className="flex-1 min-h-[44px] p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
                   >
-                    <option value="risk_score">Risk Score</option>
-                    <option value="created_at">Created Date</option>
-                    <option value="due_date">Due Date</option>
+                    <option value="risk_score">{t('risks.riskScore')}</option>
+                    <option value="created_at">{t('risks.createdDate')}</option>
+                    <option value="due_date">{t('risks.dueDate')}</option>
                   </select>
                   <button
                     onClick={() => dispatchFilterSort({ type: 'TOGGLE_SORT_ORDER' })}
@@ -842,7 +844,7 @@ export default function Risks() {
                   }}
                   className="w-full min-h-[44px] px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 active:bg-gray-300 font-medium"
                 >
-                  Clear Filters
+                  {t('risks.clearFilters')}
                 </button>
               </div>
             </div>

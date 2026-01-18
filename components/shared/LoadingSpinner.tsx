@@ -1,5 +1,6 @@
 import React from 'react'
 import { cn } from '@/lib/design-system'
+import { useTranslations } from '@/lib/i18n/context'
 
 export interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg' | 'xl'
@@ -44,15 +45,17 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 /**
  * Full page loading component
  */
-export const PageLoader: React.FC<{ message?: string }> = ({ 
-  message = 'Loading...' 
-}) => (
-  <div className="min-h-screen flex items-center justify-center bg-gray-50">
-    <div className="text-center">
-      <LoadingSpinner size="xl" className="mx-auto mb-4" />
-      <p className="text-gray-600">{message}</p>
+export const PageLoader: React.FC<{ message?: string }> = ({ message }) => {
+  const { t } = useTranslations()
+  
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <LoadingSpinner size="xl" className="mx-auto mb-4" />
+        <p className="text-gray-600">{message || t('common.loading')}</p>
+      </div>
     </div>
-  </div>
-)
+  )
+}
 
 export default LoadingSpinner

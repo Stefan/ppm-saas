@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Calculator, DollarSign, Calendar, AlertTriangle, Save, RotateCcw, Copy, FileText, Target, Lightbulb, BookOpen } from 'lucide-react'
+import { useTranslations } from '@/lib/i18n/context'
 
 // Types for impact estimation
 interface ImpactEstimate {
@@ -65,6 +66,7 @@ export default function ImpactEstimationTools({
   onEstimateUpdate,
   onSaveTemplate: _onSaveTemplate
 }: ImpactEstimationToolsProps) {
+  const t = useTranslations('changes');
   const [activeTab, setActiveTab] = useState<'calculator' | 'scenarios' | 'templates'>('calculator')
   const [estimate, setEstimate] = useState<ImpactEstimate>(
     currentEstimate || {
@@ -397,9 +399,9 @@ export default function ImpactEstimationTools({
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Impact Estimation Tools</h2>
+            <h2 className="text-2xl font-bold text-gray-900">{t('impactEstimation.title')}</h2>
             <p className="text-gray-600 mt-1">
-              Interactive tools for estimating change impact with scenario modeling
+              {t('impactEstimation.subtitle')}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -408,14 +410,14 @@ export default function ImpactEstimationTools({
               className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               <RotateCcw className="h-4 w-4" />
-              Reset
+              {t('impactEstimation.reset')}
             </button>
             <button
               onClick={() => onEstimateUpdate(estimate)}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
             >
               <Save className="h-4 w-4" />
-              Save Estimate
+              {t('impactEstimation.saveEstimate')}
             </button>
           </div>
         </div>
@@ -426,9 +428,9 @@ export default function ImpactEstimationTools({
         <div className="border-b border-gray-200">
           <nav className="flex space-x-8 px-6">
             {[
-              { id: 'calculator', label: 'Impact Calculator', icon: Calculator },
-              { id: 'scenarios', label: 'What-If Scenarios', icon: Target },
-              { id: 'templates', label: 'Template Library', icon: BookOpen }
+              { id: 'calculator', label: t('impactEstimation.tabs.calculator'), icon: Calculator },
+              { id: 'scenarios', label: t('impactEstimation.tabs.scenarios'), icon: Target },
+              { id: 'templates', label: t('impactEstimation.tabs.templates'), icon: BookOpen }
             ].map(tab => {
               const Icon = tab.icon
               return (

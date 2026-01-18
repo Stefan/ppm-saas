@@ -372,8 +372,8 @@ export class CrossBrowserTouchHandler {
     anyStyle.msTransform = anyStyle.msTransform || 'translateZ(0)'
 
     // Will-change for performance optimization
-    style.willChange = 'transform, scroll-position'
-    anyStyle.webkitWillChange = 'transform, scroll-position'
+    style.willChange = 'transform'
+    anyStyle.webkitWillChange = 'transform'
 
     // Backface visibility for smoother animations
     anyStyle.webkitBackfaceVisibility = 'hidden'

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Copy, Check, Share2, X, Calendar, Shield } from 'lucide-react';
+import { useTranslations } from '@/lib/i18n/context';
 
 interface ShareablePermissions {
   can_view_basic_info: boolean;
@@ -23,6 +24,7 @@ export default function ShareableURLWidget({
   projectName,
   onClose 
 }: ShareableURLWidgetProps) {
+  const t = useTranslations();
   const [isOpen, setIsOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedURL, setGeneratedURL] = useState<string | null>(null);
@@ -65,7 +67,7 @@ export default function ShareableURLWidget({
       });
       
       if (!response.ok) {
-        throw new Error('Failed to generate shareable URL');
+        throw new Error(t('shared.shareableUrl.errors.failedToGenerate'));
       }
       
       const data = await response.json();
@@ -90,7 +92,7 @@ export default function ShareableURLWidget({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      setError('Failed to copy URL to clipboard');
+      setError(t('shared.shareableUrl.errors.failedToCopy'));
     }
   };
 
@@ -117,10 +119,10 @@ export default function ShareableURLWidget({
       <button
         onClick={() => setIsOpen(true)}
         className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        title="Generate shareable URL"
+        title={t('shared.shareableUrl.title')}
       >
         <Share2 className="w-4 h-4" />
-        <span>Share Project</span>
+        <span>{t('shared.shareableUrl.shareButton')}</span>
       </button>
 
       {/* Modal */}
@@ -133,7 +135,7 @@ export default function ShareableURLWidget({
                 <Share2 className="w-6 h-6 text-blue-600" />
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">
-                    Share Project
+                    {t('shared.shareableUrl.title')}
                   </h2>
                   <p className="text-sm text-gray-500 mt-1">
                     {projectName}
@@ -155,7 +157,7 @@ export default function ShareableURLWidget({
                 <div className="flex items-center gap-2 mb-3">
                   <Shield className="w-5 h-5 text-gray-700" />
                   <h3 className="text-lg font-medium text-gray-900">
-                    Access Permissions
+                    {t('shared.shareableUrl.accessPermissions')}
                   </h3>
                 </div>
                 <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
@@ -167,7 +169,7 @@ export default function ShareableURLWidget({
                       className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                     />
                     <span className="text-sm text-gray-700">
-                      View basic project information
+                      {t('shared.shareableUrl.permissions.viewBasicInfo')}
                     </span>
                   </label>
                   
@@ -179,7 +181,7 @@ export default function ShareableURLWidget({
                       className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                     />
                     <span className="text-sm text-gray-700">
-                      View project timeline
+                      {t('shared.shareableUrl.permissions.viewTimeline')}
                     </span>
                   </label>
                   
@@ -191,7 +193,7 @@ export default function ShareableURLWidget({
                       className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                     />
                     <span className="text-sm text-gray-700">
-                      View financial data
+                      {t('shared.shareableUrl.permissions.viewFinancial')}
                     </span>
                   </label>
                   
@@ -203,7 +205,7 @@ export default function ShareableURLWidget({
                       className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                     />
                     <span className="text-sm text-gray-700">
-                      View risk information
+                      {t('shared.shareableUrl.permissions.viewRisks')}
                     </span>
                   </label>
                   
@@ -215,7 +217,7 @@ export default function ShareableURLWidget({
                       className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                     />
                     <span className="text-sm text-gray-700">
-                      View resource allocation
+                      {t('shared.shareableUrl.permissions.viewResources')}
                     </span>
                   </label>
                 </div>
@@ -226,7 +228,7 @@ export default function ShareableURLWidget({
                 <div className="flex items-center gap-2 mb-3">
                   <Calendar className="w-5 h-5 text-gray-700" />
                   <h3 className="text-lg font-medium text-gray-900">
-                    Link Expiration
+                    {t('shared.shareableUrl.linkExpiration')}
                   </h3>
                 </div>
                 <div className="flex items-center gap-4">
@@ -239,12 +241,13 @@ export default function ShareableURLWidget({
                     className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <span className="text-sm text-gray-600">
-                    days from now
+                    {t('shared.shareableUrl.daysFromNow')}
                   </span>
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  The link will expire on{' '}
-                  {new Date(Date.now() + expirationDays * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                  {t('shared.shareableUrl.linkExpiresOn', {
+                    date: new Date(Date.now() + expirationDays * 24 * 60 * 60 * 1000).toLocaleDateString()
+                  })}
                 </p>
               </div>
 
@@ -259,7 +262,7 @@ export default function ShareableURLWidget({
               {generatedURL && (
                 <div className="space-y-3">
                   <h3 className="text-lg font-medium text-gray-900">
-                    Shareable Link
+                    {t('shared.shareableUrl.shareableLink')}
                   </h3>
                   <div className="flex items-center gap-2">
                     <input
@@ -275,19 +278,18 @@ export default function ShareableURLWidget({
                       {copied ? (
                         <>
                           <Check className="w-4 h-4" />
-                          <span>Copied!</span>
+                          <span>{t('shared.shareableUrl.copied')}</span>
                         </>
                       ) : (
                         <>
                           <Copy className="w-4 h-4" />
-                          <span>Copy</span>
+                          <span>{t('shared.shareableUrl.copy')}</span>
                         </>
                       )}
                     </button>
                   </div>
                   <p className="text-xs text-gray-500">
-                    Share this link with external stakeholders. They can access the project
-                    with the permissions you've configured.
+                    {t('shared.shareableUrl.shareDescription')}
                   </p>
                 </div>
               )}
@@ -299,7 +301,7 @@ export default function ShareableURLWidget({
                 onClick={handleClose}
                 className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
               >
-                Close
+                {t('common.close')}
               </button>
               {!generatedURL && (
                 <button
@@ -310,12 +312,12 @@ export default function ShareableURLWidget({
                   {isGenerating ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Generating...</span>
+                      <span>{t('shared.shareableUrl.generating')}</span>
                     </>
                   ) : (
                     <>
                       <Share2 className="w-4 h-4" />
-                      <span>Generate Link</span>
+                      <span>{t('shared.shareableUrl.generateButton')}</span>
                     </>
                   )}
                 </button>

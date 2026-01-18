@@ -1,11 +1,16 @@
 /**
  * Language management hook for multi-language support
- * Handles language preferences, detection, and translation
+ * 
+ * This is a wrapper around the core i18n system that provides additional
+ * functionality for help-chat API integration and utilities.
+ * 
+ * The core i18n system (lib/i18n/context.tsx) is the single source of truth
+ * for language state and persistence.
  */
 
 import { useState, useEffect, useCallback } from 'react'
-import { useLocalStorage } from './useLocalStorage'
-import { helpChatAPI } from '../lib/help-chat/api'
+import { helpChatAPI } from '@/lib/help-chat/api'
+import { useI18n } from '@/lib/i18n/context'
 
 export interface SupportedLanguage {
   code: string
@@ -35,7 +40,7 @@ export interface TranslationResponse {
 }
 
 interface UseLanguageReturn {
-  // Current language state
+  // Current language state (from i18n system)
   currentLanguage: string
   supportedLanguages: SupportedLanguage[]
   isLoading: boolean
@@ -68,7 +73,9 @@ interface UseLanguageReturn {
 }
 
 export function useLanguage(): UseLanguageReturn {
-  const [currentLanguage, setCurrentLanguage] = useLocalStorage<string>('help-chat-language', 'en')
+  // Use i18n system as single source of truth
+  const i18n = useI18n()
+  
   const [supportedLanguages, setSupportedLanguages] = useState<SupportedLanguage[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -80,10 +87,10 @@ export function useLanguage(): UseLanguageReturn {
 
   // Sync with server preference on language change
   useEffect(() => {
-    if (currentLanguage) {
-      syncLanguagePreference(currentLanguage)
+    if (i18n.locale) {
+      syncLanguagePreference(i18n.locale)
     }
-  }, [currentLanguage])
+  }, [i18n.locale])
 
   const syncLanguagePreference = async (language: string) => {
     try {
@@ -107,10 +114,10 @@ export function useLanguage(): UseLanguageReturn {
         }
       }
 
-      // Update local storage
-      setCurrentLanguage(language)
+      // Update i18n system (single source of truth)
+      await i18n.setLocale(language)
 
-      // Sync with server
+      // Sync with server (for help-chat API)
       await syncLanguagePreference(language)
 
       return true
@@ -121,7 +128,7 @@ export function useLanguage(): UseLanguageReturn {
     } finally {
       setIsLoading(false)
     }
-  }, [supportedLanguages, setCurrentLanguage])
+  }, [supportedLanguages, i18n])
 
   const getUserLanguagePreference = useCallback(async (): Promise<string> => {
     try {
@@ -129,9 +136,9 @@ export function useLanguage(): UseLanguageReturn {
       return response.language || 'en'
     } catch (err) {
       console.warn('Failed to get server language preference:', err)
-      return currentLanguage // Fallback to local preference
+      return i18n.locale // Fallback to i18n locale
     }
-  }, [currentLanguage])
+  }, [i18n.locale])
 
   const getSupportedLanguages = useCallback(async (): Promise<SupportedLanguage[]> => {
     try {
@@ -145,19 +152,14 @@ export function useLanguage(): UseLanguageReturn {
       const errorMessage = err instanceof Error ? err.message : 'Failed to get supported languages'
       setError(errorMessage)
       
-      // Fallback to default languages
+      // Fallback to default languages matching the i18n system
       const defaultLanguages: SupportedLanguage[] = [
         { code: 'en', name: 'English', native_name: 'English', formal_tone: false },
         { code: 'de', name: 'German', native_name: 'Deutsch', formal_tone: true },
         { code: 'fr', name: 'French', native_name: 'Français', formal_tone: true },
         { code: 'es', name: 'Spanish', native_name: 'Español', formal_tone: false },
-        { code: 'it', name: 'Italian', native_name: 'Italiano', formal_tone: false },
-        { code: 'pt', name: 'Portuguese', native_name: 'Português', formal_tone: false },
-        { code: 'nl', name: 'Dutch', native_name: 'Nederlands', formal_tone: false },
         { code: 'pl', name: 'Polish', native_name: 'Polski', formal_tone: false },
-        { code: 'ru', name: 'Russian', native_name: 'Русский', formal_tone: false },
-        { code: 'zh', name: 'Chinese', native_name: '中文', formal_tone: false },
-        { code: 'ja', name: 'Japanese', native_name: '日本語', formal_tone: false },
+        { code: 'gsw', name: 'Swiss German', native_name: 'Baseldytsch', formal_tone: false },
       ]
       setSupportedLanguages(defaultLanguages)
       return defaultLanguages
@@ -232,7 +234,7 @@ export function useLanguage(): UseLanguageReturn {
   }, [])
 
   const formatDate = useCallback((date: Date, language?: string): string => {
-    const locale = language || currentLanguage
+    const locale = language || i18n.locale
     
     try {
       // Map language codes to locale strings
@@ -240,6 +242,9 @@ export function useLanguage(): UseLanguageReturn {
         'en': 'en-US',
         'de': 'de-DE',
         'fr': 'fr-FR',
+        'es': 'es-ES',
+        'pl': 'pl-PL',
+        'gsw': 'de-CH',
       }
 
       const localeString = localeMap[locale] || locale
@@ -252,10 +257,10 @@ export function useLanguage(): UseLanguageReturn {
       // Fallback to default formatting
       return date.toLocaleDateString()
     }
-  }, [currentLanguage])
+  }, [i18n.locale])
 
   const formatNumber = useCallback((number: number, language?: string): string => {
-    const locale = language || currentLanguage
+    const locale = language || i18n.locale
     
     try {
       // Map language codes to locale strings
@@ -263,6 +268,9 @@ export function useLanguage(): UseLanguageReturn {
         'en': 'en-US',
         'de': 'de-DE',
         'fr': 'fr-FR',
+        'es': 'es-ES',
+        'pl': 'pl-PL',
+        'gsw': 'de-CH',
       }
 
       const localeString = localeMap[locale] || locale
@@ -271,13 +279,13 @@ export function useLanguage(): UseLanguageReturn {
       // Fallback to default formatting
       return number.toLocaleString()
     }
-  }, [currentLanguage])
+  }, [i18n.locale])
 
   return {
-    // State
-    currentLanguage,
+    // State (from i18n system)
+    currentLanguage: i18n.locale,
     supportedLanguages,
-    isLoading,
+    isLoading: isLoading || i18n.isLoading,
     error,
     
     // Language management

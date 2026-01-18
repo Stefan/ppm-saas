@@ -22,6 +22,9 @@ class Settings:
     
     # OpenAI Configuration
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+    OPENAI_BASE_URL: Optional[str] = os.getenv("OPENAI_BASE_URL")  # For Grok or other OpenAI-compatible APIs
+    OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4")  # Default model, can be overridden for Grok
+    OPENAI_EMBEDDING_MODEL: str = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-ada-002")  # Embedding model
     
     # RAG System Configuration
     RAG_ENABLED: bool = os.getenv("RAG_ENABLED", "false").lower() == "true"
@@ -99,6 +102,9 @@ class Settings:
         print(f"- SUPABASE_URL set: {bool(self.SUPABASE_URL)}")
         print(f"- SUPABASE_ANON_KEY set: {bool(self.SUPABASE_ANON_KEY)}")
         print(f"- OPENAI_API_KEY set: {bool(self.OPENAI_API_KEY)}")
+        print(f"- OPENAI_BASE_URL: {self.OPENAI_BASE_URL or 'default (OpenAI)'}")
+        print(f"- OPENAI_MODEL: {self.OPENAI_MODEL}")
+        print(f"- OPENAI_EMBEDDING_MODEL: {self.OPENAI_EMBEDDING_MODEL}")
         print(f"- REDIS_URL set: {bool(self.REDIS_URL)}")
 
 # Global settings instance

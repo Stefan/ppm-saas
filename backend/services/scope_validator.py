@@ -38,10 +38,16 @@ class ScopeValidationResult:
 class ScopeValidator:
     """Component that ensures responses stay within PPM domain boundaries"""
     
-    def __init__(self, supabase_client: Client, openai_api_key: str):
+    def __init__(self, supabase_client: Client, openai_api_key: str, base_url: str = None):
         self.supabase = supabase_client
-        self.openai_client = OpenAI(api_key=openai_api_key)
-        self.validation_model = "gpt-3.5-turbo"
+        # Initialize OpenAI client with optional custom base URL (for Grok, etc.)
+        if base_url:
+            self.openai_client = OpenAI(api_key=openai_api_key, base_url=base_url)
+        else:
+            self.openai_client = OpenAI(api_key=openai_api_key)
+        # Use configurable model from environment or default
+        import os
+        self.validation_model = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
         
         # PPM domain keywords (allowed)
         self.ppm_domain_keywords = [

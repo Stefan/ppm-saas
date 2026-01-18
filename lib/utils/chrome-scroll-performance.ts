@@ -86,7 +86,7 @@ export class ChromeScrollPerformanceManager {
 
     // Apply will-change properties for scroll optimization
     if (this.config.enableWillChange) {
-      element.style.willChange = 'scroll-position'
+      element.style.willChange = 'transform'
       ;(element.style as any).webkitWillChange = 'scroll-position'
     }
 
@@ -431,7 +431,7 @@ export class ChromeScrollPerformanceManager {
 
     // Optimize will-change during scroll
     if (this.config.enableWillChange) {
-      element.style.willChange = 'scroll-position, transform'
+      element.style.willChange = 'transform'
       ;(element.style as any).webkitWillChange = 'scroll-position, transform'
     }
 

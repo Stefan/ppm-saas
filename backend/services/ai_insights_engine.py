@@ -30,11 +30,17 @@ class AIInsightsEngine:
     Generates predictive analytics, recommendations, and alerts
     """
     
-    def __init__(self, supabase_client: Client, openai_api_key: str):
+    def __init__(self, supabase_client: Client, openai_api_key: str, base_url: str = None):
         """Initialize AI Insights Engine with Supabase and OpenAI clients"""
         self.supabase = supabase_client
-        self.openai_client = OpenAI(api_key=openai_api_key)
-        self.model = "gpt-4"
+        # Initialize OpenAI client with optional custom base URL (for Grok, etc.)
+        if base_url:
+            self.openai_client = OpenAI(api_key=openai_api_key, base_url=base_url)
+        else:
+            self.openai_client = OpenAI(api_key=openai_api_key)
+        # Use configurable model from environment or default
+        import os
+        self.model = os.getenv("OPENAI_MODEL", "gpt-4")
         self.temperature = 0.7
         self.max_tokens = 2000
         self.confidence_threshold = 0.7

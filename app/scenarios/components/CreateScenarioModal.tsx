@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { X, Calendar, DollarSign, Users, Target, AlertTriangle } from 'lucide-react'
 import { getApiUrl } from '../../../lib/api'
+import { useTranslations } from '@/lib/i18n/context'
 
 interface Project {
   id: string
@@ -41,6 +42,7 @@ export default function CreateScenarioModal({
   session: _session,
   onScenarioCreated
 }: CreateScenarioModalProps) {
+  const { t } = useTranslations()
   const [formData, setFormData] = useState<ScenarioFormData>({
     name: '',
     description: '',
@@ -54,7 +56,7 @@ export default function CreateScenarioModal({
     e.preventDefault()
 
     if (!formData.name.trim()) {
-      setError('Scenario name is required')
+      setError(t('scenarios.modal.scenarioNameRequired'))
       return
     }
 
@@ -145,12 +147,13 @@ export default function CreateScenarioModal({
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Create New Scenario</h3>
-            <p className="text-sm text-gray-600">Project: {project.name}</p>
+            <h3 className="text-lg font-semibold text-gray-900">{t('scenarios.modal.createNew')}</h3>
+            <p className="text-sm text-gray-600">{t('scenarios.modal.projectLabel')} {project.name}</p>
           </div>
           <button
             onClick={onClose}
             className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+            aria-label={t('common.close')}
           >
             <X className="h-5 w-5" />
           </button>
@@ -171,19 +174,19 @@ export default function CreateScenarioModal({
           <div className="space-y-4">
             <h4 className="text-md font-semibold text-gray-900 flex items-center">
               <Target className="h-5 w-5 mr-2" />
-              Basic Information
+              {t('scenarios.modal.basicInformation')}
             </h4>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Scenario Name *
+                  {t('scenarios.modal.scenarioName')} *
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="e.g., Budget Increase 20%"
+                  placeholder={t('scenarios.modal.scenarioNamePlaceholder')}
                   className="input-field"
                   required
                 />
@@ -191,13 +194,13 @@ export default function CreateScenarioModal({
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
+                  {t('scenarios.modal.description')}
                 </label>
                 <input
                   type="text"
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Optional description"
+                  placeholder={t('scenarios.modal.descriptionPlaceholder')}
                   className="input-field"
                 />
               </div>
@@ -206,18 +209,18 @@ export default function CreateScenarioModal({
 
           {/* Parameter Changes */}
           <div className="space-y-4">
-            <h4 className="text-md font-semibold text-gray-900">Parameter Changes</h4>
+            <h4 className="text-md font-semibold text-gray-900">{t('scenarios.modal.parameterChanges')}</h4>
             
             {/* Timeline Changes */}
             <div className="bg-gray-50 p-4 rounded-lg">
               <h5 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
                 <Calendar className="h-4 w-4 mr-2" />
-                Timeline Changes
+                {t('scenarios.modal.timelineChanges')}
               </h5>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    New Start Date
+                    {t('scenarios.modal.newStartDate')}
                   </label>
                   <input
                     type="date"
@@ -227,14 +230,14 @@ export default function CreateScenarioModal({
                   />
                   {project.start_date && (
                     <p className="text-xs text-gray-500 mt-1">
-                      Current: {new Date(project.start_date).toLocaleDateString()}
+                      {t('scenarios.modal.current')} {new Date(project.start_date).toLocaleDateString()}
                     </p>
                   )}
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    New End Date
+                    {t('scenarios.modal.newEndDate')}
                   </label>
                   <input
                     type="date"
@@ -244,7 +247,7 @@ export default function CreateScenarioModal({
                   />
                   {project.end_date && (
                     <p className="text-xs text-gray-500 mt-1">
-                      Current: {new Date(project.end_date).toLocaleDateString()}
+                      {t('scenarios.modal.current')} {new Date(project.end_date).toLocaleDateString()}
                     </p>
                   )}
                 </div>
@@ -255,11 +258,11 @@ export default function CreateScenarioModal({
             <div className="bg-gray-50 p-4 rounded-lg">
               <h5 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
                 <DollarSign className="h-4 w-4 mr-2" />
-                Budget Changes
+                {t('scenarios.modal.budgetChanges')}
               </h5>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  New Budget ($)
+                  {t('scenarios.modal.newBudget')}
                 </label>
                 <input
                   type="number"
@@ -267,12 +270,12 @@ export default function CreateScenarioModal({
                   step="1000"
                   value={formData.parameter_changes.budget || ''}
                   onChange={(e) => handleParameterChange('budget', e.target.value ? parseFloat(e.target.value) : undefined)}
-                  placeholder="Enter new budget amount"
+                  placeholder={t('scenarios.modal.newBudgetPlaceholder')}
                   className="input-field"
                 />
                 {project.budget && (
                   <p className="text-xs text-gray-500 mt-1">
-                    Current: ${project.budget.toLocaleString()}
+                    {t('scenarios.modal.current')} ${project.budget.toLocaleString()}
                   </p>
                 )}
               </div>
@@ -282,25 +285,30 @@ export default function CreateScenarioModal({
             <div className="bg-gray-50 p-4 rounded-lg">
               <h5 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
                 <Users className="h-4 w-4 mr-2" />
-                Resource Allocation Changes
+                {t('scenarios.modal.resourceAllocationChanges')}
               </h5>
               <div className="space-y-3">
-                {['Developer', 'Designer', 'QA Engineer', 'Project Manager'].map((resource) => (
-                  <div key={resource} className="flex items-center space-x-4">
+                {[
+                  { key: 'Developer', label: t('scenarios.modal.developer') },
+                  { key: 'Designer', label: t('scenarios.modal.designer') },
+                  { key: 'QA Engineer', label: t('scenarios.modal.qaEngineer') },
+                  { key: 'Project Manager', label: t('scenarios.modal.projectManager') }
+                ].map(({ key, label }) => (
+                  <div key={key} className="flex items-center space-x-4">
                     <label className="w-32 text-sm font-medium text-gray-700">
-                      {resource}
+                      {label}
                     </label>
                     <input
                       type="range"
                       min="0"
                       max="100"
                       step="5"
-                      value={((formData.parameter_changes.resource_allocations?.[resource] || 0) * 100)}
-                      onChange={(e) => handleResourceAllocationChange(resource, parseInt(e.target.value))}
+                      value={((formData.parameter_changes.resource_allocations?.[key] || 0) * 100)}
+                      onChange={(e) => handleResourceAllocationChange(key, parseInt(e.target.value))}
                       className="flex-1"
                     />
                     <span className="w-12 text-sm text-gray-600">
-                      {Math.round((formData.parameter_changes.resource_allocations?.[resource] || 0) * 100)}%
+                      {Math.round((formData.parameter_changes.resource_allocations?.[key] || 0) * 100)}%
                     </span>
                   </div>
                 ))}
@@ -310,12 +318,12 @@ export default function CreateScenarioModal({
 
           {/* Analysis Scope */}
           <div className="space-y-4">
-            <h4 className="text-md font-semibold text-gray-900">Analysis Scope</h4>
+            <h4 className="text-md font-semibold text-gray-900">{t('scenarios.modal.analysisScope')}</h4>
             <div className="flex flex-wrap gap-3">
               {[
-                { key: 'timeline', label: 'Timeline Impact', icon: Calendar },
-                { key: 'cost', label: 'Cost Impact', icon: DollarSign },
-                { key: 'resources', label: 'Resource Impact', icon: Users }
+                { key: 'timeline', label: t('scenarios.modal.timelineImpactLabel'), icon: Calendar },
+                { key: 'cost', label: t('scenarios.modal.costImpactLabel'), icon: DollarSign },
+                { key: 'resources', label: t('scenarios.modal.resourceImpactLabel'), icon: Users }
               ].map(({ key, label, icon: Icon }) => (
                 <label key={key} className="flex items-center space-x-2 cursor-pointer">
                   <input
@@ -339,14 +347,14 @@ export default function CreateScenarioModal({
               disabled={loading}
               className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
             >
-              Cancel
+              {t('scenarios.modal.cancel')}
             </button>
             <button
               type="submit"
               disabled={loading || !formData.name.trim()}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Creating...' : 'Create Scenario'}
+              {loading ? t('scenarios.modal.creating') : t('scenarios.modal.create')}
             </button>
           </div>
         </form>

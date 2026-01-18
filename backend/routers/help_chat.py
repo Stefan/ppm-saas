@@ -20,6 +20,7 @@ from services.translation_service import TranslationService, TranslationRequest,
 from services.visual_guide_service import visual_guide_service
 from services.analytics_tracker import get_analytics_tracker, EventType
 from services.help_chat_performance import get_help_chat_performance
+from services.help_chat_cache import get_cached_response, set_cached_response  # Neues Caching
 
 # Import rate limiting
 try:
@@ -169,7 +170,7 @@ async def process_help_query(
     help_request: HelpQueryRequest,
     current_user = Depends(get_current_user)
 ):
-    """Process user help query and return AI-generated response"""
+    """Process user help query and return AI-generated response with Supabase caching"""
     start_time = time.time()
     performance_service = get_help_chat_performance()
     
@@ -177,11 +178,11 @@ async def process_help_query(
         if supabase is None:
             raise HTTPException(status_code=503, detail="Database service unavailable")
         
-        # Check for cached response first
-        cached_response = await performance_service.get_cached_response(
-            help_request.query, 
-            help_request.context, 
-            help_request.language
+        # 1. Check Supabase cache first (NEW)
+        cached_response = await get_cached_response(
+            query=help_request.query,
+            user_id=current_user["user_id"],
+            context=help_request.context
         )
         
         if cached_response:
@@ -193,9 +194,10 @@ async def process_help_query(
             # Add cache indicator to response
             cached_response['is_cached'] = True
             cached_response['response_time_ms'] = int((time.time() - start_time) * 1000)
+            logger.info(f"Returning cached response (took {cached_response['response_time_ms']}ms)")
             return HelpQueryResponse(**cached_response)
         
-        # Check if we should use fallback due to performance issues
+        # 2. Check if we should use fallback due to performance issues
         if performance_service.should_use_fallback():
             fallback_response = await performance_service.get_fallback_response(
                 help_request.query, help_request.context
@@ -215,7 +217,7 @@ async def process_help_query(
                 is_fallback=True
             )
         
-        # Get help RAG agent
+        # 3. Get help RAG agent and process query
         agent = get_help_rag_agent()
         
         # Create page context from request
@@ -236,7 +238,7 @@ async def process_help_query(
             language=help_request.language
         )
         
-        # Cache the response for future requests
+        # 4. Prepare response data for caching
         response_data = {
             'response': help_response.response,
             'session_id': help_response.session_id,
@@ -267,22 +269,22 @@ async def process_help_query(
             ] if help_response.related_guides else None
         }
         
-        # Cache response with appropriate TTL based on confidence
+        # 5. Cache response in Supabase with TTL based on confidence (NEW)
         cache_ttl = 600 if help_response.confidence > 0.8 else 300  # 10 min for high confidence, 5 min for lower
-        await performance_service.cache_response(
-            help_request.query, 
-            help_request.context, 
-            response_data, 
-            help_request.language, 
-            cache_ttl
+        await set_cached_response(
+            query=help_request.query,
+            user_id=current_user["user_id"],
+            response=response_data,
+            context=help_request.context,
+            ttl=cache_ttl
         )
         
-        # Record performance metrics
+        # 6. Record performance metrics
         await performance_service.record_operation_performance(
             'help_query_ai', start_time, True
         )
         
-        # Track analytics for the query
+        # 7. Track analytics for the query
         analytics_tracker = get_analytics_tracker()
         await analytics_tracker.track_query(
             user_id=current_user["user_id"],

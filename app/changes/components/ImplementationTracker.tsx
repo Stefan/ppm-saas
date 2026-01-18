@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Calendar, Clock, Users, CheckCircle, TrendingUp, BarChart3, Target, PlayCircle, Settings, FileText, MessageSquare, AlertTriangle } from 'lucide-react'
+import { useTranslations } from '@/lib/i18n/context'
 
 // Utility function for date formatting
 const formatDate = (dateString: string) => {
@@ -129,6 +130,7 @@ export default function ImplementationTracker({
   implementationPlanId,
   onStatusUpdate 
 }: ImplementationTrackerProps) {
+  const t = useTranslations('changes');
   const [implementationStatus, setImplementationStatus] = useState<ImplementationStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'overview' | 'tasks' | 'gantt' | 'milestones' | 'progress'>('overview')

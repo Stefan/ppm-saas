@@ -23,6 +23,7 @@ import {
   Eye,
   Edit3
 } from 'lucide-react'
+import { useTranslations } from '../../lib/i18n/context'
 import type { Comment, Conflict } from './types'
 import type { ActiveUser } from '../../hooks/useRealtimePMR'
 
@@ -47,6 +48,7 @@ export default function CollaborationPanel({
   onResolveConflict,
   className = ''
 }: CollaborationPanelProps) {
+  const { t } = useTranslations()
   const [activeTab, setActiveTab] = useState<'users' | 'comments' | 'conflicts'>('users')
   const [newCommentContent, setNewCommentContent] = useState('')
   const [selectedSection, setSelectedSection] = useState<string>('')
@@ -94,9 +96,9 @@ export default function CollaborationPanel({
     const diffMs = now.getTime() - date.getTime()
     const diffMins = Math.floor(diffMs / 60000)
     
-    if (diffMins < 1) return 'Just now'
-    if (diffMins < 60) return `${diffMins}m ago`
-    if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`
+    if (diffMins < 1) return t('pmr.collaboration.time.justNow')
+    if (diffMins < 60) return t('pmr.collaboration.time.minutesAgo', { minutes: diffMins })
+    if (diffMins < 1440) return t('pmr.collaboration.time.hoursAgo', { hours: Math.floor(diffMins / 60) })
     return date.toLocaleDateString()
   }
 
@@ -106,7 +108,7 @@ export default function CollaborationPanel({
       <div className="p-4 border-b border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center">
           <Users className="h-5 w-5 mr-2 text-blue-600" />
-          Collaboration
+          {t('pmr.collaboration.title')}
         </h3>
       </div>
 
@@ -122,7 +124,7 @@ export default function CollaborationPanel({
         >
           <div className="flex items-center justify-center space-x-1">
             <Users className="h-4 w-4" />
-            <span>Users</span>
+            <span>{t('pmr.collaboration.tabs.users')}</span>
             {activeUsers.length > 0 && (
               <span className="ml-1 px-1.5 py-0.5 text-xs bg-blue-100 text-blue-600 rounded-full">
                 {activeUsers.length}
@@ -141,7 +143,7 @@ export default function CollaborationPanel({
         >
           <div className="flex items-center justify-center space-x-1">
             <MessageSquare className="h-4 w-4" />
-            <span>Comments</span>
+            <span>{t('pmr.collaboration.tabs.comments')}</span>
             {unresolvedComments.length > 0 && (
               <span className="ml-1 px-1.5 py-0.5 text-xs bg-yellow-100 text-yellow-600 rounded-full">
                 {unresolvedComments.length}
@@ -160,7 +162,7 @@ export default function CollaborationPanel({
         >
           <div className="flex items-center justify-center space-x-1">
             <AlertTriangle className="h-4 w-4" />
-            <span>Conflicts</span>
+            <span>{t('pmr.collaboration.tabs.conflicts')}</span>
             {unresolvedConflicts.length > 0 && (
               <span className="ml-1 px-1.5 py-0.5 text-xs bg-red-100 text-red-600 rounded-full">
                 {unresolvedConflicts.length}
@@ -191,7 +193,7 @@ export default function CollaborationPanel({
                     <p className="text-sm font-medium text-gray-900 truncate">
                       {user.name}
                       {user.id === currentUserId && (
-                        <span className="ml-2 text-xs text-gray-500">(You)</span>
+                        <span className="ml-2 text-xs text-gray-500">{t('pmr.collaboration.users.you')}</span>
                       )}
                     </p>
                     {user.email && (
@@ -199,7 +201,7 @@ export default function CollaborationPanel({
                     )}
                     <p className="text-xs text-gray-400 flex items-center mt-1">
                       <Clock className="h-3 w-3 mr-1" />
-                      Active {formatTimestamp(user.lastActivity)}
+                      {t('pmr.collaboration.users.active', { time: formatTimestamp(user.lastActivity) })}
                     </p>
                   </div>
                   <div className="flex items-center space-x-1">
@@ -210,7 +212,7 @@ export default function CollaborationPanel({
             ) : (
               <div className="text-center py-8">
                 <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-sm text-gray-500">No other users online</p>
+                <p className="text-sm text-gray-500">{t('pmr.collaboration.users.noUsers')}</p>
               </div>
             )}
           </div>
@@ -223,13 +225,13 @@ export default function CollaborationPanel({
             <div className="bg-gray-50 rounded-lg p-3 space-y-2">
               <input
                 type="text"
-                placeholder="Section ID (e.g., executive-summary)"
+                placeholder={t('pmr.collaboration.comments.sectionPlaceholder')}
                 value={selectedSection}
                 onChange={(e) => setSelectedSection(e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <textarea
-                placeholder="Add a comment..."
+                placeholder={t('pmr.collaboration.comments.addPlaceholder')}
                 value={newCommentContent}
                 onChange={(e) => setNewCommentContent(e.target.value)}
                 onKeyDown={(e) => {
@@ -246,7 +248,7 @@ export default function CollaborationPanel({
                 className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               >
                 <Send className="h-4 w-4" />
-                <span>Send Comment</span>
+                <span>{t('pmr.collaboration.comments.sendComment')}</span>
               </button>
             </div>
 
@@ -264,7 +266,7 @@ export default function CollaborationPanel({
                           {comment.user_name}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {comment.section_id && `on ${comment.section_id}`}
+                          {comment.section_id && t('pmr.collaboration.comments.on', { section: comment.section_id })}
                         </p>
                       </div>
                       <div className="flex items-center space-x-1">
@@ -275,7 +277,7 @@ export default function CollaborationPanel({
                           <button
                             onClick={() => onResolveComment(comment.id)}
                             className="p-1 text-gray-400 hover:text-green-600 transition-colors"
-                            title="Resolve comment"
+                            title={t('pmr.collaboration.comments.resolveComment')}
                           >
                             <CheckCircle className="h-4 w-4" />
                           </button>
@@ -289,7 +291,7 @@ export default function CollaborationPanel({
             ) : (
               <div className="text-center py-8">
                 <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-sm text-gray-500">No comments yet</p>
+                <p className="text-sm text-gray-500">{t('pmr.collaboration.comments.noComments')}</p>
               </div>
             )}
           </div>
@@ -309,15 +311,15 @@ export default function CollaborationPanel({
                       <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
                       <div>
                         <p className="text-sm font-medium text-red-900">
-                          {conflict.conflict_type === 'simultaneous_edit' && 'Simultaneous Edit Conflict'}
-                          {conflict.conflict_type === 'version_mismatch' && 'Version Mismatch'}
-                          {conflict.conflict_type === 'permission_conflict' && 'Permission Conflict'}
+                          {conflict.conflict_type === 'simultaneous_edit' && t('pmr.collaboration.conflicts.types.simultaneousEdit')}
+                          {conflict.conflict_type === 'version_mismatch' && t('pmr.collaboration.conflicts.types.versionMismatch')}
+                          {conflict.conflict_type === 'permission_conflict' && t('pmr.collaboration.conflicts.types.permissionConflict')}
                         </p>
                         <p className="text-xs text-red-700 mt-1">
-                          Section: {conflict.section_id}
+                          {t('pmr.collaboration.conflicts.section', { section: conflict.section_id })}
                         </p>
                         <p className="text-xs text-red-600 mt-1">
-                          {conflict.conflicting_users.length} users made conflicting changes
+                          {t('pmr.collaboration.conflicts.usersConflicting', { count: conflict.conflicting_users.length })}
                         </p>
                       </div>
                     </div>
@@ -335,10 +337,10 @@ export default function CollaborationPanel({
                     <div className="space-y-3 pt-3 border-t border-red-200">
                       {/* Show conflicting changes */}
                       <div className="space-y-2">
-                        <p className="text-xs font-medium text-red-900">Conflicting Changes:</p>
+                        <p className="text-xs font-medium text-red-900">{t('pmr.collaboration.conflicts.conflictingChanges')}</p>
                         {conflict.conflicting_changes.map((change, idx) => (
                           <div key={idx} className="bg-white rounded p-2 text-xs">
-                            <p className="font-medium text-gray-900">User: {change.user_id}</p>
+                            <p className="font-medium text-gray-900">{t('pmr.collaboration.conflicts.user', { userId: change.user_id })}</p>
                             <p className="text-gray-600 mt-1">
                               {formatTimestamp(change.timestamp)}
                             </p>
@@ -348,26 +350,26 @@ export default function CollaborationPanel({
 
                       {/* Resolution options */}
                       <div className="space-y-2">
-                        <p className="text-xs font-medium text-red-900">Resolve Conflict:</p>
+                        <p className="text-xs font-medium text-red-900">{t('pmr.collaboration.conflicts.resolve')}</p>
                         <div className="grid grid-cols-2 gap-2">
                           <button
                             onClick={() => handleResolveConflict(conflict.id, 'overwrite')}
                             className="px-3 py-2 bg-white text-red-700 border border-red-300 rounded hover:bg-red-50 text-xs font-medium"
                           >
-                            Use Latest
+                            {t('pmr.collaboration.conflicts.useLatest')}
                           </button>
                           <button
                             onClick={() => handleResolveConflict(conflict.id, 'merge')}
                             className="px-3 py-2 bg-white text-red-700 border border-red-300 rounded hover:bg-red-50 text-xs font-medium"
                           >
-                            Merge Changes
+                            {t('pmr.collaboration.conflicts.mergeChanges')}
                           </button>
                         </div>
                         <button
                           onClick={() => handleResolveConflict(conflict.id, 'manual')}
                           className="w-full px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-xs font-medium"
                         >
-                          Resolve Manually
+                          {t('pmr.collaboration.conflicts.resolveManually')}
                         </button>
                       </div>
                     </div>
@@ -377,7 +379,7 @@ export default function CollaborationPanel({
             ) : (
               <div className="text-center py-8">
                 <CheckCircle className="h-12 w-12 text-green-300 mx-auto mb-3" />
-                <p className="text-sm text-gray-500">No conflicts detected</p>
+                <p className="text-sm text-gray-500">{t('pmr.collaboration.conflicts.noConflicts')}</p>
               </div>
             )}
           </div>
@@ -390,17 +392,17 @@ export default function CollaborationPanel({
           <div className="flex items-center space-x-4">
             <span className="flex items-center">
               <Users className="h-3 w-3 mr-1" />
-              {activeUsers.length} online
+              {t('pmr.collaboration.footer.online', { count: activeUsers.length })}
             </span>
             <span className="flex items-center">
               <MessageSquare className="h-3 w-3 mr-1" />
-              {unresolvedComments.length} comments
+              {t('pmr.collaboration.footer.comments', { count: unresolvedComments.length })}
             </span>
           </div>
           {unresolvedConflicts.length > 0 && (
             <span className="flex items-center text-red-600">
               <AlertTriangle className="h-3 w-3 mr-1" />
-              {unresolvedConflicts.length} conflicts
+              {t('pmr.collaboration.footer.conflicts', { count: unresolvedConflicts.length })}
             </span>
           )}
         </div>

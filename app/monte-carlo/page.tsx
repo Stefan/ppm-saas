@@ -8,6 +8,7 @@ import { getApiUrl } from '../../lib/api/client'
 import { ResponsiveContainer } from '../../components/ui/molecules/ResponsiveContainer'
 import { AdaptiveGrid } from '../../components/ui/molecules/AdaptiveGrid'
 import { TouchButton } from '../../components/ui/atoms/TouchButton'
+import { useTranslations } from '@/lib/i18n/context'
 import { 
   BarChart3, 
   TrendingUp, 
@@ -64,6 +65,7 @@ interface SimulationResult {
 
 export default function MonteCarloPage() {
   const { session } = useAuth()
+  const { t } = useTranslations()
   const [activeSimulation, setActiveSimulation] = useState<SimulationResult | null>(null)
   const [simulationHistory, setSimulationHistory] = useState<SimulationResult[]>([])
   const [loading, setLoading] = useState(false)
@@ -246,9 +248,9 @@ export default function MonteCarloPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-4 sm:space-y-0">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Monte Carlo Risk Analysis</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('monteCarlo.title')}</h1>
             <p className="mt-2 text-gray-600">
-              Statistical simulation and visualization of project risk impacts
+              {t('monteCarlo.subtitle')}
             </p>
           </div>
           
@@ -259,7 +261,7 @@ export default function MonteCarloPage() {
               size="md"
               leftIcon={<Settings className="h-4 w-4" />}
             >
-              Configure
+              {t('monteCarlo.configure')}
             </TouchButton>
             
             <TouchButton
@@ -270,7 +272,7 @@ export default function MonteCarloPage() {
               leftIcon={<Play className="h-4 w-4" />}
               loading={loading}
             >
-              {loading ? 'Running...' : 'Run Simulation'}
+              {loading ? t('monteCarlo.running') : t('monteCarlo.runSimulation')}
             </TouchButton>
           </div>
         </div>
@@ -289,26 +291,26 @@ export default function MonteCarloPage() {
         {showConfig && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Simulation Configuration</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t('monteCarlo.simulationConfiguration')}</h3>
             </div>
             <div className="p-6 space-y-6">
               {/* Risk Configuration */}
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-md font-medium text-gray-900">Risk Configuration</h4>
+                  <h4 className="text-md font-medium text-gray-900">{t('monteCarlo.riskConfiguration')}</h4>
                   <button
                     onClick={loadRisksFromProject}
                     className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
                   >
-                    Load Sample Risks
+                    {t('monteCarlo.loadSampleRisks')}
                   </button>
                 </div>
                 
                 {config.risks.length === 0 ? (
                   <div className="text-center py-8 bg-gray-50 rounded-lg">
                     <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500 mb-4">No risks configured</p>
-                    <p className="text-sm text-gray-400">Load risks from your project or add them manually</p>
+                    <p className="text-gray-500 mb-4">{t('monteCarlo.noRisksConfigured')}</p>
+                    <p className="text-sm text-gray-400">{t('monteCarlo.loadRisksMessage')}</p>
                   </div>
                 ) : (
                   <div className="space-y-3">

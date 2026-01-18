@@ -1,0 +1,170 @@
+import { FileInfo, FileCategory, CategoryRule } from './types';
+import { FileScanner } from './FileScanner';
+
+/**
+ * Categorizes files based on pattern matching rules
+ */
+export class Categorizer {
+  private scanner: FileScanner;
+  private rules: CategoryRule[];
+
+  constructor(scanner: FileScanner) {
+    this.scanner = scanner;
+    this.rules = this.initializeRules();
+  }
+
+  /**
+   * Initialize category rules with patterns and priorities
+   * Higher priority = checked first
+   */
+  private initializeRules(): CategoryRule[] {
+    return [
+      // Priority 100: Essential files (checked first)
+      {
+        category: FileCategory.ESSENTIAL,
+        patterns: [], // Handled by whitelist check
+        priority: 100,
+      },
+
+      // Priority 90: SQL files for review
+      {
+        category: FileCategory.SQL_REVIEW,
+        patterns: [/\.sql$/i],
+        priority: 90,
+      },
+
+      // Priority 80: Specific temporary summaries
+      {
+        category: FileCategory.TEMPORARY_SUMMARY,
+        patterns: [
+          /^TASK_.*_SUMMARY\.md$/i,
+          /^CHECKPOINT_.*_REPORT\.md$/i,
+          /^FINAL_.*_SUMMARY\.md$/i,
+          /.*_COMPLETION_SUMMARY\.md$/i,
+          /.*_FIX_SUMMARY\.md$/i,
+          /.*_IMPLEMENTATION_SUMMARY\.md$/i,
+          /.*_INTEGRATION_SUMMARY\.md$/i,
+          /.*_VALIDATION_SUMMARY\.md$/i,
+          /.*_STATUS\.md$/i,
+          /.*_COMPLETE\.md$/i,
+          /.*_REPORT\.md$/i,
+        ],
+        priority: 80,
+      },
+
+      // Priority 70: Translation work files
+      {
+        category: FileCategory.TRANSLATION_WORK,
+        patterns: [
+          /^BATCH2_.*\.md$/i,
+          /^I18N_(?!DEVELOPER_GUIDE).*\.md$/i, // I18N files except DEVELOPER_GUIDE
+          /^WEEK4_.*\.md$/i,
+          /.*_TRANSLATION_.*\.md$/i,
+          /.*_TRANSLATION_.*\.csv$/i,
+        ],
+        priority: 70,
+      },
+
+      // Priority 60: Performance reports
+      {
+        category: FileCategory.PERFORMANCE_REPORT,
+        patterns: [
+          /^DASHBOARD_.*\.md$/i,
+          /^BUNDLE_.*\.md$/i,
+          /^PERFORMANCE_.*\.md$/i,
+          /^OPTIMIZATION_.*\.md$/i,
+          /^LCP_.*\.md$/i,
+          /^CLS_.*\.md$/i,
+          /^TBT_.*\.md$/i,
+          /^LIGHTHOUSE_.*\.md$/i,
+          /^CHROME_.*\.md$/i,
+          /^ADMIN_.*\.md$/i,
+          /^PHASE_.*\.md$/i,
+          /^CODEBASE_.*\.md$/i,
+          /^DEPENDENCY_.*\.md$/i,
+          /^DEPLOYMENT_.*\.md$/i,
+          /^VERCEL_.*\.md$/i,
+          /^IMAGE_.*\.md$/i,
+          /^MOBILE_.*\.md$/i,
+          /^STATE_.*\.md$/i,
+          /^WEB_.*\.md$/i,
+          /^TIPTAP_.*\.md$/i,
+          /^ROUTE_.*\.md$/i,
+          /^VIRTUAL_.*\.md$/i,
+          /^DYNAMIC_.*\.md$/i,
+        ],
+        priority: 60,
+      },
+
+      // Priority 50: Temporary logs and test outputs
+      {
+        category: FileCategory.TEMPORARY_LOG,
+        patterns: [
+          /\.log$/i,
+          /^test-results\.json$/i,
+          /^test-output\.log$/i,
+          /^bundle-analysis.*\.(txt|log)$/i,
+          /^chrome-scroll-test\.html$/i,
+          /^lighthouse-.*\.(json|log)$/i,
+        ],
+        priority: 50,
+      },
+    ];
+  }
+
+  /**
+   * Categorize a file based on rules
+   */
+  categorizeFile(file: FileInfo): FileCategory {
+    // Check essential files first (highest priority)
+    if (this.scanner.isEssentialFile(file.name)) {
+      return FileCategory.ESSENTIAL;
+    }
+
+    // Sort rules by priority (highest first)
+    const sortedRules = [...this.rules].sort((a, b) => b.priority - a.priority);
+
+    // Check each rule in priority order
+    for (const rule of sortedRules) {
+      if (rule.category === FileCategory.ESSENTIAL) {
+        continue; // Already checked above
+      }
+
+      for (const pattern of rule.patterns) {
+        if (pattern.test(file.name)) {
+          return rule.category;
+        }
+      }
+    }
+
+    // No pattern matched
+    return FileCategory.UNKNOWN;
+  }
+
+  /**
+   * Get all category rules
+   */
+  getCategoryRules(): CategoryRule[] {
+    return this.rules;
+  }
+
+  /**
+   * Categorize multiple files
+   */
+  categorizeFiles(files: FileInfo[]): Map<FileCategory, FileInfo[]> {
+    const categorized = new Map<FileCategory, FileInfo[]>();
+
+    // Initialize all categories
+    for (const category of Object.values(FileCategory)) {
+      categorized.set(category as FileCategory, []);
+    }
+
+    // Categorize each file
+    for (const file of files) {
+      const category = this.categorizeFile(file);
+      categorized.get(category)!.push(file);
+    }
+
+    return categorized;
+  }
+}

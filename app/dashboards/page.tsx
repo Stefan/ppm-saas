@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, Suspense, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { useAuth } from '../providers/SupabaseAuthProvider'
 import AppLayout from '../../components/shared/AppLayout'
+import PageContainer from '../../components/shared/PageContainer'
 import { getApiUrl, apiRequest } from '../../lib/api/client'
 import { 
   loadDashboardData, 
@@ -20,6 +21,8 @@ import { useRouter } from 'next/navigation'
 import { ComponentErrorBoundary } from '../../components/error-boundaries/ComponentErrorBoundary'
 import { SkeletonCard, SkeletonChart } from '../../components/ui/skeletons'
 import type { DashboardWidget } from '../../components/ui/organisms/AdaptiveDashboard'
+import { useLanguage } from '../../hooks/useLanguage'
+import { useTranslations } from '../../lib/i18n/context'
 
 // Dynamic imports for heavy components (code splitting)
 const VarianceKPIs = dynamic(() => import('./components/VarianceKPIs'), {
@@ -84,6 +87,9 @@ const AdaptiveDashboard = dynamic(() => import('../../components/ui/organisms/Ad
 export default function UltraFastDashboard() {
   const { session } = useAuth()
   const router = useRouter()
+  const { currentLanguage } = useLanguage()
+  const { t } = useTranslations()
+  
   const [quickStats, setQuickStats] = useState<QuickStats | null>(null)
   const [kpis, setKPIs] = useState<KPIs | null>(null)
   const [recentProjects, setRecentProjects] = useState<Project[]>([])
@@ -382,54 +388,79 @@ export default function UltraFastDashboard() {
   // Ultra-fast loading state
   if (loading) return (
     <AppLayout>
-      <div className="p-8 space-y-6">
+      <PageContainer maxWidth="wide">
         {/* Header Skeleton */}
-        <div className="animate-pulse">
+        <div className="animate-pulse mb-6">
           <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
           <div className="h-4 bg-gray-200 rounded w-1/4"></div>
         </div>
         
         {/* KPI Cards Skeleton */}
-        <div className="grid grid-cols-4 gap-4">
+        <div 
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: '1.5rem',
+            marginBottom: '1.5rem'
+          }}
+        >
           {[...Array(4)].map((_, i) => (
             <SkeletonCard key={i} variant="stat" />
           ))}
         </div>
         
         {/* Variance KPIs Skeleton */}
-        <div className="grid grid-cols-4 gap-4">
+        <div 
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: '1.5rem',
+            marginBottom: '1.5rem'
+          }}
+        >
           {[...Array(4)].map((_, i) => (
             <SkeletonCard key={i} variant="stat" />
           ))}
         </div>
         
         {/* Health Overview Skeleton */}
-        <div className="grid grid-cols-2 gap-6">
+        <div 
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+            gap: '1.5rem',
+            marginBottom: '1.5rem'
+          }}
+        >
           <SkeletonChart variant="pie" />
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="animate-pulse space-y-4">
-              <div className="h-5 bg-gray-200 rounded w-1/3"></div>
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="flex justify-between">
-                  <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                </div>
-              ))}
+          <div className="card">
+            <div className="card-body">
+              <div className="animate-pulse space-y-4">
+                <div className="h-5 bg-gray-200 rounded w-1/3"></div>
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="flex justify-between">
+                    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
         
         {/* Variance Trends Skeleton */}
-        <SkeletonChart variant="line" height="h-80" />
+        <div className="mb-6">
+          <SkeletonChart variant="line" height="h-80" />
+        </div>
         
         {/* Recent Projects Skeleton */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
+        <div className="card">
+          <div className="card-header">
             <div className="animate-pulse h-5 bg-gray-200 rounded w-1/4"></div>
           </div>
           <div className="divide-y divide-gray-200">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="px-6 py-4">
+              <div key={i} className="px-4 py-4 sm:px-6">
                 <div className="animate-pulse flex items-center justify-between">
                   <div className="flex items-center space-x-3 flex-1">
                     <div className="w-3 h-3 bg-gray-200 rounded-full"></div>
@@ -444,57 +475,57 @@ export default function UltraFastDashboard() {
             ))}
           </div>
         </div>
-      </div>
+      </PageContainer>
     </AppLayout>
   )
 
   return (
     <AppLayout>
-      <div className="p-8 space-y-6">
+      <PageContainer maxWidth="wide" compact>
         {/* Ultra-fast Header */}
-        <div className="flex justify-between items-start space-y-4">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-3 mb-4">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-3xl font-bold text-gray-900 truncate">Portfolio Dashboard</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t('dashboard.title')}</h1>
               {quickStats && quickStats.critical_alerts > 0 && (
-                <div className="flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium w-fit">
+                <div className="flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
                   <AlertTriangle className="h-4 w-4 mr-1 flex-shrink-0" />
-                  <span className="whitespace-nowrap">{quickStats.critical_alerts} Critical</span>
+                  <span className="whitespace-nowrap">{quickStats.critical_alerts} {t('dashboard.critical')}</span>
                 </div>
               )}
               {varianceAlertCount > 0 && (
-                <div className="flex items-center px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium w-fit">
+                <div className="flex items-center px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
                   <DollarSign className="h-4 w-4 mr-1 flex-shrink-0" />
-                  <span className="whitespace-nowrap">{varianceAlertCount} Budget Alert{varianceAlertCount !== 1 ? 's' : ''}</span>
+                  <span className="whitespace-nowrap">{varianceAlertCount} {varianceAlertCount !== 1 ? t('dashboard.budgetAlerts') : t('dashboard.budgetAlert')}</span>
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-              {quickStats && <span className="whitespace-nowrap">{quickStats.total_projects} projects</span>}
+            <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-gray-600">
+              {quickStats && <span className="whitespace-nowrap">{quickStats.total_projects} {t('dashboard.projects')}</span>}
               {lastUpdated && (
-                <span className="whitespace-nowrap">Updated: {lastUpdated.toLocaleTimeString()}</span>
+                <span className="whitespace-nowrap">{t('dashboard.updated')}: {lastUpdated.toLocaleTimeString()}</span>
               )}
               {lastSyncTime && (
                 <span className="whitespace-nowrap flex items-center">
                   <div className={`w-2 h-2 rounded-full mr-1 flex-shrink-0 ${isSyncing ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`}></div>
-                  {isSyncing ? 'Syncing...' : 'Synced'}
+                  {isSyncing ? t('dashboard.syncing') : t('dashboard.synced')}
                 </span>
               )}
               <span className="flex items-center text-green-600 whitespace-nowrap">
                 <div className="w-2 h-2 bg-green-500 rounded-full mr-1 flex-shrink-0"></div>
-                Live
+                {t('dashboard.live')}
               </span>
             </div>
           </div>
           
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <button
               onClick={toggleDashboardMode}
               className="flex items-center justify-center px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
-              title={showAdaptiveDashboard ? 'Switch to Traditional View' : 'Switch to AI-Enhanced View'}
+              title={showAdaptiveDashboard ? t('dashboard.traditionalView') : t('dashboard.aiView')}
             >
               <Zap className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span>AI Enhanced</span>
+              <span>{t('dashboard.aiEnhanced')}</span>
             </button>
             
             <button
@@ -502,7 +533,7 @@ export default function UltraFastDashboard() {
               className="flex items-center justify-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <RefreshCw className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span>Refresh</span>
+              <span>{t('dashboard.refresh')}</span>
             </button>
           </div>
         </div>
@@ -513,7 +544,7 @@ export default function UltraFastDashboard() {
             <div className="flex items-start">
               <AlertTriangle className="h-5 w-5 text-yellow-400 mr-2 flex-shrink-0 mt-0.5" />
               <span className="text-sm text-yellow-800 break-words">
-                Using fallback data - {error}
+                {t('dashboard.fallbackData')} - {error}
               </span>
             </div>
           </div>
@@ -552,44 +583,51 @@ export default function UltraFastDashboard() {
                   <ErrorFallback error={error} onRetry={resetError} />
                 )}
               >
-                <div className="grid grid-cols-4 gap-4">
-                  <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div 
+                  className="mb-4"
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                    gap: '1rem'
+                  }}
+                >
+                  <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Success Rate</p>
-                        <p className="text-2xl font-bold text-green-600">{kpis?.project_success_rate || 0}%</p>
+                        <p className="text-xs font-medium text-gray-600">{t('kpi.successRate')}</p>
+                        <p className="text-2xl font-bold text-green-600 mt-1">{kpis?.project_success_rate || 0}%</p>
                       </div>
-                      <CheckCircle className="h-8 w-8 text-green-600" />
+                      <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0" />
                     </div>
                   </div>
                   
-                  <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                  <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Budget Performance</p>
-                        <p className="text-2xl font-bold text-blue-600">{kpis?.budget_performance || 0}%</p>
+                        <p className="text-xs font-medium text-gray-600">{t('kpi.budgetPerformance')}</p>
+                        <p className="text-2xl font-bold text-blue-600 mt-1">{kpis?.budget_performance || 0}%</p>
                       </div>
-                      <DollarSign className="h-8 w-8 text-blue-600" />
+                      <DollarSign className="h-6 w-6 text-blue-600 flex-shrink-0" />
                     </div>
                   </div>
                   
-                  <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                  <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Timeline Performance</p>
-                        <p className="text-2xl font-bold text-purple-600">{kpis?.timeline_performance || 0}%</p>
+                        <p className="text-xs font-medium text-gray-600">{t('kpi.timelinePerformance')}</p>
+                        <p className="text-2xl font-bold text-purple-600 mt-1">{kpis?.timeline_performance || 0}%</p>
                       </div>
-                      <Clock className="h-8 w-8 text-purple-600" />
+                      <Clock className="h-6 w-6 text-purple-600 flex-shrink-0" />
                     </div>
                   </div>
                   
-                  <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                  <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Active Projects</p>
-                        <p className="text-2xl font-bold text-indigo-600">{kpis?.active_projects_ratio || 0}%</p>
+                        <p className="text-xs font-medium text-gray-600">{t('kpi.activeProjects')}</p>
+                        <p className="text-2xl font-bold text-indigo-600 mt-1">{kpis?.active_projects_ratio || 0}%</p>
                       </div>
-                      <TrendingUp className="h-8 w-8 text-indigo-600" />
+                      <TrendingUp className="h-6 w-6 text-indigo-600 flex-shrink-0" />
                     </div>
                   </div>
                 </div>
@@ -616,15 +654,22 @@ export default function UltraFastDashboard() {
                   <ErrorFallback error={error} onRetry={resetError} />
                 )}
               >
-                <div className="grid grid-cols-2 gap-6">
+                <div 
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+                    gap: '1rem'
+                  }}
+                  className="mb-4"
+                >
                   {/* Health Distribution */}
-                  <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Project Health</h3>
-                    <div className="space-y-3">
+                  <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                    <h3 className="text-base font-semibold text-gray-900 mb-3">{t('health.projectHealth')}</h3>
+                    <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center min-w-0">
-                          <div className="w-3 h-3 bg-green-500 rounded-full mr-3 flex-shrink-0"></div>
-                          <span className="text-sm font-medium text-gray-700">Healthy</span>
+                          <div className="w-2.5 h-2.5 bg-green-500 rounded-full mr-2 flex-shrink-0"></div>
+                          <span className="text-sm font-medium text-gray-700">{t('health.healthy')}</span>
                         </div>
                         <div className="flex items-center space-x-2 flex-shrink-0">
                           <span className="text-sm font-bold text-gray-900">{quickStats?.health_distribution?.green || 0}</span>
@@ -634,8 +679,8 @@ export default function UltraFastDashboard() {
                       
                       <div className="flex items-center justify-between">
                         <div className="flex items-center min-w-0">
-                          <div className="w-3 h-3 bg-yellow-500 rounded-full mr-3 flex-shrink-0"></div>
-                          <span className="text-sm font-medium text-gray-700">At Risk</span>
+                          <div className="w-2.5 h-2.5 bg-yellow-500 rounded-full mr-2 flex-shrink-0"></div>
+                          <span className="text-sm font-medium text-gray-700">{t('health.atRisk')}</span>
                         </div>
                         <div className="flex items-center space-x-2 flex-shrink-0">
                           <span className="text-sm font-bold text-gray-900">{quickStats?.health_distribution?.yellow || 0}</span>
@@ -645,8 +690,8 @@ export default function UltraFastDashboard() {
                       
                       <div className="flex items-center justify-between">
                         <div className="flex items-center min-w-0">
-                          <div className="w-3 h-3 bg-red-500 rounded-full mr-3 flex-shrink-0"></div>
-                          <span className="text-sm font-medium text-gray-700">Critical</span>
+                          <div className="w-2.5 h-2.5 bg-red-500 rounded-full mr-2 flex-shrink-0"></div>
+                          <span className="text-sm font-medium text-gray-700">{t('health.critical')}</span>
                         </div>
                         <div className="flex items-center space-x-2 flex-shrink-0">
                           <span className="text-sm font-bold text-gray-900">{quickStats?.health_distribution?.red || 0}</span>
@@ -656,7 +701,7 @@ export default function UltraFastDashboard() {
                     </div>
                     
                     {/* Simple Health Bar */}
-                    <div className="mt-4">
+                    <div className="mt-3">
                       <div className="flex h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div 
                           className="bg-green-500" 
@@ -678,24 +723,30 @@ export default function UltraFastDashboard() {
                   </div>
 
                   {/* Quick Stats */}
-                  <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h3>
-                    <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                    <h3 className="text-base font-semibold text-gray-900 mb-3">{t('stats.quickStats')}</h3>
+                    <div 
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(2, 1fr)',
+                        gap: '0.75rem'
+                      }}
+                    >
                       <div className="text-center">
-                        <div className="text-xl sm:text-2xl font-bold text-blue-600">{quickStats?.total_projects || 0}</div>
-                        <div className="text-sm text-gray-600">Total Projects</div>
+                        <div className="text-2xl font-bold text-blue-600">{quickStats?.total_projects || 0}</div>
+                        <div className="text-xs text-gray-600">{t('stats.totalProjects')}</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-xl sm:text-2xl font-bold text-green-600">{quickStats?.active_projects || 0}</div>
-                        <div className="text-sm text-gray-600">Active Projects</div>
+                        <div className="text-2xl font-bold text-green-600">{quickStats?.active_projects || 0}</div>
+                        <div className="text-xs text-gray-600">{t('stats.activeProjects')}</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-xl sm:text-2xl font-bold text-red-600">{quickStats?.critical_alerts || 0}</div>
-                        <div className="text-sm text-gray-600">Critical Alerts</div>
+                        <div className="text-2xl font-bold text-red-600">{quickStats?.critical_alerts || 0}</div>
+                        <div className="text-xs text-gray-600">{t('stats.criticalAlerts')}</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-xl sm:text-2xl font-bold text-yellow-600">{quickStats?.at_risk_projects || 0}</div>
-                        <div className="text-sm text-gray-600">At Risk</div>
+                        <div className="text-2xl font-bold text-yellow-600">{quickStats?.at_risk_projects || 0}</div>
+                        <div className="text-xs text-gray-600">{t('stats.atRisk')}</div>
                       </div>
                     </div>
                   </div>
@@ -703,109 +754,132 @@ export default function UltraFastDashboard() {
               </ComponentErrorBoundary>
             )}
 
-            {/* Variance Trends */}
-            <ComponentErrorBoundary
-              componentName="VarianceTrends"
-              fallbackComponent={({ error, resetError }) => (
-                <ErrorFallback error={error} onRetry={resetError} />
-              )}
+            {/* Variance Trends and Alerts - Side by Side */}
+            <div 
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',
+                gap: '1rem'
+              }}
+              className="mb-4"
             >
-              <Suspense fallback={<LoadingFallback message="Loading variance trends..." />}>
-                <VarianceTrends session={session} selectedCurrency="USD" />
-              </Suspense>
-            </ComponentErrorBoundary>
-
-            {/* Variance Alerts */}
-            <ComponentErrorBoundary
-              componentName="VarianceAlerts"
-              fallbackComponent={({ error, resetError }) => (
-                <ErrorFallback error={error} onRetry={resetError} />
-              )}
-            >
-              <Suspense fallback={<LoadingFallback message="Loading variance alerts..." />}>
-                <VarianceAlerts session={session} onAlertCount={setVarianceAlertCount} />
-              </Suspense>
-            </ComponentErrorBoundary>
-
-            {/* Recent Projects (Loaded in background) */}
-            {(recentProjects?.length || 0) > 0 && (
               <ComponentErrorBoundary
-                componentName="RecentProjects"
+                componentName="VarianceTrends"
                 fallbackComponent={({ error, resetError }) => (
                   <ErrorFallback error={error} onRetry={resetError} />
                 )}
               >
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                  <div className="px-6 py-4 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900">Recent Projects</h3>
-                  </div>
-                  <VirtualizedProjectList 
-                    projects={recentProjects} 
-                    height={600}
-                    itemHeight={120}
-                  />
-                </div>
+                <Suspense fallback={<LoadingFallback message="Loading variance trends..." />}>
+                  <VarianceTrends session={session} selectedCurrency="USD" />
+                </Suspense>
               </ComponentErrorBoundary>
-            )}
 
-            {/* Quick Actions */}
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-              <div className="grid grid-cols-5 gap-4">
-                <button 
-                  onClick={() => router.push('/scenarios')}
-                  className="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors min-h-[44px]"
+              <ComponentErrorBoundary
+                componentName="VarianceAlerts"
+                fallbackComponent={({ error, resetError }) => (
+                  <ErrorFallback error={error} onRetry={resetError} />
+                )}
+              >
+                <Suspense fallback={<LoadingFallback message="Loading variance alerts..." />}>
+                  <VarianceAlerts session={session} onAlertCount={setVarianceAlertCount} />
+                </Suspense>
+              </ComponentErrorBoundary>
+            </div>
+
+            {/* Recent Projects and Quick Actions - Side by Side */}
+            <div 
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',
+                gap: '1rem'
+              }}
+            >
+              {/* Recent Projects (Loaded in background) */}
+              {(recentProjects?.length || 0) > 0 && (
+                <ComponentErrorBoundary
+                  componentName="RecentProjects"
+                  fallbackComponent={({ error, resetError }) => (
+                    <ErrorFallback error={error} onRetry={resetError} />
+                  )}
                 >
-                  <div className="text-center">
-                    <GitBranch className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <span className="text-sm font-medium text-gray-700">What-If Scenarios</span>
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                    <div className="px-4 py-3 border-b border-gray-200">
+                      <h3 className="text-base font-semibold text-gray-900">{t('projects.recentProjects')}</h3>
+                    </div>
+                    <VirtualizedProjectList 
+                      projects={recentProjects} 
+                      height={400}
+                      itemHeight={100}
+                    />
                   </div>
-                </button>
-                
-                <button 
-                  onClick={() => router.push('/dashboards')}
-                  className="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors min-h-[44px]"
+                </ComponentErrorBoundary>
+              )}
+
+              {/* Quick Actions */}
+              <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                <h3 className="text-base font-semibold text-gray-900 mb-3">{t('actions.quickActions')}</h3>
+                <div 
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '0.75rem'
+                  }}
                 >
-                  <div className="text-center">
-                    <BarChart3 className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <span className="text-sm font-medium text-gray-700">View Detailed Charts</span>
-                  </div>
-                </button>
-                
-                <button 
-                  onClick={() => router.push('/resources')}
-                  className="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors min-h-[44px]"
-                >
-                  <div className="text-center">
-                    <Users className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <span className="text-sm font-medium text-gray-700">Manage Resources</span>
-                  </div>
-                </button>
-                
-                <button 
-                  onClick={() => router.push('/financials')}
-                  className="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-colors min-h-[44px]"
-                >
-                  <div className="text-center">
-                    <DollarSign className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <span className="text-sm font-medium text-gray-700">Financial Analysis</span>
-                  </div>
-                </button>
-                
-                <button 
-                  onClick={() => router.push('/reports')}
-                  className="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors min-h-[44px]"
-                >
-                  <div className="text-center">
-                    <Eye className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <span className="text-sm font-medium text-gray-700">Generate Report</span>
-                  </div>
-                </button>
+                  <button 
+                    onClick={() => router.push('/scenarios')}
+                    className="flex items-center justify-center p-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+                  >
+                    <div className="text-center">
+                      <GitBranch className="h-6 w-6 text-gray-400 mx-auto mb-1" />
+                      <span className="text-xs font-medium text-gray-700">{t('actions.scenarios')}</span>
+                    </div>
+                  </button>
+                  
+                  <button 
+                    onClick={() => router.push('/dashboards')}
+                    className="flex items-center justify-center p-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+                  >
+                    <div className="text-center">
+                      <BarChart3 className="h-6 w-6 text-gray-400 mx-auto mb-1" />
+                      <span className="text-xs font-medium text-gray-700">{t('actions.charts')}</span>
+                    </div>
+                  </button>
+                  
+                  <button 
+                    onClick={() => router.push('/resources')}
+                    className="flex items-center justify-center p-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors"
+                  >
+                    <div className="text-center">
+                      <Users className="h-6 w-6 text-gray-400 mx-auto mb-1" />
+                      <span className="text-xs font-medium text-gray-700">{t('actions.resources')}</span>
+                    </div>
+                  </button>
+                  
+                  <button 
+                    onClick={() => router.push('/financials')}
+                    className="flex items-center justify-center p-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-colors"
+                  >
+                    <div className="text-center">
+                      <DollarSign className="h-6 w-6 text-gray-400 mx-auto mb-1" />
+                      <span className="text-xs font-medium text-gray-700">{t('actions.financials')}</span>
+                    </div>
+                  </button>
+                  
+                  <button 
+                    onClick={() => router.push('/reports')}
+                    className="flex items-center justify-center p-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors"
+                  >
+                    <div className="text-center">
+                      <Eye className="h-6 w-6 text-gray-400 mx-auto mb-1" />
+                      <span className="text-xs font-medium text-gray-700">{t('actions.reports')}</span>
+                    </div>
+                  </button>
+                </div>
               </div>
             </div>
           </>
         )}
-      </div>
+      </PageContainer>
     </AppLayout>
   )
 }

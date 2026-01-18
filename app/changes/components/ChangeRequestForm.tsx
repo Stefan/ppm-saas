@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { Save, X, Upload, FileText, Calculator, Info, Calendar, DollarSign, Clock } from 'lucide-react'
+import { useTranslations } from '@/lib/i18n/context'
 
 // Types based on the design document
 interface ChangeRequestFormData {
@@ -62,27 +63,7 @@ interface ChangeRequestFormProps {
   initialData?: Partial<ChangeRequestFormData>
 }
 
-const CHANGE_TYPES = [
-  { value: '', label: 'Select Change Type' },
-  { value: 'scope', label: 'Scope Change' },
-  { value: 'schedule', label: 'Schedule Change' },
-  { value: 'budget', label: 'Budget Change' },
-  { value: 'design', label: 'Design Change' },
-  { value: 'regulatory', label: 'Regulatory Change' },
-  { value: 'resource', label: 'Resource Change' },
-  { value: 'quality', label: 'Quality Change' },
-  { value: 'safety', label: 'Safety Change' },
-  { value: 'emergency', label: 'Emergency Change' }
-]
-
-const PRIORITY_LEVELS = [
-  { value: '', label: 'Select Priority' },
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-  { value: 'critical', label: 'Critical' },
-  { value: 'emergency', label: 'Emergency' }
-]
+// Change types and priorities will be translated dynamically
 
 export default function ChangeRequestForm({
   changeId,
@@ -92,6 +73,8 @@ export default function ChangeRequestForm({
   onCancel,
   initialData
 }: ChangeRequestFormProps) {
+  const t = useTranslations('changes');
+  
   const [formData, setFormData] = useState<ChangeRequestFormData>({
     title: '',
     description: '',
@@ -273,34 +256,34 @@ export default function ChangeRequestForm({
     const newErrors: Record<string, string> = {}
 
     if (!formData.title.trim()) {
-      newErrors.title = 'Title is required'
+      newErrors.title = t('requestForm.validation.titleRequired')
     } else if (formData.title.length < 5) {
-      newErrors.title = 'Title must be at least 5 characters'
+      newErrors.title = t('requestForm.validation.titleMinLength')
     }
 
     if (!formData.description.trim()) {
-      newErrors.description = 'Description is required'
+      newErrors.description = t('requestForm.validation.descriptionRequired')
     } else if (formData.description.length < 10) {
-      newErrors.description = 'Description must be at least 10 characters'
+      newErrors.description = t('requestForm.validation.descriptionMinLength')
     }
 
     if (!formData.change_type) {
-      newErrors.change_type = 'Change type is required'
+      newErrors.change_type = t('requestForm.validation.changeTypeRequired')
     }
 
     if (!formData.priority) {
-      newErrors.priority = 'Priority is required'
+      newErrors.priority = t('requestForm.validation.priorityRequired')
     }
 
     if (!formData.project_id) {
-      newErrors.project_id = 'Project selection is required'
+      newErrors.project_id = t('requestForm.validation.projectRequired')
     }
 
     // Validate template fields if template is selected
     if (selectedTemplate) {
       selectedTemplate.template_data.fields.forEach(field => {
         if (field.required && !formData.template_data[field.name]) {
-          newErrors[`template_${field.name}`] = `${field.label} is required`
+          newErrors[`template_${field.name}`] = t('requestForm.validation.fieldRequired', { field: field.label })
         }
       })
     }
@@ -366,7 +349,7 @@ export default function ChangeRequestForm({
               error ? 'border-red-500' : 'border-gray-300'
             }`}
           >
-            <option value="">Select {field.label}</option>
+            <option value="">{t('common.select')} {field.label}</option>
             {field.options?.map(option => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -418,11 +401,34 @@ export default function ChangeRequestForm({
     }
   }
 
+  // Get change types and priorities with translations
+  const CHANGE_TYPES = [
+    { value: '', label: t('requestForm.changeTypes.select') },
+    { value: 'scope', label: t('requestForm.changeTypes.scope') },
+    { value: 'schedule', label: t('requestForm.changeTypes.schedule') },
+    { value: 'budget', label: t('requestForm.changeTypes.budget') },
+    { value: 'design', label: t('requestForm.changeTypes.design') },
+    { value: 'regulatory', label: t('requestForm.changeTypes.regulatory') },
+    { value: 'resource', label: t('requestForm.changeTypes.resource') },
+    { value: 'quality', label: t('requestForm.changeTypes.quality') },
+    { value: 'safety', label: t('requestForm.changeTypes.safety') },
+    { value: 'emergency', label: t('requestForm.changeTypes.emergency') }
+  ];
+
+  const PRIORITY_LEVELS = [
+    { value: '', label: t('requestForm.priorities.select') },
+    { value: 'low', label: t('requestForm.priorities.low') },
+    { value: 'medium', label: t('requestForm.priorities.medium') },
+    { value: 'high', label: t('requestForm.priorities.high') },
+    { value: 'critical', label: t('requestForm.priorities.critical') },
+    { value: 'emergency', label: t('requestForm.priorities.emergency') }
+  ];
+
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg">
       <div className="px-6 py-4 border-b border-gray-200">
         <h2 className="text-xl font-semibold text-gray-900">
-          {changeId ? 'Edit Change Request' : 'New Change Request'}
+          {changeId ? t('requestForm.editTitle') : t('requestForm.title')}
         </h2>
       </div>
 
@@ -431,7 +437,7 @@ export default function ChangeRequestForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="md:col-span-2">
             <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-              Title *
+              {t('requestForm.title')}
             </label>
             <input
               id="title"
@@ -441,7 +447,7 @@ export default function ChangeRequestForm({
               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                 errors.title ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="Brief description of the change"
+              placeholder={t('requestForm.titlePlaceholder')}
             />
             {errors.title && (
               <p className="mt-1 text-sm text-red-600">{errors.title}</p>
@@ -450,7 +456,7 @@ export default function ChangeRequestForm({
 
           <div>
             <label htmlFor="project" className="block text-sm font-medium text-gray-700 mb-2">
-              Project *
+              {t('requestForm.project')}
             </label>
             <select
               id="project"
@@ -460,7 +466,7 @@ export default function ChangeRequestForm({
                 errors.project_id ? 'border-red-500' : 'border-gray-300'
               }`}
             >
-              <option value="">Select Project</option>
+              <option value="">{t('requestForm.selectProject')}</option>
               {projects.map(project => (
                 <option key={project.id} value={project.id}>
                   {project.name}
@@ -474,7 +480,7 @@ export default function ChangeRequestForm({
 
           <div>
             <label htmlFor="template" className="block text-sm font-medium text-gray-700 mb-2">
-              Template
+              {t('requestForm.template')}
             </label>
             <select
               id="template"
@@ -482,7 +488,7 @@ export default function ChangeRequestForm({
               onChange={(e) => handleTemplateChange(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="">Select Template (Optional)</option>
+              <option value="">{t('requestForm.selectTemplate')}</option>
               {templates.map(template => (
                 <option key={template.id} value={template.id}>
                   {template.name}
@@ -493,7 +499,7 @@ export default function ChangeRequestForm({
 
           <div>
             <label htmlFor="change-type" className="block text-sm font-medium text-gray-700 mb-2">
-              Change Type *
+              {t('requestForm.changeType')}
             </label>
             <select
               id="change-type"
@@ -516,7 +522,7 @@ export default function ChangeRequestForm({
 
           <div>
             <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-2">
-              Priority *
+              {t('requestForm.priority')}
             </label>
             <select
               id="priority"
@@ -542,7 +548,7 @@ export default function ChangeRequestForm({
         <div className="space-y-4">
           <div>
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-              Description *
+              {t('requestForm.description')}
             </label>
             <textarea
               id="description"
@@ -552,7 +558,7 @@ export default function ChangeRequestForm({
               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                 errors.description ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="Detailed description of the proposed change"
+              placeholder={t('requestForm.descriptionPlaceholder')}
             />
             {errors.description && (
               <p className="mt-1 text-sm text-red-600">{errors.description}</p>
@@ -561,14 +567,14 @@ export default function ChangeRequestForm({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Justification
+              {t('requestForm.justification')}
             </label>
             <textarea
               value={formData.justification}
               onChange={(e) => handleInputChange('justification', e.target.value)}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Business justification for this change"
+              placeholder={t('requestForm.justificationPlaceholder')}
             />
           </div>
         </div>
@@ -577,7 +583,7 @@ export default function ChangeRequestForm({
         {selectedTemplate && (
           <div className="border-t pt-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
-              {selectedTemplate.name} Fields
+              {t('requestForm.templateFields', { templateName: selectedTemplate.name })}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {selectedTemplate.template_data.fields.map(field => (
@@ -600,14 +606,14 @@ export default function ChangeRequestForm({
         {/* Impact Estimation */}
         <div className="border-t pt-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-gray-900">Impact Estimation</h3>
+            <h3 className="text-lg font-medium text-gray-900">{t('requestForm.impactEstimation')}</h3>
             <button
               type="button"
               onClick={() => setShowImpactEstimator(!showImpactEstimator)}
               className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
             >
               <Calculator className="h-4 w-4" />
-              {showImpactEstimator ? 'Hide' : 'Show'} Impact Calculator
+              {showImpactEstimator ? t('requestForm.hideImpactCalculator') : t('requestForm.showImpactCalculator')}
             </button>
           </div>
 
@@ -615,7 +621,7 @@ export default function ChangeRequestForm({
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <DollarSign className="inline h-4 w-4 mr-1" />
-                Estimated Cost Impact ($)
+                {t('requestForm.estimatedCostImpact')}
               </label>
               <input
                 type="number"
@@ -631,7 +637,7 @@ export default function ChangeRequestForm({
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <Calendar className="inline h-4 w-4 mr-1" />
-                Schedule Impact (Days)
+                {t('requestForm.scheduleImpact')}
               </label>
               <input
                 type="number"
@@ -646,7 +652,7 @@ export default function ChangeRequestForm({
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <Clock className="inline h-4 w-4 mr-1" />
-                Effort Hours
+                {t('requestForm.effortHours')}
               </label>
               <input
                 type="number"
@@ -662,7 +668,7 @@ export default function ChangeRequestForm({
 
           <div className="mt-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Required By Date
+              {t('requestForm.requiredByDate')}
             </label>
             <input
               type="date"
@@ -676,12 +682,12 @@ export default function ChangeRequestForm({
         {/* Project Linkages */}
         {selectedProject && (
           <div className="border-t pt-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Project Linkages</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">{t('requestForm.projectLinkages')}</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Affected Milestones
+                  {t('requestForm.affectedMilestones')}
                 </label>
                 <div className="space-y-2 max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-3">
                   {selectedProject.milestones.map(milestone => (
@@ -705,7 +711,7 @@ export default function ChangeRequestForm({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Affected Purchase Orders
+                  {t('requestForm.affectedPurchaseOrders')}
                 </label>
                 <div className="space-y-2 max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-3">
                   {selectedProject.purchase_orders.map(po => (
@@ -734,21 +740,21 @@ export default function ChangeRequestForm({
 
         {/* File Attachments */}
         <div className="border-t pt-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Attachments</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">{t('requestForm.attachments')}</h3>
           
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Upload Documents
+                {t('requestForm.uploadDocuments')}
               </label>
               <div className="flex items-center justify-center w-full">
                 <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
                     <Upload className="w-8 h-8 mb-4 text-gray-500" />
                     <p className="mb-2 text-sm text-gray-500">
-                      <span className="font-semibold">Click to upload</span> or drag and drop
+                      <span className="font-semibold">{t('requestForm.clickToUpload')}</span> {t('requestForm.dragAndDrop')}
                     </p>
-                    <p className="text-xs text-gray-500">PDF, DOC, XLS, IMG files (MAX. 10MB)</p>
+                    <p className="text-xs text-gray-500">{t('requestForm.fileTypes')}</p>
                   </div>
                   <input
                     type="file"
@@ -764,7 +770,7 @@ export default function ChangeRequestForm({
 
             {attachments.length > 0 && (
               <div className="space-y-2">
-                <h4 className="text-sm font-medium text-gray-700">Attached Files:</h4>
+                <h4 className="text-sm font-medium text-gray-700">{t('requestForm.attachedFiles')}</h4>
                 {attachments.map((file, index) => (
                   <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                     <div className="flex items-center gap-2">
@@ -792,7 +798,7 @@ export default function ChangeRequestForm({
         <div className="flex items-center justify-between pt-6 border-t">
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Info className="h-4 w-4" />
-            <span>Fields marked with * are required</span>
+            <span>{t('requestForm.fieldsRequired')}</span>
           </div>
           
           <div className="flex items-center gap-3">
@@ -801,7 +807,7 @@ export default function ChangeRequestForm({
               onClick={onCancel}
               className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
             >
-              Cancel
+              {t('requestForm.cancel')}
             </button>
             <button
               type="submit"
@@ -813,7 +819,7 @@ export default function ChangeRequestForm({
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              {loading ? 'Saving...' : (changeId ? 'Update' : 'Create')} Change Request
+              {loading ? t('requestForm.saving') : (changeId ? t('requestForm.update') : t('requestForm.create'))}
             </button>
           </div>
         </div>

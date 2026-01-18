@@ -4,6 +4,7 @@ import {
   CheckCircle, FolderTree 
 } from 'lucide-react'
 import { ViewMode } from '../types'
+import { useTranslations } from '../../../lib/i18n/context'
 
 interface TabConfig {
   key: ViewMode
@@ -58,28 +59,30 @@ const TabButton = React.memo(({ tab, isActive, onClick }: {
 TabButton.displayName = 'TabButton'
 
 export default function TabNavigation({ viewMode, onViewModeChange }: TabNavigationProps) {
+  const { t } = useTranslations()
+  
   const tabConfig = useMemo((): TabConfig[] => [
-    { key: 'overview', label: 'Übersicht', icon: BarChart3, description: 'Gesamtüberblick und KPIs' },
-    { key: 'detailed', label: 'Detailliert', icon: TrendingUp, description: 'Detaillierte Kategorieanalyse' },
-    { key: 'trends', label: 'Trends', icon: PieChart, description: 'Zeitliche Entwicklung und Prognosen' },
-    { key: 'analysis', label: 'Analyse', icon: Target, description: 'Erweiterte Kostenanalyse' },
-    { key: 'po-breakdown', label: 'PO Breakdown', icon: FolderTree, description: 'SAP Purchase Order Hierarchie' },
-    { key: 'csv-import', label: 'CSV Import', icon: Upload, description: 'Daten importieren', highlight: true },
-    { key: 'commitments-actuals', label: 'Commitments vs Actuals', icon: FileText, description: 'Geplant vs. Ist-Vergleich' }
-  ], [])
+    { key: 'overview', label: t('financials.tabs.overview'), icon: BarChart3, description: t('financials.descriptions.overview') },
+    { key: 'detailed', label: t('financials.tabs.detailed'), icon: TrendingUp, description: t('financials.descriptions.detailed') },
+    { key: 'trends', label: t('financials.tabs.trends'), icon: PieChart, description: t('financials.descriptions.trends') },
+    { key: 'analysis', label: t('financials.tabs.analysis'), icon: Target, description: t('financials.descriptions.analysis') },
+    { key: 'po-breakdown', label: t('financials.tabs.poBreakdown'), icon: FolderTree, description: t('financials.descriptions.poBreakdown') },
+    { key: 'csv-import', label: t('financials.tabs.csvImport'), icon: Upload, description: t('financials.descriptions.csvImport'), highlight: true },
+    { key: 'commitments-actuals', label: t('financials.tabs.commitmentsActuals'), icon: FileText, description: t('financials.descriptions.commitmentsActuals') }
+  ], [t])
 
   const currentViewLabel = useMemo(() => {
     switch (viewMode) {
-      case 'overview': return 'Übersicht'
-      case 'detailed': return 'Detailliert'
-      case 'trends': return 'Trends'
-      case 'analysis': return 'Analyse'
-      case 'po-breakdown': return 'PO Breakdown'
-      case 'csv-import': return 'CSV Import'
-      case 'commitments-actuals': return 'Commitments vs Actuals'
-      default: return 'Übersicht'
+      case 'overview': return t('financials.tabs.overview')
+      case 'detailed': return t('financials.tabs.detailed')
+      case 'trends': return t('financials.tabs.trends')
+      case 'analysis': return t('financials.tabs.analysis')
+      case 'po-breakdown': return t('financials.tabs.poBreakdown')
+      case 'csv-import': return t('financials.tabs.csvImport')
+      case 'commitments-actuals': return t('financials.tabs.commitmentsActuals')
+      default: return t('financials.tabs.overview')
     }
-  }, [viewMode])
+  }, [viewMode, t])
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-1">
@@ -99,12 +102,12 @@ export default function TabNavigation({ viewMode, onViewModeChange }: TabNavigat
         <div className="flex items-center space-x-2 text-sm text-gray-600">
           <div className="flex items-center">
             <div className="w-2 h-2 bg-blue-600 rounded-full mr-2"></div>
-            Aktuelle Ansicht: <span className="font-medium ml-1">{currentViewLabel}</span>
+            {t('financials.currentView')}: <span className="font-medium ml-1">{currentViewLabel}</span>
           </div>
           {viewMode === 'csv-import' && (
             <div className="flex items-center text-green-600">
               <Upload className="h-3 w-3 mr-1" />
-              <span className="text-xs">Drag & Drop CSV-Dateien hier</span>
+              <span className="text-xs">{t('financials.dragDropCSV')}</span>
             </div>
           )}
         </div>
@@ -113,11 +116,11 @@ export default function TabNavigation({ viewMode, onViewModeChange }: TabNavigat
           {viewMode === 'csv-import' && (
             <div className="flex items-center space-x-1 text-xs text-gray-500">
               <CheckCircle className="h-3 w-3 text-green-500" />
-              <span>Unterstützte Formate: CSV</span>
+              <span>{t('financials.supportedFormats')}</span>
             </div>
           )}
           <div className="text-xs text-gray-400">
-            Zuletzt aktualisiert: {new Date().toLocaleTimeString('de-DE')}
+            {t('financials.lastUpdated')}: {new Date().toLocaleTimeString('de-DE')}
           </div>
         </div>
       </div>

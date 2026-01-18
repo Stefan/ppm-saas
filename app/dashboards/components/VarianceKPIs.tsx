@@ -3,6 +3,7 @@
 import { useState, useEffect, memo } from 'react'
 import { TrendingUp, TrendingDown, AlertTriangle, Target } from 'lucide-react'
 import { getApiUrl } from '../../../lib/api'
+import { useTranslations } from '../../../lib/i18n/context'
 
 interface VarianceKPIs {
   total_variance: number
@@ -20,6 +21,7 @@ interface VarianceKPIsProps {
 }
 
 function VarianceKPIs({ session, selectedCurrency = 'USD' }: VarianceKPIsProps) {
+  const { t } = useTranslations()
   const [varianceData, setVarianceData] = useState<VarianceKPIs | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -32,13 +34,19 @@ function VarianceKPIs({ session, selectedCurrency = 'USD' }: VarianceKPIsProps) 
   }, [session, selectedCurrency])
 
   const fetchVarianceKPIs = async () => {
-    if (!session?.access_token) return
+    if (!session?.access_token) {
+      console.log('No session token, skipping variance fetch')
+      return
+    }
     
     setLoading(true)
     setError(null)
     
     try {
-      const response = await fetch(getApiUrl('/csv-import/variances'), {
+      const url = getApiUrl('/csv-import/variances')
+      console.log('Fetching variance data from:', url)
+      
+      const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
@@ -48,6 +56,15 @@ function VarianceKPIs({ session, selectedCurrency = 'USD' }: VarianceKPIsProps) 
       if (!response.ok) {
         const errorText = await response.text()
         console.error('Variance API error:', response.status, errorText)
+        
+        // Don't throw error for 404 or 500 - just show empty state
+        if (response.status === 404 || response.status === 500) {
+          console.warn('Variance endpoint not available, showing empty state')
+          setVarianceData(null)
+          setLoading(false)
+          return
+        }
+        
         throw new Error(`Failed to fetch variance data (${response.status}): ${errorText}`)
       }
       
@@ -192,19 +209,19 @@ function VarianceKPIs({ session, selectedCurrency = 'USD' }: VarianceKPIsProps) 
 
       {/* Commitments vs Actuals Summary */}
       <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Commitments vs Actuals Summary</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('variance.commitmentsVsActualsSummary')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600">
               {varianceData.total_commitments.toLocaleString()} {varianceData.currency}
             </div>
-            <div className="text-sm text-gray-600">Total Commitments</div>
+            <div className="text-sm text-gray-600">{t('variance.totalCommitments')}</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-600">
               {varianceData.total_actuals.toLocaleString()} {varianceData.currency}
             </div>
-            <div className="text-sm text-gray-600">Total Actuals</div>
+            <div className="text-sm text-gray-600">{t('variance.totalActuals')}</div>
           </div>
           <div className="text-center">
             <div className={`text-2xl font-bold ${
@@ -214,7 +231,7 @@ function VarianceKPIs({ session, selectedCurrency = 'USD' }: VarianceKPIsProps) 
               {varianceData.total_variance >= 0 ? '+' : ''}
               {varianceData.total_variance.toLocaleString()} {varianceData.currency}
             </div>
-            <div className="text-sm text-gray-600">Net Variance</div>
+            <div className="text-sm text-gray-600">{t('variance.netVariance')}</div>
           </div>
         </div>
         

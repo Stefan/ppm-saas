@@ -68,13 +68,14 @@ class AuditExportService:
     AI-powered executive summaries, and trend analysis visualizations.
     """
     
-    def __init__(self, supabase_client=None, openai_api_key: Optional[str] = None):
+    def __init__(self, supabase_client=None, openai_api_key: Optional[str] = None, base_url: Optional[str] = None):
         """
         Initialize Audit Export Service
         
         Args:
             supabase_client: Supabase client for database operations
             openai_api_key: OpenAI API key for summary generation
+            base_url: Optional custom base URL for OpenAI-compatible APIs (e.g., Grok)
         """
         self.supabase = supabase_client or supabase
         self.logger = logging.getLogger(__name__)
@@ -86,11 +87,17 @@ class AuditExportService:
                 self.logger.warning("OpenAI API key not provided, AI summaries will be disabled")
                 self.openai_client = None
             else:
-                self.openai_client = OpenAI(api_key=api_key)
+                # Use custom base URL if provided (for Grok, etc.)
+                base_url = base_url or os.getenv("OPENAI_BASE_URL")
+                if base_url:
+                    self.openai_client = OpenAI(api_key=api_key, base_url=base_url)
+                else:
+                    self.openai_client = OpenAI(api_key=api_key)
         else:
             self.openai_client = None
         
-        self.chat_model = "gpt-4"
+        # Use configurable model from environment or default
+        self.chat_model = os.getenv("OPENAI_MODEL", "gpt-4")
         
         # PDF styling - only if reportlab is available
         if REPORTLAB_AVAILABLE:

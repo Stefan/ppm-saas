@@ -1,0 +1,12 @@
+{
+  "implementationTracker": {
+    "title": "Implementierungsverfolgung",
+    "changeRequest": "Änderungsantrag",
+    "assignedTo": "Zugewiesen an",
+    "overallProgress": "Gesamtfortschritt",
+    "daysRemaining": "Verbleibende Tage",
+    "scheduleStatus": "Zeitplanstatus",
+    "implementationProgress": "Implementierungsfortschritt",
+    "complete": "Abgeschlossen"
+  }
+}

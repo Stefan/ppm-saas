@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { LogOut, Activity, MessageSquare, X, Users, BarChart3 } from 'lucide-react'
 import { useAuth } from '../../app/providers/SupabaseAuthProvider'
+import { GlobalLanguageSelector } from './GlobalLanguageSelector'
 
 export interface SidebarProps {
   isOpen?: boolean
@@ -181,6 +182,7 @@ export default function Sidebar({ isOpen = true, onToggle, isMobile = false }: S
           </ul>
           
           <div className="p-4 border-t border-gray-700">
+            <GlobalLanguageSelector />
             <button 
               onClick={handleLogout} 
               className="flex items-center w-full py-3 px-4 rounded hover:bg-gray-700 text-gray-300 hover:text-white transition-colors min-h-[44px]"
@@ -420,6 +422,7 @@ export default function Sidebar({ isOpen = true, onToggle, isMobile = false }: S
       </ul>
       
       <div style={{ padding: '1rem', marginTop: '1rem', borderTop: '1px solid #374151', flexShrink: 0 }}>
+        <GlobalLanguageSelector />
         <button 
           onClick={handleLogout} 
           style={{ 

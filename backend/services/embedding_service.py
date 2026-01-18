@@ -137,9 +137,15 @@ class EmbeddingService:
         self.api_key = api_key
         self.config = config or EmbeddingConfig()
         
-        # Initialize OpenAI clients
-        self.client = OpenAI(api_key=api_key)
-        self.async_client = AsyncOpenAI(api_key=api_key)
+        # Initialize OpenAI clients with optional custom base URL (for Grok, etc.)
+        import os
+        base_url = os.getenv("OPENAI_BASE_URL")
+        if base_url:
+            self.client = OpenAI(api_key=api_key, base_url=base_url)
+            self.async_client = AsyncOpenAI(api_key=api_key, base_url=base_url)
+        else:
+            self.client = OpenAI(api_key=api_key)
+            self.async_client = AsyncOpenAI(api_key=api_key)
         
         logger.info(
             f"EmbeddingService initialized with model={self.config.model}, "

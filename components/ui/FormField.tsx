@@ -3,6 +3,7 @@ import { cn } from '@/lib/design-system'
 import { AlertCircle, HelpCircle } from 'lucide-react'
 import { Input, Textarea } from './Input'
 import { Select } from './Select'
+import { useTranslations } from '@/lib/i18n/context'
 
 interface FormFieldProps {
   label: string
@@ -41,6 +42,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   className
 }) => {
   const [showTooltip, setShowTooltip] = React.useState(false)
+  const { t } = useTranslations()
 
   const renderInput = () => {
     switch (type) {
@@ -64,7 +66,7 @@ export const FormField: React.FC<FormFieldProps> = ({
             disabled={disabled}
             error={error}
           >
-            <option value="">Select {label}</option>
+            <option value="">{t('form.select', { label })}</option>
             {options.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}

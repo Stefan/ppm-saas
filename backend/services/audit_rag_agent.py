@@ -27,7 +27,7 @@ class AuditRAGAgent(AIAgentBase):
     Extends existing RAGReporterAgent infrastructure with audit-specific functionality.
     """
     
-    def __init__(self, supabase_client: Client, openai_api_key: str, redis_client: Optional[aioredis.Redis] = None):
+    def __init__(self, supabase_client: Client, openai_api_key: str, redis_client: Optional[aioredis.Redis] = None, base_url: Optional[str] = None):
         """
         Initialize Audit RAG Agent
         
@@ -35,11 +35,14 @@ class AuditRAGAgent(AIAgentBase):
             supabase_client: Supabase client for database operations
             openai_api_key: OpenAI API key for embeddings and chat
             redis_client: Optional Redis client for caching
+            base_url: Optional custom base URL for OpenAI-compatible APIs (e.g., Grok)
         """
-        super().__init__(supabase_client, openai_api_key)
+        super().__init__(supabase_client, openai_api_key, base_url)
         self.redis = redis_client
-        self.embedding_model = "text-embedding-ada-002"
-        self.chat_model = "gpt-4"
+        # Use configurable models from environment or defaults
+        import os
+        self.embedding_model = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-ada-002")
+        self.chat_model = os.getenv("OPENAI_MODEL", "gpt-4")
         self.embedding_dimension = 1536  # OpenAI ada-002 dimension
         self.cache_ttl = 600  # 10 minutes for search results
         

@@ -3,7 +3,8 @@
  * Client-side performance tracking and reporting
  */
 
-import { useEffect, useCallback, useRef, useState } from 'react'
+import React, { useEffect, useCallback, useRef, useState } from 'react'
+import { onCLS, onLCP, onTTFB, onINP, onFCP, type Metric } from 'web-vitals'
 
 // ============================================================================
 // Types
@@ -24,6 +25,7 @@ export interface PerformanceReport {
     cls?: number // Cumulative Layout Shift
     fcp?: number // First Contentful Paint
     ttfb?: number // Time to First Byte
+    inp?: number // Interaction to Next Paint
   }
   resourceTiming: {
     totalResources: number
@@ -31,6 +33,13 @@ export interface PerformanceReport {
     totalDuration: number
   }
   customMetrics: Record<string, number>
+  longTasks: LongTaskEntry[]
+}
+
+export interface LongTaskEntry {
+  duration: number
+  startTime: number
+  name: string
 }
 
 // ============================================================================
@@ -41,15 +50,19 @@ export function usePerformanceMonitoring(options: {
   enabled?: boolean
   reportInterval?: number // milliseconds
   onReport?: (report: PerformanceReport) => void
+  analyticsEndpoint?: string
 } = {}) {
   const {
     enabled = true,
     reportInterval = 30000, // 30 seconds
-    onReport
+    onReport,
+    analyticsEndpoint = '/api/analytics/performance'
   } = options
 
   const metricsRef = useRef<PerformanceMetric[]>([])
   const customMetricsRef = useRef<Record<string, number>>({})
+  const webVitalsRef = useRef<PerformanceReport['webVitals']>({})
+  const longTasksRef = useRef<LongTaskEntry[]>([])
   const reportTimerRef = useRef<NodeJS.Timeout | null>(null)
   const [isMonitoring, setIsMonitoring] = useState(false)
 
@@ -89,42 +102,83 @@ export function usePerformanceMonitoring(options: {
   // ========================================================================
 
   const captureWebVitals = useCallback(() => {
-    if (!enabled || typeof window === 'undefined') return {}
+    if (!enabled || typeof window === 'undefined') return
 
-    const vitals: PerformanceReport['webVitals'] = {}
+    // Use web-vitals library for accurate measurements
+    // These callbacks will be called when metrics are available
+    // Note: These are registered once and persist for the page lifetime
+    onCLS((metric: Metric) => {
+      webVitalsRef.current.cls = metric.value
+      recordMetric('web_vitals.cls', metric.value, { rating: metric.rating })
+    })
 
-    try {
-      // Get navigation timing
-      const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
-      if (navigation) {
-        vitals.ttfb = navigation.responseStart - navigation.requestStart
-        vitals.fcp = navigation.domContentLoadedEventEnd - navigation.fetchStart
-      }
+    // Note: FID has been deprecated in favor of INP in web-vitals v4
+    // We're using INP which is a more comprehensive interaction metric
 
-      // Get paint timing
-      const paintEntries = performance.getEntriesByType('paint')
-      const lcp = paintEntries.find(entry => entry.name === 'largest-contentful-paint')
-      if (lcp) {
-        vitals.lcp = lcp.startTime
-      }
+    onLCP((metric: Metric) => {
+      webVitalsRef.current.lcp = metric.value
+      recordMetric('web_vitals.lcp', metric.value, { rating: metric.rating })
+    })
 
-      // Get layout shift (CLS)
-      const layoutShifts = performance.getEntriesByType('layout-shift') as any[]
-      if (layoutShifts.length > 0) {
-        vitals.cls = layoutShifts.reduce((sum, entry) => sum + entry.value, 0)
-      }
+    onTTFB((metric: Metric) => {
+      webVitalsRef.current.ttfb = metric.value
+      recordMetric('web_vitals.ttfb', metric.value, { rating: metric.rating })
+    })
 
-      // Get first input delay (FID)
-      const firstInput = performance.getEntriesByType('first-input') as any[]
-      if (firstInput.length > 0) {
-        vitals.fid = firstInput[0].processingStart - firstInput[0].startTime
-      }
-    } catch (error) {
-      console.error('Error capturing web vitals:', error)
+    onINP((metric: Metric) => {
+      webVitalsRef.current.inp = metric.value
+      recordMetric('web_vitals.inp', metric.value, { rating: metric.rating })
+    })
+
+    onFCP((metric: Metric) => {
+      webVitalsRef.current.fcp = metric.value
+      recordMetric('web_vitals.fcp', metric.value, { rating: metric.rating })
+    })
+  }, [enabled, recordMetric])
+
+  // ========================================================================
+  // Long Task Monitoring
+  // ========================================================================
+
+  const monitorLongTasks = useCallback(() => {
+    if (!enabled || typeof window === 'undefined' || !('PerformanceObserver' in window)) {
+      return
     }
 
-    return vitals
-  }, [enabled])
+    try {
+      const observer = new PerformanceObserver((list) => {
+        const entries = list.getEntries()
+        entries.forEach((entry) => {
+          const longTask: LongTaskEntry = {
+            duration: entry.duration,
+            startTime: entry.startTime,
+            name: entry.name
+          }
+          
+          longTasksRef.current.push(longTask)
+          
+          // Keep only last 50 long tasks to prevent memory issues
+          if (longTasksRef.current.length > 50) {
+            longTasksRef.current = longTasksRef.current.slice(-50)
+          }
+
+          // Record metric for tasks exceeding 50ms
+          if (entry.duration > 50) {
+            recordMetric('long_task', entry.duration, {
+              name: entry.name,
+              exceeds_threshold: 'true'
+            })
+          }
+        })
+      })
+
+      observer.observe({ entryTypes: ['longtask'] })
+
+      return () => observer.disconnect()
+    } catch (error) {
+      console.error('Error monitoring long tasks:', error)
+    }
+  }, [enabled, recordMetric])
 
   // ========================================================================
   // Resource Timing
@@ -172,21 +226,46 @@ export function usePerformanceMonitoring(options: {
   const generateReport = useCallback((): PerformanceReport => {
     return {
       metrics: [...metricsRef.current],
-      webVitals: captureWebVitals(),
+      webVitals: { ...webVitalsRef.current },
       resourceTiming: captureResourceTiming(),
-      customMetrics: { ...customMetricsRef.current }
+      customMetrics: { ...customMetricsRef.current },
+      longTasks: [...longTasksRef.current]
     }
-  }, [captureWebVitals, captureResourceTiming])
+  }, [captureResourceTiming])
 
-  const sendReport = useCallback(() => {
-    if (!enabled || !onReport) return
+  const sendReport = useCallback(async () => {
+    if (!enabled) return
 
     const report = generateReport()
-    onReport(report)
+
+    // Call custom onReport callback if provided
+    if (onReport) {
+      onReport(report)
+    }
+
+    // Send to analytics endpoint
+    if (analyticsEndpoint && typeof window !== 'undefined') {
+      try {
+        await fetch(analyticsEndpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            ...report,
+            url: window.location.href,
+            userAgent: navigator.userAgent,
+            timestamp: Date.now()
+          })
+        })
+      } catch (error) {
+        console.error('Failed to send performance report:', error)
+      }
+    }
 
     // Clear metrics after reporting
     metricsRef.current = []
-  }, [enabled, onReport, generateReport])
+  }, [enabled, onReport, analyticsEndpoint, generateReport])
 
   // ========================================================================
   // PMR-Specific Metrics
@@ -271,25 +350,26 @@ export function usePerformanceMonitoring(options: {
   // Lifecycle
   // ========================================================================
 
+  // Register Web Vitals observers once on mount
+  useEffect(() => {
+    if (!enabled || typeof window === 'undefined') return
+
+    // Web Vitals observers are registered once and persist for page lifetime
+    captureWebVitals()
+  }, []) // Empty deps - only run once on mount
+
   useEffect(() => {
     if (!enabled) return
 
     setIsMonitoring(true)
 
     // Set up periodic reporting
-    if (onReport && reportInterval > 0) {
+    if (reportInterval > 0) {
       reportTimerRef.current = setInterval(sendReport, reportInterval)
     }
 
-    // Capture initial web vitals
-    if (typeof window !== 'undefined') {
-      // Wait for page load
-      if (document.readyState === 'complete') {
-        captureWebVitals()
-      } else {
-        window.addEventListener('load', captureWebVitals)
-      }
-    }
+    // Start monitoring long tasks
+    const cleanupLongTasks = monitorLongTasks()
 
     return () => {
       setIsMonitoring(false)
@@ -299,15 +379,14 @@ export function usePerformanceMonitoring(options: {
       }
 
       // Send final report
-      if (onReport) {
-        sendReport()
-      }
+      sendReport()
 
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('load', captureWebVitals)
+      // Cleanup long task observer
+      if (cleanupLongTasks) {
+        cleanupLongTasks()
       }
     }
-  }, [enabled, onReport, reportInterval, sendReport, captureWebVitals])
+  }, [enabled, reportInterval, sendReport, monitorLongTasks])
 
   // ========================================================================
   // Return API
@@ -377,7 +456,7 @@ export function usePerformanceObserver(
 }
 
 // ============================================================================
-// Component Render Time Hook
+// Component Render Time Hook with React Profiler
 // ============================================================================
 
 export function useRenderTime(componentName: string) {

@@ -339,8 +339,11 @@ class EnhancedPMRService:
             summary_prompt = self._build_executive_summary_prompt(report, context)
             
             # Use RAG agent's OpenAI client directly for summary generation
+            # Use the configured model from the RAG agent
+            import os
+            model = os.getenv("OPENAI_MODEL", "gpt-4")
             response = self.rag_agent.openai_client.chat.completions.create(
-                model="gpt-4",
+                model=model,
                 messages=[
                     {
                         "role": "system",

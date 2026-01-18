@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Language - ORKA PPM</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .current {
+            font-weight: bold;
+            color: #1976d2;
+        }
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+        button.danger {
+            background: #d32f2f;
+        }
+        button.danger:hover {
+            background: #c62828;
+        }
+        .success {
+            background: #4caf50;
+            color: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌍 Language Settings</h1>
+        
+        <div class="info">
+            <p><strong>Current Language:</strong> <span class="current" id="currentLang">Loading...</span></p>
+            <p><strong>Storage Key:</strong> orka-ppm-locale</p>
+        </div>
+
+        <h2>Set Language</h2>
+        <button onclick="setLanguage('en')">🇬🇧 English</button>
+        <button onclick="setLanguage('de')">🇩🇪 Deutsch</button>
+        <button onclick="setLanguage('fr')">🇫🇷 Français</button>
+        <button onclick="setLanguage('es')">🇪🇸 Español</button>
+        <button onclick="setLanguage('pl')">🇵🇱 Polski</button>
+        <button onclick="setLanguage('gsw')">🇨🇭 Baseldytsch</button>
+
+        <h2>Reset</h2>
+        <button class="danger" onclick="clearLanguage()">🗑️ Clear Language Setting</button>
+
+        <div class="success" id="successMsg"></div>
+
+        <p style="margin-top: 30px;">
+            <a href="/">← Back to App</a>
+        </p>
+    </div>
+
+    <script>
+        function getCurrentLanguage() {
+            return localStorage.getItem('orka-ppm-locale') || 'Not set';
+        }
+
+        function updateDisplay() {
+            document.getElementById('currentLang').textContent = getCurrentLanguage();
+        }
+
+        function showSuccess(message) {
+            const successMsg = document.getElementById('successMsg');
+            successMsg.textContent = message;
+            successMsg.style.display = 'block';
+            setTimeout(() => {
+                successMsg.style.display = 'none';
+            }, 3000);
+        }
+
+        function setLanguage(lang) {
+            localStorage.setItem('orka-ppm-locale', lang);
+            
+            // Also set cookie
+            const expirationDate = new Date();
+            expirationDate.setFullYear(expirationDate.getFullYear() + 1);
+            document.cookie = `orka-ppm-locale=${lang}; path=/; expires=${expirationDate.toUTCString()}; SameSite=Lax`;
+            
+            updateDisplay();
+            showSuccess(`✅ Language set to: ${lang}`);
+        }
+
+        function clearLanguage() {
+            localStorage.removeItem('orka-ppm-locale');
+            
+            // Clear cookie
+            document.cookie = 'orka-ppm-locale=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+            
+            updateDisplay();
+            showSuccess('✅ Language setting cleared. Browser language will be used on next load.');
+        }
+
+        // Initialize
+        updateDisplay();
+    </script>
+</body>
+</html>

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { ArrowLeft, Edit, Download, MessageSquare, Clock, CheckCircle, XCircle, AlertCircle, FileText, User, Calendar, DollarSign, Activity, Eye, Send, Upload, Link as LinkIcon } from 'lucide-react'
 import { ChangeRequest, mockDataService } from '../lib/mockData'
 import { useAsyncData, LoadingState } from '../lib/loadingStates'
+import { useTranslations } from '@/lib/i18n/context'
 
 interface ChangeRequestDetailProps {
   changeId: string
@@ -16,6 +17,7 @@ export default function ChangeRequestDetail({
   onEdit, 
   onBack 
 }: ChangeRequestDetailProps) {
+  const t = useTranslations('changes');
   const [activeTab, setActiveTab] = useState<'overview' | 'timeline' | 'approvals' | 'documents' | 'communications'>('overview')
   const [newComment, setNewComment] = useState('')
 
@@ -92,21 +94,21 @@ export default function ChangeRequestDetail({
   return (
     <LoadingState
       state={isLoading ? 'loading' : isError ? 'error' : changeRequest ? 'success' : 'error'}
-      message="Loading change request details..."
-      error={error || (!changeRequest ? 'Change request not found' : '')}
+      message={t('requestDetail.loading')}
+      error={error || (!changeRequest ? t('requestDetail.notFound') : '')}
       fallback={
         <div className="text-center py-12">
           <AlertCircle className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">Change request not found</h3>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">{t('requestDetail.notFound')}</h3>
           <p className="mt-1 text-sm text-gray-500">
-            The requested change request could not be loaded.
+            {t('requestDetail.notFoundMessage')}
           </p>
           <div className="mt-6">
             <button
               onClick={onBack}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
             >
-              Back to List
+              {t('requestDetail.backToList')}
             </button>
           </div>
         </div>
@@ -124,7 +126,7 @@ export default function ChangeRequestDetail({
                 className="flex items-center gap-2 text-gray-600 hover:text-gray-800"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Back to List
+                {t('requestDetail.backToList')}
               </button>
               <div className="h-6 border-l border-gray-300"></div>
               <div>
@@ -150,7 +152,7 @@ export default function ChangeRequestDetail({
                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
               >
                 <Edit className="h-4 w-4" />
-                Edit
+                {t('requestDetail.edit')}
               </button>
             </div>
           </div>
@@ -162,11 +164,11 @@ export default function ChangeRequestDetail({
         <div className="border-b border-gray-200">
           <nav className="flex space-x-8 px-6">
             {[
-              { id: 'overview', label: 'Overview', icon: Eye },
-              { id: 'timeline', label: 'Timeline', icon: Clock },
-              { id: 'approvals', label: 'Approvals', icon: CheckCircle },
-              { id: 'documents', label: 'Documents', icon: FileText },
-              { id: 'communications', label: 'Communications', icon: MessageSquare }
+              { id: 'overview', label: t('requestDetail.tabs.overview'), icon: Eye },
+              { id: 'timeline', label: t('requestDetail.tabs.timeline'), icon: Clock },
+              { id: 'approvals', label: t('requestDetail.tabs.approvals'), icon: CheckCircle },
+              { id: 'documents', label: t('requestDetail.tabs.documents'), icon: FileText },
+              { id: 'communications', label: t('requestDetail.tabs.communications'), icon: MessageSquare }
             ].map(tab => {
               const Icon = tab.icon
               return (
@@ -195,30 +197,30 @@ export default function ChangeRequestDetail({
                 {/* Main Details */}
                 <div className="lg:col-span-2 space-y-6">
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-3">Description</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-3">{t('requestDetail.description')}</h3>
                     <p className="text-gray-700 leading-relaxed">{changeRequest.description}</p>
                   </div>
 
                   {changeRequest.justification && (
                     <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-3">Justification</h3>
+                      <h3 className="text-lg font-medium text-gray-900 mb-3">{t('requestDetail.justification')}</h3>
                       <p className="text-gray-700 leading-relaxed">{changeRequest.justification}</p>
                     </div>
                   )}
 
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-3">Impact Analysis</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-3">{t('requestDetail.impactAnalysis')}</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {changeRequest.estimated_cost_impact && (
                         <div className="bg-gray-50 p-4 rounded-lg">
                           <div className="flex items-center gap-2 mb-2">
                             <DollarSign className="h-4 w-4 text-green-600" />
-                            <span className="font-medium text-gray-900">Cost Impact</span>
+                            <span className="font-medium text-gray-900">{t('requestDetail.costImpact')}</span>
                           </div>
                           <p className="text-2xl font-bold text-gray-900">
                             ${changeRequest.estimated_cost_impact.toLocaleString()}
                           </p>
-                          <p className="text-sm text-gray-600">Estimated</p>
+                          <p className="text-sm text-gray-600">{t('requestDetail.estimated')}</p>
                         </div>
                       )}
 
@@ -226,12 +228,12 @@ export default function ChangeRequestDetail({
                         <div className="bg-gray-50 p-4 rounded-lg">
                           <div className="flex items-center gap-2 mb-2">
                             <Calendar className="h-4 w-4 text-blue-600" />
-                            <span className="font-medium text-gray-900">Schedule Impact</span>
+                            <span className="font-medium text-gray-900">{t('requestDetail.scheduleImpact')}</span>
                           </div>
                           <p className="text-2xl font-bold text-gray-900">
-                            {changeRequest.estimated_schedule_impact_days} days
+                            {changeRequest.estimated_schedule_impact_days} {t('common.days')}
                           </p>
-                          <p className="text-sm text-gray-600">Estimated delay</p>
+                          <p className="text-sm text-gray-600">{t('requestDetail.estimatedDelay')}</p>
                         </div>
                       )}
                     </div>
@@ -239,11 +241,11 @@ export default function ChangeRequestDetail({
 
                   {/* Project Linkages */}
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-3">Project Linkages</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-3">{t('requestDetail.projectLinkages')}</h3>
                     <div className="space-y-4">
                       {changeRequest.affected_milestones.length > 0 && (
                         <div>
-                          <h4 className="font-medium text-gray-900 mb-2">Affected Milestones</h4>
+                          <h4 className="font-medium text-gray-900 mb-2">{t('requestDetail.affectedMilestones')}</h4>
                           <div className="flex flex-wrap gap-2">
                             {changeRequest.affected_milestones.map(milestone => (
                               <span
@@ -260,7 +262,7 @@ export default function ChangeRequestDetail({
 
                       {changeRequest.affected_pos.length > 0 && (
                         <div>
-                          <h4 className="font-medium text-gray-900 mb-2">Affected Purchase Orders</h4>
+                          <h4 className="font-medium text-gray-900 mb-2">{t('requestDetail.affectedPurchaseOrders')}</h4>
                           <div className="space-y-2">
                             {changeRequest.affected_pos.map(po => (
                               <div
@@ -282,16 +284,16 @@ export default function ChangeRequestDetail({
                 {/* Sidebar */}
                 <div className="space-y-6">
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-medium text-gray-900 mb-3">Request Details</h3>
+                    <h3 className="font-medium text-gray-900 mb-3">{t('requestDetail.requestDetails')}</h3>
                     <div className="space-y-3 text-sm">
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-gray-500" />
-                        <span className="text-gray-600">Requested by:</span>
+                        <span className="text-gray-600">{t('requestDetail.requestedBy')}:</span>
                         <span className="font-medium">{changeRequest.requested_by}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-gray-500" />
-                        <span className="text-gray-600">Requested:</span>
+                        <span className="text-gray-600">{t('requestDetail.requested')}:</span>
                         <span className="font-medium">
                           {new Date(changeRequest.requested_date).toLocaleDateString()}
                         </span>
@@ -299,7 +301,7 @@ export default function ChangeRequestDetail({
                       {changeRequest.required_by_date && (
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4 text-gray-500" />
-                          <span className="text-gray-600">Required by:</span>
+                          <span className="text-gray-600">{t('requestDetail.requiredBy')}:</span>
                           <span className="font-medium">
                             {new Date(changeRequest.required_by_date).toLocaleDateString()}
                           </span>
@@ -307,23 +309,23 @@ export default function ChangeRequestDetail({
                       )}
                       <div className="flex items-center gap-2">
                         <FileText className="h-4 w-4 text-gray-500" />
-                        <span className="text-gray-600">Type:</span>
+                        <span className="text-gray-600">{t('requestDetail.type')}:</span>
                         <span className="font-medium capitalize">{changeRequest.change_type}</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-medium text-gray-900 mb-3">Project</h3>
+                    <h3 className="font-medium text-gray-900 mb-3">{t('requestDetail.project')}</h3>
                     <p className="text-sm font-medium text-blue-600">{changeRequest.project_name}</p>
                   </div>
 
                   {changeRequest.implementation_progress !== undefined && (
                     <div className="bg-gray-50 p-4 rounded-lg">
-                      <h3 className="font-medium text-gray-900 mb-3">Implementation Progress</h3>
+                      <h3 className="font-medium text-gray-900 mb-3">{t('requestDetail.implementationProgress')}</h3>
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">Progress</span>
+                          <span className="text-gray-600">{t('requestDetail.progress')}</span>
                           <span className="font-medium">{changeRequest.implementation_progress}%</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2" role="progressbar" aria-valuenow={changeRequest.implementation_progress} aria-valuemin={0} aria-valuemax={100}>
@@ -343,7 +345,7 @@ export default function ChangeRequestDetail({
           {/* Timeline Tab */}
           {activeTab === 'timeline' && (
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Change Request Timeline</h3>
+              <h3 className="text-lg font-medium text-gray-900">{t('requestDetail.timeline.title')}</h3>
               <div className="flow-root">
                 <ul className="-mb-8">
                   {changeRequest.communications.map((comm, index) => (
@@ -388,7 +390,7 @@ export default function ChangeRequestDetail({
           {activeTab === 'approvals' && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Pending Approvals</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">{t('requestDetail.approvals.pendingTitle')}</h3>
                 {changeRequest.pending_approvals.length > 0 ? (
                   <div className="space-y-3">
                     {changeRequest.pending_approvals.map(approval => (
@@ -396,15 +398,15 @@ export default function ChangeRequestDetail({
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="font-medium text-gray-900">
-                              Step {approval.step_number}: {approval.approver_name}
+                              {t('requestDetail.approvals.step')} {approval.step_number}: {approval.approver_name}
                             </p>
                             <p className="text-sm text-gray-600 capitalize">
-                              Status: {approval.status}
+                              {t('requestDetail.approvals.status')}: {approval.status}
                             </p>
                           </div>
                           {approval.due_date && (
                             <div className="text-right">
-                              <p className="text-sm text-gray-600">Due Date</p>
+                              <p className="text-sm text-gray-600">{t('requestDetail.approvals.dueDate')}</p>
                               <p className="font-medium text-gray-900">
                                 {new Date(approval.due_date).toLocaleDateString()}
                               </p>
@@ -415,12 +417,12 @@ export default function ChangeRequestDetail({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-500">No pending approvals</p>
+                  <p className="text-gray-500">{t('requestDetail.approvals.noPending')}</p>
                 )}
               </div>
 
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Approval History</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">{t('requestDetail.approvals.historyTitle')}</h3>
                 {changeRequest.approval_history.length > 0 ? (
                   <div className="space-y-3">
                     {changeRequest.approval_history.map(approval => (
@@ -429,10 +431,10 @@ export default function ChangeRequestDetail({
                           <div>
                             <p className="font-medium text-gray-900">{approval.approver_name}</p>
                             <p className="text-sm text-gray-600 capitalize">
-                              Decision: <span className="font-medium">{approval.decision}</span>
+                              {t('requestDetail.approvals.decision')}: <span className="font-medium">{approval.decision}</span>
                             </p>
                             {approval.comments && (
-                              <p className="text-sm text-gray-700 mt-2">{approval.comments}</p>
+                              <p className="text-sm text-gray-700 mt-2">{t('requestDetail.approvals.comments')}: {approval.comments}</p>
                             )}
                           </div>
                           <div className="text-right">
@@ -445,7 +447,7 @@ export default function ChangeRequestDetail({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-500">No approval history</p>
+                  <p className="text-gray-500">{t('requestDetail.approvals.noHistory')}</p>
                 )}
               </div>
             </div>
@@ -504,27 +506,27 @@ export default function ChangeRequestDetail({
           {activeTab === 'communications' && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Add Comment</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">{t('requestDetail.communications.addComment')}</h3>
                 <div className="space-y-3">
                   <textarea
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Add a comment..."
+                    placeholder={t('requestDetail.communications.addCommentPlaceholder')}
                   />
                   <button
                     onClick={handleAddComment}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
                   >
                     <Send className="h-4 w-4" />
-                    Add Comment
+                    {t('requestDetail.communications.sendComment')}
                   </button>
                 </div>
               </div>
 
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Communication History</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">{t('requestDetail.communications.communicationHistory')}</h3>
                 <div className="space-y-4">
                   {changeRequest.communications.map(comm => (
                     <div key={comm.id} className="border border-gray-200 rounded-lg p-4">
@@ -538,7 +540,7 @@ export default function ChangeRequestDetail({
                               comm.type === 'approval' ? 'bg-green-100 text-green-800' :
                               'bg-gray-100 text-gray-800'
                             }`}>
-                              {comm.type.replace('_', ' ')}
+                              {t(`requestDetail.communications.types.${comm.type}`)}
                             </span>
                           </div>
                           <p className="text-gray-700">{comm.message}</p>

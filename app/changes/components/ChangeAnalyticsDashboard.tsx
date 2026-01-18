@@ -6,6 +6,7 @@ import { TrendingUp, Users, AlertTriangle, Activity, BarChart3, Download, Refres
 import PerformanceMonitoringInterface from './PerformanceMonitoringInterface'
 import { ChangeAnalytics, mockDataService } from '../lib/mockData'
 import { useAsyncData, SkeletonChart } from '../lib/loadingStates'
+import { useTranslations } from '@/lib/i18n/context'
 
 interface ChangeAnalyticsDashboardProps {
   projectId?: string
@@ -27,6 +28,7 @@ export default function ChangeAnalyticsDashboard({
   filters = {},
   onExport
 }: ChangeAnalyticsDashboardProps) {
+  const t = useTranslations('changes');
   const [activeView, setActiveView] = useState<'overview' | 'performance' | 'trends' | 'projects' | 'impact'>('overview')
   const [refreshing, setRefreshing] = useState(false)
   const [selectedMetric, setSelectedMetric] = useState<string | null>(null)
@@ -104,7 +106,7 @@ export default function ChangeAnalyticsDashboard({
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <p className="text-gray-500">{error || 'No analytics data available'}</p>
+          <p className="text-gray-500">{error || t('analytics.noData')}</p>
         </div>
       </div>
     )
@@ -116,9 +118,9 @@ export default function ChangeAnalyticsDashboard({
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Change Analytics Dashboard</h2>
+            <h2 className="text-2xl font-bold text-gray-900">{t('analytics.title')}</h2>
             <p className="text-gray-600 mt-1">
-              Executive dashboard with KPIs and trends for change management
+              {t('analytics.subtitle')}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -128,18 +130,18 @@ export default function ChangeAnalyticsDashboard({
               className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-              Refresh
+              {t('analytics.refresh')}
             </button>
             <button
               onClick={handleExport}
               className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               <Download className="h-4 w-4" />
-              Export
+              {t('analytics.export')}
             </button>
             <button className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50">
               <Filter className="h-4 w-4" />
-              Filters
+              {t('analytics.filters')}
             </button>
           </div>
         </div>
@@ -150,11 +152,11 @@ export default function ChangeAnalyticsDashboard({
         <div className="border-b border-gray-200">
           <nav className="flex space-x-8 px-6">
             {[
-              { id: 'overview', label: 'Overview', icon: BarChart3 },
-              { id: 'performance', label: 'Performance', icon: Zap },
-              { id: 'trends', label: 'Trends', icon: TrendingUp },
-              { id: 'projects', label: 'Projects', icon: Users },
-              { id: 'impact', label: 'Impact Analysis', icon: AlertTriangle }
+              { id: 'overview', label: t('analytics.tabs.overview'), icon: BarChart3 },
+              { id: 'performance', label: t('analytics.tabs.performance'), icon: Zap },
+              { id: 'trends', label: t('analytics.tabs.trends'), icon: TrendingUp },
+              { id: 'projects', label: t('analytics.tabs.projects'), icon: Users },
+              { id: 'impact', label: t('analytics.tabs.impact'), icon: AlertTriangle }
             ].map(tab => {
               const Icon = tab.icon
               return (

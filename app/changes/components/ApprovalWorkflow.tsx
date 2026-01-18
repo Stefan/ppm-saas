@@ -5,6 +5,7 @@ import { CheckCircle, XCircle, Clock, AlertTriangle, MessageSquare, User, Calend
 import { ChangeRequest, ImpactAnalysisData, mockDataService } from '../lib/mockData'
 import { useAsyncData, LoadingState } from '../lib/loadingStates'
 import { workflowManager, WorkflowContext, WorkflowStep, WorkflowAction } from '../lib/workflowManager'
+import { useTranslations } from '@/lib/i18n/context'
 
 interface ApprovalWorkflowProps {
   changeId: string
@@ -28,6 +29,7 @@ export default function ApprovalWorkflow({
   onDecisionMade,
   onDelegate 
 }: ApprovalWorkflowProps) {
+  const t = useTranslations('changes');
   const [showDecisionModal, setShowDecisionModal] = useState(false)
   const [selectedDecision, setSelectedDecision] = useState<string>('')
   const [decisionComments, setDecisionComments] = useState('')
@@ -138,14 +140,14 @@ export default function ApprovalWorkflow({
   return (
     <LoadingState
       state={isLoading ? 'loading' : isError ? 'error' : changeRequest ? 'success' : 'error'}
-      message="Loading approval workflow..."
-      error={error || (!changeRequest ? 'Change request not found' : '')}
+      message={t('approvalWorkflow.loading')}
+      error={error || (!changeRequest ? t('approvalWorkflow.notFound') : '')}
       fallback={
         <div className="text-center py-12">
           <AlertTriangle className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">Change request not found</h3>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">{t('approvalWorkflow.notFound')}</h3>
           <p className="mt-1 text-sm text-gray-500">
-            Unable to load the change request for approval.
+            {t('approvalWorkflow.notFoundMessage')}
           </p>
         </div>
       }
@@ -179,16 +181,16 @@ export default function ApprovalWorkflow({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <User className="h-4 w-4" />
-                <span>Requested by: <span className="font-medium">{changeRequest.requested_by}</span></span>
+                <span>{t('approvalWorkflow.requestedBy')}: <span className="font-medium">{changeRequest.requested_by}</span></span>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Calendar className="h-4 w-4" />
-                <span>Requested: <span className="font-medium">{formatDate(changeRequest.requested_date)}</span></span>
+                <span>{t('approvalWorkflow.requested')}: <span className="font-medium">{formatDate(changeRequest.requested_date)}</span></span>
               </div>
               {changeRequest.required_by_date && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Clock className="h-4 w-4" />
-                  <span>Required by: <span className="font-medium">{formatDate(changeRequest.required_by_date)}</span></span>
+                  <span>{t('approvalWorkflow.requiredBy')}: <span className="font-medium">{formatDate(changeRequest.required_by_date)}</span></span>
                 </div>
               )}
             </div>
@@ -201,7 +203,7 @@ export default function ApprovalWorkflow({
                   className="flex items-center gap-2 text-sm font-medium text-gray-900 hover:text-blue-600"
                 >
                   {showImpactDetails ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                  Impact Summary
+                  {t('approvalWorkflow.impactSummary')}
                 </button>
                 
                 {showImpactDetails && (
@@ -209,7 +211,7 @@ export default function ApprovalWorkflow({
                     <div className="bg-gray-50 p-3 rounded-lg">
                       <div className="flex items-center gap-2 mb-1">
                         <DollarSign className="h-4 w-4 text-green-600" />
-                        <span className="text-sm font-medium text-gray-900">Cost Impact</span>
+                        <span className="text-sm font-medium text-gray-900">{t('approvalWorkflow.costImpact')}</span>
                       </div>
                       <p className="text-lg font-bold text-gray-900">
                         ${impactAnalysis.total_cost_impact.toLocaleString()}
@@ -219,7 +221,7 @@ export default function ApprovalWorkflow({
                     <div className="bg-gray-50 p-3 rounded-lg">
                       <div className="flex items-center gap-2 mb-1">
                         <Calendar className="h-4 w-4 text-blue-600" />
-                        <span className="text-sm font-medium text-gray-900">Schedule Impact</span>
+                        <span className="text-sm font-medium text-gray-900">{t('approvalWorkflow.scheduleImpact')}</span>
                       </div>
                       <p className="text-lg font-bold text-gray-900">
                         {impactAnalysis.schedule_impact_days} days
@@ -229,17 +231,17 @@ export default function ApprovalWorkflow({
                     <div className="bg-gray-50 p-3 rounded-lg">
                       <div className="flex items-center gap-2 mb-1">
                         <TrendingUp className="h-4 w-4 text-orange-600" />
-                        <span className="text-sm font-medium text-gray-900">Critical Path</span>
+                        <span className="text-sm font-medium text-gray-900">{t('approvalWorkflow.criticalPath')}</span>
                       </div>
                       <p className="text-lg font-bold text-gray-900">
-                        {impactAnalysis.critical_path_affected ? 'Affected' : 'Not Affected'}
+                        {impactAnalysis.critical_path_affected ? t('approvalWorkflow.affected') : t('approvalWorkflow.notAffected')}
                       </p>
                     </div>
                     
                     <div className="bg-gray-50 p-3 rounded-lg">
                       <div className="flex items-center gap-2 mb-1">
                         <AlertTriangle className="h-4 w-4 text-red-600" />
-                        <span className="text-sm font-medium text-gray-900">New Risks</span>
+                        <span className="text-sm font-medium text-gray-900">{t('approvalWorkflow.newRisks')}</span>
                       </div>
                       <p className="text-lg font-bold text-gray-900">
                         {impactAnalysis.new_risks.length}
@@ -254,10 +256,10 @@ export default function ApprovalWorkflow({
           {/* Enhanced Workflow Progress */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Workflow Progress</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t('approvalWorkflow.workflowProgress')}</h3>
               <div className="flex items-center gap-4">
                 <div className="text-sm text-gray-600">
-                  Progress: {workflowProgress.progressPercentage}%
+                  {t('approvalWorkflow.progress')}: {workflowProgress.progressPercentage}%
                 </div>
                 <div className="w-32 bg-gray-200 rounded-full h-2">
                   <div
@@ -272,7 +274,7 @@ export default function ApprovalWorkflow({
             <div className="mb-6 p-4 bg-blue-50 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-medium text-blue-900">Current Status</h4>
+                  <h4 className="font-medium text-blue-900">{t('approvalWorkflow.currentStatus')}</h4>
                   <p className="text-blue-700 capitalize">{workflowProgress.currentStep.replace('_', ' ')}</p>
                 </div>
                 <div className="flex gap-2">
@@ -290,7 +292,7 @@ export default function ApprovalWorkflow({
               
               {availableActions.some(action => !action.enabled) && (
                 <div className="mt-3 pt-3 border-t border-blue-200">
-                  <h5 className="text-sm font-medium text-blue-900 mb-2">Unavailable Actions:</h5>
+                  <h5 className="text-sm font-medium text-blue-900 mb-2">{t('approvalWorkflow.unavailableActions')}:</h5>
                   {availableActions.filter(action => !action.enabled).map(action => (
                     <div key={action.action} className="text-sm text-blue-700">
                       <span className="font-medium">{action.description}:</span> {action.reason}
@@ -302,12 +304,12 @@ export default function ApprovalWorkflow({
 
             {/* Workflow Steps Visualization */}
             <div className="space-y-4">
-              <h4 className="font-medium text-gray-900">Workflow Steps</h4>
+              <h4 className="font-medium text-gray-900">{t('approvalWorkflow.workflowSteps')}</h4>
               
               {/* Completed Steps */}
               {workflowProgress.completedSteps.length > 0 && (
                 <div>
-                  <h5 className="text-sm font-medium text-green-700 mb-2">Completed Steps</h5>
+                  <h5 className="text-sm font-medium text-green-700 mb-2">{t('approvalWorkflow.completedSteps')}</h5>
                   <div className="space-y-2">
                     {workflowProgress.completedSteps.map((step) => (
                       <div key={step} className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -321,7 +323,7 @@ export default function ApprovalWorkflow({
 
               {/* Current Step */}
               <div>
-                <h5 className="text-sm font-medium text-blue-700 mb-2">Current Step</h5>
+                <h5 className="text-sm font-medium text-blue-700 mb-2">{t('approvalWorkflow.currentStep')}</h5>
                 <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <Clock className="h-5 w-5 text-blue-500 animate-pulse" />
                   <span className="font-medium text-blue-900 capitalize">{workflowProgress.currentStep.replace('_', ' ')}</span>
@@ -331,7 +333,7 @@ export default function ApprovalWorkflow({
               {/* Next Steps */}
               {workflowProgress.nextSteps.length > 0 && (
                 <div>
-                  <h5 className="text-sm font-medium text-gray-700 mb-2">Upcoming Steps</h5>
+                  <h5 className="text-sm font-medium text-gray-700 mb-2">{t('approvalWorkflow.upcomingSteps')}</h5>
                   <div className="space-y-2">
                     {workflowProgress.nextSteps.slice(0, 3).map((step) => (
                       <div key={step} className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
@@ -351,10 +353,10 @@ export default function ApprovalWorkflow({
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="px-6 py-4 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">
-                Make Workflow Decision
+                {t('approvalWorkflow.makeDecision')}
               </h3>
               <p className="text-sm text-gray-600 mt-1">
-                Action: {DECISION_OPTIONS.find(opt => opt.value === selectedDecision)?.label}
+                {t('approvalWorkflow.action')}: {t(`approvalWorkflow.decisions.${selectedDecision}` as any) || selectedDecision}
               </p>
             </div>
             
@@ -362,7 +364,7 @@ export default function ApprovalWorkflow({
               {/* Comments */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Comments {selectedDecision === 'reject' || selectedDecision === 'request_info' ? '*' : ''}
+                  {t('approvalWorkflow.comments')} {selectedDecision === 'reject' || selectedDecision === 'request_info' ? t('approvalWorkflow.commentsRequired') : t('approvalWorkflow.commentsOptional')}
                 </label>
                 <textarea
                   value={decisionComments}
@@ -370,11 +372,11 @@ export default function ApprovalWorkflow({
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={
-                    selectedDecision === 'approve' ? 'Optional comments about the approval...' :
-                    selectedDecision === 'reject' ? 'Please explain why this change is being rejected...' :
-                    selectedDecision === 'request_info' ? 'What additional information is needed?' :
-                    selectedDecision === 'delegate' ? 'Reason for delegation...' :
-                    'Add your comments...'
+                    selectedDecision === 'approve' ? t('approvalWorkflow.commentsPlaceholder.approve') :
+                    selectedDecision === 'reject' ? t('approvalWorkflow.commentsPlaceholder.reject') :
+                    selectedDecision === 'request_info' ? t('approvalWorkflow.commentsPlaceholder.requestInfo') :
+                    selectedDecision === 'delegate' ? t('approvalWorkflow.commentsPlaceholder.delegate') :
+                    t('approvalWorkflow.commentsPlaceholder.default')
                   }
                 />
               </div>
@@ -383,14 +385,14 @@ export default function ApprovalWorkflow({
               {selectedDecision === 'approve' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Approval Conditions (Optional)
+                    {t('approvalWorkflow.approvalConditions')}
                   </label>
                   <textarea
                     value={conditions}
                     onChange={(e) => setConditions(e.target.value)}
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Any conditions or requirements for this approval..."
+                    placeholder={t('approvalWorkflow.approvalConditionsPlaceholder')}
                   />
                 </div>
               )}
@@ -399,14 +401,14 @@ export default function ApprovalWorkflow({
               {selectedDecision === 'delegate' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Delegate To *
+                    {t('approvalWorkflow.delegateTo')}
                   </label>
                   <input
                     type="text"
                     value={delegateToUser}
                     onChange={(e) => setDelegateToUser(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter user ID or email to delegate to..."
+                    placeholder={t('approvalWorkflow.delegateToPlaceholder')}
                   />
                 </div>
               )}
@@ -417,7 +419,7 @@ export default function ApprovalWorkflow({
                 onClick={() => setShowDecisionModal(false)}
                 className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
               >
-                Cancel
+                {t('approvalWorkflow.cancel')}
               </button>
               <button
                 onClick={handleSubmitDecision}
@@ -429,7 +431,7 @@ export default function ApprovalWorkflow({
                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-2 rounded-lg flex items-center gap-2"
               >
                 <Send className="h-4 w-4" />
-                Submit Decision
+                {t('approvalWorkflow.submitDecision')}
               </button>
             </div>
           </div>

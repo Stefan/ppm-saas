@@ -1,0 +1,42 @@
+{
+  "note": "Master translation file - Common terms used across all Batch 2 translations",
+  "common_terms": {
+    "de": {
+      "Implementation Tracking": "Implementierungsverfolgung",
+      "Change Request": "Änderungsantrag",
+      "Assigned to": "Zugewiesen an",
+      "Overall Progress": "Gesamtfortschritt",
+      "Days Remaining": "Verbleibende Tage",
+      "Schedule Status": "Zeitplanstatus",
+      "Complete": "Abgeschlossen",
+      "Overview": "Übersicht",
+      "Tasks": "Aufgaben",
+      "Gantt Chart": "Gantt-Diagramm",
+      "Milestones": "Meilensteine",
+      "Progress": "Fortschritt",
+      "Loading...": "Lädt...",
+      "Cancel": "Abbrechen",
+      "Save": "Speichern",
+      "Delete": "Löschen",
+      "Edit": "Bearbeiten",
+      "Add": "Hinzufügen",
+      "Update": "Aktualisieren",
+      "Create": "Erstellen",
+      "Search": "Suchen",
+      "Filter": "Filtern",
+      "Filters": "Filter",
+      "Export": "Exportieren",
+      "Refresh": "Aktualisieren",
+      "Close": "Schließen",
+      "View": "Ansehen",
+      "Remove": "Entfernen",
+      "Apply": "Anwenden",
+      "Clear": "Löschen",
+      "Yes": "Ja",
+      "No": "Nein",
+      "All": "Alle",
+      "None": "Keine",
+      "Other": "Andere"
+    }
+  }
+}

@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
-import dynamic from 'next/dynamic'
 import { 
   X, 
   Send, 
@@ -18,12 +17,6 @@ import type { HelpFeedbackRequest } from '../types/help-chat'
 import { cn } from '../lib/utils/design-system'
 import { MessageRenderer } from './help-chat/MessageRenderer'
 import type { QuickAction } from '../types/help-chat'
-
-// Dynamic import for LanguageSelector to reduce initial bundle
-const LanguageSelector = dynamic(
-  () => import('./help-chat/LanguageSelector').then(mod => ({ default: mod.LanguageSelector })),
-  { ssr: false }
-)
 
 interface HelpChatProps {
   className?: string
@@ -160,7 +153,6 @@ export function HelpChat({ className }: HelpChatProps) {
                 </h1>
               </div>
               <div className="flex items-center space-x-2">
-                <LanguageSelector compact />
                 {state.messages.length > 0 && (
                   <button
                     onClick={handleClearMessages}
@@ -186,7 +178,7 @@ export function HelpChat({ className }: HelpChatProps) {
                 </div>
               ) : (
                 <div>
-                  {state.messages.map((message) => (
+                  {state.messages.filter(msg => msg.type !== 'tip').map((message) => (
                     <div key={message.id}>
                       <MessageRenderer
                         message={message}
@@ -232,15 +224,15 @@ export function HelpChat({ className }: HelpChatProps) {
               <div ref={messagesEndRef} />
             </main>
 
-            <footer className="border-t border-gray-200 p-4 bg-white">
+            <footer className="border-t border-gray-200 p-4 bg-white sticky bottom-0 z-10">
               <form onSubmit={handleSubmit} className="flex space-x-3">
                 <textarea
                   ref={inputRef}
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Ask me about PPM features..."
-                  className="flex-1 resize-none rounded-lg border-2 border-gray-300 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none min-h-[44px] max-h-32"
+                  placeholder="Frage mich etwas über PPM..."
+                  className="flex-1 resize-none rounded-lg border-2 border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none min-h-[48px] max-h-32 bg-white"
                   rows={1}
                   disabled={!canSendMessage}
                 />
@@ -248,7 +240,7 @@ export function HelpChat({ className }: HelpChatProps) {
                   type="submit"
                   disabled={!canSendMessage || !inputValue.trim()}
                   className={cn(
-                    'px-4 py-3 rounded-lg font-medium transition-colors min-h-[44px] min-w-[44px]',
+                    'px-4 py-3 rounded-lg font-medium transition-colors min-h-[48px] min-w-[48px] flex items-center justify-center',
                     canSendMessage && inputValue.trim()
                       ? 'bg-blue-600 text-white hover:bg-blue-700'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -291,7 +283,6 @@ export function HelpChat({ className }: HelpChatProps) {
               </h2>
             </div>
             <div className="flex items-center space-x-2">
-              <LanguageSelector compact />
               {state.messages.length > 0 && (
                 <button
                   onClick={handleClearMessages}
@@ -327,7 +318,7 @@ export function HelpChat({ className }: HelpChatProps) {
               </div>
             ) : (
               <div>
-                {state.messages.map((message) => (
+                {state.messages.filter(msg => msg.type !== 'tip').map((message) => (
                   <div key={message.id}>
                     <MessageRenderer
                       message={message}
@@ -373,15 +364,15 @@ export function HelpChat({ className }: HelpChatProps) {
             <div ref={messagesEndRef} />
           </main>
 
-          <footer className="border-t-2 border-gray-200 p-4 bg-white">
+          <footer className="border-t-2 border-gray-200 p-4 bg-white sticky bottom-0 z-10">
             <form onSubmit={handleSubmit} className="flex space-x-3">
               <textarea
                 ref={inputRef}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask me about PPM features..."
-                className="flex-1 resize-none rounded-lg border-2 border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none min-h-[40px] max-h-32"
+                placeholder="Frage mich etwas über PPM..."
+                className="flex-1 resize-none rounded-lg border-2 border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none min-h-[44px] max-h-32 bg-white"
                 rows={1}
                 disabled={!canSendMessage}
               />
@@ -389,16 +380,16 @@ export function HelpChat({ className }: HelpChatProps) {
                 type="submit"
                 disabled={!canSendMessage || !inputValue.trim()}
                 className={cn(
-                  'px-3 py-2 rounded-lg font-medium transition-colors min-h-[40px] min-w-[40px]',
+                  'px-4 py-2 rounded-lg font-medium transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center',
                   canSendMessage && inputValue.trim()
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 )}
               >
                 {state.isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
-                  <Send className="h-4 w-4" />
+                  <Send className="h-5 w-5" />
                 )}
               </button>
             </form>

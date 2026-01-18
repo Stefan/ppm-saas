@@ -2,7 +2,9 @@
 
 import React, { Component, ErrorInfo, ReactNode } from 'react'
 import { AlertTriangle, RefreshCw, Home, ArrowLeft, HelpCircle } from 'lucide-react'
-import { logger } from '../../lib/monitoring/logger'
+import { logger } from '@/lib/monitoring/logger'
+import { loadTranslations } from '@/lib/i18n/loader'
+import type { TranslationDictionary } from '@/lib/i18n/types'
 
 interface Props {
   children: ReactNode
@@ -17,6 +19,8 @@ interface State {
   error?: Error
   errorInfo?: ErrorInfo
   errorId?: string
+  translations?: TranslationDictionary
+  locale?: string
 }
 
 /**
@@ -25,6 +29,20 @@ interface State {
 class ErrorBoundaryComponent extends Component<Props, State> {
   public state: State = {
     hasError: false
+  }
+
+  public async componentDidMount() {
+    // Load translations for error boundary
+    try {
+      const locale = typeof window !== 'undefined' 
+        ? localStorage.getItem('i18n_locale') || 'en'
+        : 'en'
+      const translations = await loadTranslations(locale)
+      this.setState({ translations, locale })
+    } catch (error) {
+      console.error('Failed to load translations for ErrorBoundary:', error)
+      // Continue without translations - will use fallback English text
+    }
   }
 
   public static getDerivedStateFromError(error: Error): State {
@@ -86,34 +104,90 @@ class ErrorBoundaryComponent extends Component<Props, State> {
     }
   }
 
+  private t = (key: string, params?: Record<string, string | number>): string => {
+    if (!this.state.translations) {
+      // Fallback to English if translations not loaded
+      const fallbackMap: Record<string, string> = {
+        'errors.boundary.tryAgain': 'Try Again',
+        'errors.boundary.refreshPage': 'Refresh Page',
+        'errors.boundary.navigateSection': 'Or navigate to a different section:',
+        'errors.boundary.dashboardHome': 'Dashboard Home',
+        'errors.boundary.goBack': 'Go Back',
+        'errors.boundary.quickNavigation': 'Quick Navigation:',
+        'errors.boundary.help': 'Help',
+        'errors.boundary.errorId': 'Error ID:',
+        'errors.boundary.includeIdInSupport': 'Please include this ID when contacting support',
+        'errors.boundary.devDetails': 'Development Error Details:',
+        'errors.boundary.message': 'Message:',
+        'errors.boundary.stackTrace': 'Stack Trace:',
+        'errors.boundary.componentStack': 'Component Stack:',
+        'nav.reports': 'Reports',
+        'nav.risks': 'Risks',
+        'nav.scenarios': 'Scenarios',
+      }
+      let result = fallbackMap[key] || key
+      if (params) {
+        Object.entries(params).forEach(([paramKey, paramValue]) => {
+          result = result.replace(`{${paramKey}}`, String(paramValue))
+        })
+      }
+      return result
+    }
+
+    // Navigate nested object using dot notation
+    const keys = key.split('.')
+    let value: any = this.state.translations
+
+    for (const k of keys) {
+      if (value && typeof value === 'object' && k in value) {
+        value = value[k]
+      } else {
+        return key // Return key if not found
+      }
+    }
+
+    if (typeof value !== 'string') {
+      return key
+    }
+
+    // Handle interpolation
+    if (params) {
+      return Object.entries(params).reduce((str, [paramKey, paramValue]) => {
+        return str.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(paramValue))
+      }, value)
+    }
+
+    return value
+  }
+
   private getErrorTypeMessage = (error?: Error): string => {
-    if (!error) return 'An unexpected error occurred'
+    if (!error) return this.t('errors.boundary.unexpected')
     
     const errorMessage = error.message?.toLowerCase() || ''
     const errorName = error.name?.toLowerCase() || ''
     
     // Categorize common error types
     if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
-      return 'Network connection issue detected. Please check your internet connection and try again.'
+      return this.t('errors.boundary.network')
     }
     
     if (errorMessage.includes('permission') || errorMessage.includes('unauthorized')) {
-      return 'Access permission issue. You may need to log in again or contact support.'
+      return this.t('errors.boundary.permission')
     }
     
     if (errorMessage.includes('timeout')) {
-      return 'Request timed out. The server may be busy. Please try again in a moment.'
+      return this.t('errors.boundary.timeout')
     }
     
     if (errorName.includes('typeerror') || errorMessage.includes('undefined') || errorMessage.includes('null')) {
-      return 'Data loading issue detected. Some information may be temporarily unavailable.'
+      return this.t('errors.boundary.dataLoading')
     }
     
     if (errorMessage.includes('syntax') || errorName.includes('syntaxerror')) {
-      return 'Application configuration issue detected. Please refresh the page or contact support.'
+      return this.t('errors.boundary.configuration')
     }
     
-    return 'An unexpected error occurred while loading this section.'
+    return this.t('errors.boundary.defaultMessage')
   }
 
   private getContextualInfo = (): string => {
@@ -125,19 +199,19 @@ class ErrorBoundaryComponent extends Component<Props, State> {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname
       
-      if (path.includes('/dashboards')) return 'Portfolio Dashboard'
-      if (path.includes('/reports')) return 'AI Reports & Analytics'
-      if (path.includes('/risks')) return 'Risk/Issue Registers'
-      if (path.includes('/scenarios')) return 'What-If Scenarios'
-      if (path.includes('/resources')) return 'Resource Management'
-      if (path.includes('/financials')) return 'Financial Tracking'
-      if (path.includes('/changes')) return 'Change Management'
-      if (path.includes('/admin')) return 'Administration'
-      if (path.includes('/feedback')) return 'Feedback & Ideas'
-      if (path.includes('/monte-carlo')) return 'Monte Carlo Analysis'
+      if (path.includes('/dashboards')) return this.t('errors.contexts.dashboard')
+      if (path.includes('/reports')) return this.t('errors.contexts.reports')
+      if (path.includes('/risks')) return this.t('errors.contexts.risks')
+      if (path.includes('/scenarios')) return this.t('errors.contexts.scenarios')
+      if (path.includes('/resources')) return this.t('errors.contexts.resources')
+      if (path.includes('/financials')) return this.t('errors.contexts.financials')
+      if (path.includes('/changes')) return this.t('errors.contexts.changes')
+      if (path.includes('/admin')) return this.t('errors.contexts.admin')
+      if (path.includes('/feedback')) return this.t('errors.contexts.feedback')
+      if (path.includes('/monte-carlo')) return this.t('errors.contexts.monteCarlo')
     }
     
-    return 'Application'
+    return this.t('errors.contexts.application')
   }
 
   public render() {
@@ -160,7 +234,7 @@ class ErrorBoundaryComponent extends Component<Props, State> {
             </div>
             
             <h1 className="text-xl font-semibold text-gray-900 mb-2">
-              {contextualInfo} Error
+              {this.t('errors.boundary.title', { context: contextualInfo })}
             </h1>
             
             <p className="text-gray-600 mb-4">
@@ -171,10 +245,10 @@ class ErrorBoundaryComponent extends Component<Props, State> {
             {this.state.errorId && (
               <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
                 <p className="text-sm text-gray-600">
-                  <strong>Error ID:</strong> {this.state.errorId}
+                  <strong>{this.t('errors.boundary.errorId')}</strong> {this.state.errorId}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  Please include this ID when contacting support
+                  {this.t('errors.boundary.includeIdInSupport')}
                 </p>
               </div>
             )}
@@ -182,17 +256,17 @@ class ErrorBoundaryComponent extends Component<Props, State> {
             {/* Development error details */}
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-left">
-                <h3 className="text-sm font-medium text-red-800 mb-2">Development Error Details:</h3>
+                <h3 className="text-sm font-medium text-red-800 mb-2">{this.t('errors.boundary.devDetails')}</h3>
                 <div className="space-y-2">
                   <div>
-                    <strong className="text-xs text-red-700">Message:</strong>
+                    <strong className="text-xs text-red-700">{this.t('errors.boundary.message')}</strong>
                     <pre className="text-xs text-red-700 overflow-auto mt-1 bg-red-100 p-2 rounded">
                       {this.state.error.message}
                     </pre>
                   </div>
                   {this.state.error.stack && (
                     <div>
-                      <strong className="text-xs text-red-700">Stack Trace:</strong>
+                      <strong className="text-xs text-red-700">{this.t('errors.boundary.stackTrace')}</strong>
                       <pre className="text-xs text-red-700 overflow-auto mt-1 bg-red-100 p-2 rounded max-h-32">
                         {this.state.error.stack}
                       </pre>
@@ -200,7 +274,7 @@ class ErrorBoundaryComponent extends Component<Props, State> {
                   )}
                   {this.state.errorInfo?.componentStack && (
                     <div>
-                      <strong className="text-xs text-red-700">Component Stack:</strong>
+                      <strong className="text-xs text-red-700">{this.t('errors.boundary.componentStack')}</strong>
                       <pre className="text-xs text-red-700 overflow-auto mt-1 bg-red-100 p-2 rounded max-h-32">
                         {this.state.errorInfo.componentStack}
                       </pre>
@@ -217,7 +291,7 @@ class ErrorBoundaryComponent extends Component<Props, State> {
                 className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Try Again
+                {this.t('errors.boundary.tryAgain')}
               </button>
               
               <button
@@ -225,7 +299,7 @@ class ErrorBoundaryComponent extends Component<Props, State> {
                 className="flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh Page
+                {this.t('errors.boundary.refreshPage')}
               </button>
             </div>
 
@@ -234,7 +308,7 @@ class ErrorBoundaryComponent extends Component<Props, State> {
               <>
                 <div className="border-t border-gray-200 pt-4 mb-4">
                   <p className="text-sm text-gray-600 mb-3">
-                    Or navigate to a different section:
+                    {this.t('errors.boundary.navigateSection')}
                   </p>
                   <div className="flex flex-col sm:flex-row gap-2 justify-center">
                     <button
@@ -242,7 +316,7 @@ class ErrorBoundaryComponent extends Component<Props, State> {
                       className="flex items-center justify-center px-3 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
                     >
                       <Home className="h-4 w-4 mr-2" />
-                      Dashboard Home
+                      {this.t('errors.boundary.dashboardHome')}
                     </button>
                     
                     <button
@@ -250,39 +324,39 @@ class ErrorBoundaryComponent extends Component<Props, State> {
                       className="flex items-center justify-center px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
                     >
                       <ArrowLeft className="h-4 w-4 mr-2" />
-                      Go Back
+                      {this.t('errors.boundary.goBack')}
                     </button>
                   </div>
                 </div>
 
                 {/* Quick navigation links */}
                 <div className="border-t border-gray-200 pt-4">
-                  <p className="text-xs text-gray-500 mb-2">Quick Navigation:</p>
+                  <p className="text-xs text-gray-500 mb-2">{this.t('errors.boundary.quickNavigation')}</p>
                   <div className="flex flex-wrap gap-2 justify-center text-xs">
                     <a 
                       href="/reports" 
                       className="px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
                     >
-                      Reports
+                      {this.t('nav.reports')}
                     </a>
                     <a 
                       href="/risks" 
                       className="px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
                     >
-                      Risks
+                      {this.t('nav.risks')}
                     </a>
                     <a 
                       href="/scenarios" 
                       className="px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
                     >
-                      Scenarios
+                      {this.t('nav.scenarios')}
                     </a>
                     <a 
                       href="/feedback" 
                       className="px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
                     >
                       <HelpCircle className="h-3 w-3 inline mr-1" />
-                      Help
+                      {this.t('errors.boundary.help')}
                     </a>
                   </div>
                 </div>

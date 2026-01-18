@@ -2,7 +2,19 @@
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react'
 import { useEditor, EditorContent, Editor } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
+// Import only the extensions we actually use instead of full StarterKit
+import Document from '@tiptap/extension-document'
+import Paragraph from '@tiptap/extension-paragraph'
+import Text from '@tiptap/extension-text'
+import Bold from '@tiptap/extension-bold'
+import Italic from '@tiptap/extension-italic'
+import Code from '@tiptap/extension-code'
+import Heading from '@tiptap/extension-heading'
+import BulletList from '@tiptap/extension-bullet-list'
+import OrderedList from '@tiptap/extension-ordered-list'
+import ListItem from '@tiptap/extension-list-item'
+import Blockquote from '@tiptap/extension-blockquote'
+import History from '@tiptap/extension-history'
 import Placeholder from '@tiptap/extension-placeholder'
 import CharacterCount from '@tiptap/extension-character-count'
 import Highlight from '@tiptap/extension-highlight'
@@ -452,7 +464,25 @@ const PMREditor: React.FC<PMREditorProps> = ({
   // Initialize editor for current section
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      // Core extensions (required)
+      Document,
+      Paragraph,
+      Text,
+      // Formatting extensions
+      Bold,
+      Italic,
+      Code,
+      Heading.configure({
+        levels: [1, 2, 3],
+      }),
+      // List extensions
+      BulletList,
+      OrderedList,
+      ListItem,
+      Blockquote,
+      // History (undo/redo)
+      History,
+      // Additional features
       Placeholder.configure({
         placeholder: 'Start writing your report section...',
       }),
