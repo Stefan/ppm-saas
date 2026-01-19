@@ -260,7 +260,7 @@ export default function ScenariosPage() {
 
   return (
     <AppLayout>
-      <div className="p-3 sm:p-4 md:p-6 space-y-3 min-h-full">
+      <div className="p-3 sm:p-4 md:p-6 space-y-3 min-h-full pb-16">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-2 sm:space-y-0">
           <div>
