@@ -60,7 +60,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <HelpChatProvider>
-      <div className="flex flex-col h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
         {/* Top Bar Navigation */}
         <TopBar onMenuToggle={toggleMobileNav} />
         
@@ -70,7 +70,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         {/* Main Content Area */}
         <main 
           ref={mainContentRef}
-          className="flex-1 overflow-auto"
+          className="flex-1"
         >
           {children}
         </main>
