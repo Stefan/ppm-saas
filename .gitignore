@@ -61,6 +61,12 @@ test_*.csv
 *.test.json
 test_data/
 
+# Playwright test results
+test-results/
+playwright-report/
+*.webm
+*.png.diff
+
 # Development artifacts
 .swc/
 .vercel
