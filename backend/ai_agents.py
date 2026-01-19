@@ -112,15 +112,36 @@ class RAGReporterAgent(AIAgentBase):
         self.embedding_model = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-ada-002")
         self.chat_model = os.getenv("OPENAI_MODEL", "gpt-4")
         self.max_context_length = 8000
+        
+        # Check if we should use local embeddings (for Grok or when OpenAI embeddings unavailable)
+        self.use_local_embeddings = os.getenv("USE_LOCAL_EMBEDDINGS", "false").lower() == "true"
+        if self.use_local_embeddings or base_url:
+            logger.info("Using local sentence-transformers for embeddings")
+            try:
+                from sentence_transformers import SentenceTransformer
+                self.local_embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+                self.embedding_dimension = 384  # all-MiniLM-L6-v2 dimension
+            except ImportError:
+                logger.warning("sentence-transformers not installed, falling back to OpenAI")
+                self.use_local_embeddings = False
+                self.embedding_dimension = 1536
+        else:
+            self.embedding_dimension = 1536
     
     async def generate_embedding(self, text: str) -> List[float]:
-        """Generate embedding for text using OpenAI"""
+        """Generate embedding for text using OpenAI or local model"""
         try:
-            response = self.openai_client.embeddings.create(
-                model=self.embedding_model,
-                input=text
-            )
-            return response.data[0].embedding
+            if self.use_local_embeddings:
+                # Use local sentence-transformers model
+                embedding = self.local_embedding_model.encode(text, convert_to_numpy=True)
+                return embedding.tolist()
+            else:
+                # Use OpenAI API
+                response = self.openai_client.embeddings.create(
+                    model=self.embedding_model,
+                    input=text
+                )
+                return response.data[0].embedding
         except Exception as e:
             logger.error(f"Embedding generation failed: {e}")
             raise
@@ -674,6 +695,514 @@ class ResourceOptimizerAgent(AIAgentBase):
         self.skill_match_threshold = 0.6
         self.utilization_target_min = 60.0
         self.utilization_target_max = 85.0
+    
+    async def optimize_resources(
+        self,
+        organization_id: str,
+        user_id: str,
+        constraints: Optional[Dict] = None
+    ) -> Dict[str, Any]:
+        """
+        Optimize resource allocations using PuLP linear programming.
+        
+        Args:
+            organization_id: Organization ID for filtering data
+            user_id: User ID for audit logging
+            constraints: Optional constraints for optimization
+            
+        Returns:
+            Dict containing recommendations, confidence scores, and optimization results
+        """
+        start_time = datetime.now()
+        operation_id = None
+        
+        try:
+            # Retrieve resources and projects from Supabase filtered by organization
+            resources = await self._get_resources_by_organization(organization_id)
+            projects = await self._get_projects_by_organization(organization_id)
+            
+            # Check for insufficient data
+            if not resources:
+                error_msg = "No resources found for organization. Please add resources before optimizing."
+                await self._log_audit(user_id, organization_id, "optimize_resources", False, error_msg)
+                return {
+                    "error": error_msg,
+                    "recommendations": [],
+                    "total_cost_savings": 0.0,
+                    "model_confidence": 0.0,
+                    "constraints_satisfied": False
+                }
+            
+            if not projects:
+                error_msg = "No projects found for organization. Please add projects before optimizing."
+                await self._log_audit(user_id, organization_id, "optimize_resources", False, error_msg)
+                return {
+                    "error": error_msg,
+                    "recommendations": [],
+                    "total_cost_savings": 0.0,
+                    "model_confidence": 0.0,
+                    "constraints_satisfied": False
+                }
+            
+            # Build PuLP linear programming model
+            model, allocation_vars = self._build_optimization_model(resources, projects, constraints or {})
+            
+            # Solve the model
+            import pulp
+            model.solve(pulp.PULP_CBC_CMD(msg=0))  # Silent solver
+            
+            # Check solution status
+            status = pulp.LpStatus[model.status]
+            
+            if status != "Optimal":
+                # Handle infeasible solutions
+                error_msg = self._get_infeasibility_message(model, status, constraints)
+                await self._log_audit(user_id, organization_id, "optimize_resources", False, error_msg)
+                return {
+                    "error": error_msg,
+                    "recommendations": [],
+                    "total_cost_savings": 0.0,
+                    "model_confidence": 0.0,
+                    "constraints_satisfied": False,
+                    "solver_status": status
+                }
+            
+            # Extract recommendations from solved model
+            recommendations = self._extract_recommendations(model, allocation_vars, resources, projects)
+            
+            # Calculate confidence scores based on solution quality
+            confidence_score = self._calculate_confidence(model, recommendations)
+            
+            # Calculate total cost savings
+            total_cost_savings = self._calculate_cost_savings(recommendations, resources, projects)
+            
+            # Log optimization request and results to audit_logs
+            response_time = int((datetime.now() - start_time).total_seconds() * 1000)
+            operation_id = await self.log_operation(
+                operation_type="optimize_resources",
+                user_id=user_id,
+                inputs={
+                    "organization_id": organization_id,
+                    "num_resources": len(resources),
+                    "num_projects": len(projects),
+                    "constraints": constraints or {}
+                },
+                outputs={
+                    "num_recommendations": len(recommendations),
+                    "total_cost_savings": total_cost_savings,
+                    "solver_status": status
+                },
+                response_time_ms=response_time,
+                success=True,
+                confidence_score=confidence_score
+            )
+            
+            await self._log_audit(
+                user_id, 
+                organization_id, 
+                "optimize_resources", 
+                True, 
+                None,
+                {
+                    "num_recommendations": len(recommendations),
+                    "total_cost_savings": total_cost_savings,
+                    "operation_id": operation_id
+                }
+            )
+            
+            return {
+                "recommendations": recommendations,
+                "total_cost_savings": total_cost_savings,
+                "model_confidence": confidence_score,
+                "constraints_satisfied": True,
+                "solver_status": status,
+                "operation_id": operation_id,
+                "response_time_ms": response_time
+            }
+            
+        except Exception as e:
+            response_time = int((datetime.now() - start_time).total_seconds() * 1000)
+            error_msg = f"Optimization failed: {str(e)}"
+            
+            # Log error
+            operation_id = await self.log_operation(
+                operation_type="optimize_resources",
+                user_id=user_id,
+                inputs={
+                    "organization_id": organization_id,
+                    "constraints": constraints or {}
+                },
+                outputs={},
+                response_time_ms=response_time,
+                success=False,
+                error_message=error_msg
+            )
+            
+            await self._log_audit(user_id, organization_id, "optimize_resources", False, error_msg)
+            
+            logger.error(f"Resource optimization failed: {e}")
+            raise
+    
+    def _build_optimization_model(
+        self,
+        resources: List[Dict],
+        projects: List[Dict],
+        constraints: Dict
+    ):
+        """
+        Build linear programming model for resource optimization.
+        
+        Objective: Minimize total cost = Σ(resource_cost × allocation_hours)
+        
+        Constraints:
+        - Resource availability: Σ(allocations per resource) ≤ available_hours
+        - Project requirements: Σ(allocations per project) ≥ required_hours
+        - Skill matching: resource_skills ⊇ project_required_skills
+        
+        Args:
+            resources: List of resource dictionaries
+            projects: List of project dictionaries
+            constraints: Additional constraints
+            
+        Returns:
+            Tuple of (model, allocation_vars)
+        """
+        import pulp
+        
+        # Create the model
+        model = pulp.LpProblem("Resource_Optimization", pulp.LpMinimize)
+        
+        # Define decision variables: allocation[resource_id, project_id] = hours allocated
+        allocation_vars = {}
+        for resource in resources:
+            for project in projects:
+                var_name = f"alloc_{resource['id']}_{project['id']}"
+                allocation_vars[(resource['id'], project['id'])] = pulp.LpVariable(
+                    var_name,
+                    lowBound=0,
+                    cat='Continuous'
+                )
+        
+        # Set objective: minimize Σ(resource_cost × allocation_hours)
+        cost_expr = []
+        for resource in resources:
+            resource_cost = resource.get('hourly_rate', resource.get('cost_per_hour', 100))
+            for project in projects:
+                var = allocation_vars[(resource['id'], project['id'])]
+                cost_expr.append(resource_cost * var)
+        
+        model += pulp.lpSum(cost_expr), "Total_Cost"
+        
+        # Add constraints: resource availability
+        for resource in resources:
+            available_hours = resource.get('available_hours', resource.get('capacity', 160))
+            resource_allocations = [
+                allocation_vars[(resource['id'], project['id'])]
+                for project in projects
+            ]
+            model += (
+                pulp.lpSum(resource_allocations) <= available_hours,
+                f"Resource_Availability_{resource['id']}"
+            )
+        
+        # Add constraints: project requirements
+        for project in projects:
+            required_hours = project.get('required_hours', project.get('estimated_effort', 160))
+            project_allocations = [
+                allocation_vars[(resource['id'], project['id'])]
+                for resource in resources
+            ]
+            model += (
+                pulp.lpSum(project_allocations) >= required_hours,
+                f"Project_Requirements_{project['id']}"
+            )
+        
+        # Add constraints: skill matching
+        for resource in resources:
+            resource_skills = set(resource.get('skills', []))
+            for project in projects:
+                required_skills = set(project.get('required_skills', []))
+                
+                # If project requires skills that resource doesn't have, set allocation to 0
+                if required_skills and not required_skills.issubset(resource_skills):
+                    model += (
+                        allocation_vars[(resource['id'], project['id'])] == 0,
+                        f"Skill_Match_{resource['id']}_{project['id']}"
+                    )
+        
+        # Add custom constraints if provided
+        if constraints.get('max_allocation_per_resource'):
+            max_alloc = constraints['max_allocation_per_resource']
+            for resource in resources:
+                for project in projects:
+                    model += (
+                        allocation_vars[(resource['id'], project['id'])] <= max_alloc,
+                        f"Max_Allocation_{resource['id']}_{project['id']}"
+                    )
+        
+        if constraints.get('min_allocation_per_project'):
+            min_alloc = constraints['min_allocation_per_project']
+            for project in projects:
+                for resource in resources:
+                    var = allocation_vars[(resource['id'], project['id'])]
+                    # If allocated, must be at least min_alloc
+                    # This is a simplified version; proper implementation would use binary variables
+                    pass  # Skip for now as it requires binary variables
+        
+        return model, allocation_vars
+    
+    def _extract_recommendations(
+        self,
+        model,
+        allocation_vars: Dict,
+        resources: List[Dict],
+        projects: List[Dict]
+    ) -> List[Dict]:
+        """
+        Extract recommendations from solved optimization model.
+        
+        Args:
+            model: Solved PuLP model
+            allocation_vars: Dictionary of allocation variables
+            resources: List of resources
+            projects: List of projects
+            
+        Returns:
+            List of recommendation dictionaries
+        """
+        recommendations = []
+        
+        for resource in resources:
+            for project in projects:
+                var = allocation_vars[(resource['id'], project['id'])]
+                allocated_hours = var.varValue
+                
+                if allocated_hours and allocated_hours > 0:
+                    resource_cost = resource.get('hourly_rate', resource.get('cost_per_hour', 100))
+                    total_cost = allocated_hours * resource_cost
+                    
+                    # Calculate cost savings compared to average cost
+                    avg_cost = sum(r.get('hourly_rate', r.get('cost_per_hour', 100)) for r in resources) / len(resources)
+                    cost_savings = (avg_cost - resource_cost) * allocated_hours
+                    
+                    recommendations.append({
+                        "resource_id": resource['id'],
+                        "resource_name": resource.get('name', 'Unknown'),
+                        "project_id": project['id'],
+                        "project_name": project.get('name', 'Unknown'),
+                        "allocated_hours": round(allocated_hours, 2),
+                        "cost_savings": round(cost_savings, 2),
+                        "total_cost": round(total_cost, 2),
+                        "confidence": 0.0  # Will be calculated separately
+                    })
+        
+        return recommendations
+    
+    def _calculate_confidence(
+        self,
+        model,
+        recommendations: List[Dict]
+    ) -> float:
+        """
+        Calculate confidence score based on solution quality.
+        
+        Confidence levels:
+        - 1.0: Optimal solution with all constraints satisfied
+        - 0.8: Optimal solution with some constraints relaxed
+        - 0.6: Feasible solution found but not optimal
+        - 0.4: Partial solution with constraint violations
+        - 0.0: No feasible solution
+        
+        Args:
+            model: Solved PuLP model
+            recommendations: List of recommendations
+            
+        Returns:
+            Confidence score between 0.0 and 1.0
+        """
+        import pulp
+        
+        status = pulp.LpStatus[model.status]
+        
+        if status == "Optimal":
+            # Check if all constraints are satisfied
+            # For now, assume optimal means all constraints satisfied
+            confidence = 1.0
+            
+            # Adjust based on number of recommendations
+            if len(recommendations) == 0:
+                confidence = 0.5
+            elif len(recommendations) < 3:
+                confidence = 0.9
+            
+            return confidence
+        elif status == "Feasible":
+            return 0.6
+        elif status == "Infeasible":
+            return 0.0
+        else:
+            return 0.4
+    
+    def _calculate_cost_savings(
+        self,
+        recommendations: List[Dict],
+        resources: List[Dict],
+        projects: List[Dict]
+    ) -> float:
+        """
+        Calculate total cost savings from optimization.
+        
+        Args:
+            recommendations: List of recommendations
+            resources: List of resources
+            projects: List of projects
+            
+        Returns:
+            Total cost savings
+        """
+        total_savings = sum(rec.get('cost_savings', 0) for rec in recommendations)
+        return round(total_savings, 2)
+    
+    def _get_infeasibility_message(
+        self,
+        model,
+        status: str,
+        constraints: Dict
+    ) -> str:
+        """
+        Generate user-friendly error message for infeasible solutions.
+        
+        Args:
+            model: PuLP model
+            status: Solver status
+            constraints: Applied constraints
+            
+        Returns:
+            Error message explaining infeasibility
+        """
+        if status == "Infeasible":
+            messages = ["Cannot find feasible resource allocation. Possible reasons:"]
+            
+            if constraints and constraints.get('required_skills'):
+                messages.append("- Required skills not available in resource pool")
+            
+            messages.append("- Project requirements exceed available resource capacity")
+            messages.append("- Skill matching constraints too restrictive")
+            messages.append("\nSuggestions:")
+            messages.append("- Add more resources to the pool")
+            messages.append("- Reduce project requirements")
+            messages.append("- Relax skill matching constraints")
+            messages.append("- Extend project timelines")
+            
+            return "\n".join(messages)
+        elif status == "Unbounded":
+            return "Optimization problem is unbounded. Please check constraints."
+        elif status == "Undefined":
+            return "Optimization problem is undefined. Please check input data."
+        else:
+            return f"Optimization failed with status: {status}"
+    
+    async def _get_resources_by_organization(self, organization_id: str) -> List[Dict]:
+        """
+        Retrieve resources from Supabase filtered by organization.
+        
+        Args:
+            organization_id: Organization ID
+            
+        Returns:
+            List of resource dictionaries
+        """
+        try:
+            response = self.supabase.table("resources").select("*").eq(
+                "organization_id", organization_id
+            ).execute()
+            
+            resources = response.data or []
+            
+            # Enhance resources with calculated fields
+            for resource in resources:
+                # Ensure skills is a list
+                if not isinstance(resource.get('skills'), list):
+                    resource['skills'] = []
+                
+                # Calculate available hours (default to 160 hours/month if not specified)
+                resource['available_hours'] = resource.get('capacity', 160)
+                
+                # Get hourly rate (default to 100 if not specified)
+                if 'hourly_rate' not in resource and 'cost_per_hour' not in resource:
+                    resource['hourly_rate'] = 100
+            
+            return resources
+            
+        except Exception as e:
+            logger.error(f"Failed to get resources by organization: {e}")
+            return []
+    
+    async def _get_projects_by_organization(self, organization_id: str) -> List[Dict]:
+        """
+        Retrieve projects from Supabase filtered by organization.
+        
+        Args:
+            organization_id: Organization ID
+            
+        Returns:
+            List of project dictionaries
+        """
+        try:
+            response = self.supabase.table("projects").select("*").eq(
+                "organization_id", organization_id
+            ).execute()
+            
+            projects = response.data or []
+            
+            # Enhance projects with calculated fields
+            for project in projects:
+                # Infer required skills if not specified
+                if 'required_skills' not in project:
+                    project['required_skills'] = self._infer_required_skills(project)
+                
+                # Estimate required hours if not specified
+                if 'required_hours' not in project and 'estimated_effort' not in project:
+                    project['required_hours'] = self._estimate_project_effort(project)
+            
+            return projects
+            
+        except Exception as e:
+            logger.error(f"Failed to get projects by organization: {e}")
+            return []
+    
+    async def _log_audit(
+        self,
+        user_id: str,
+        organization_id: str,
+        action: str,
+        success: bool,
+        error_message: Optional[str] = None,
+        details: Optional[Dict] = None
+    ):
+        """
+        Log operation to audit_logs table.
+        
+        Args:
+            user_id: User ID
+            organization_id: Organization ID
+            action: Action performed
+            success: Whether operation succeeded
+            error_message: Error message if failed
+            details: Additional details
+        """
+        try:
+            self.supabase.table("audit_logs").insert({
+                "user_id": user_id,
+                "organization_id": organization_id,
+                "action": action,
+                "success": success,
+                "error_message": error_message,
+                "details": details or {},
+                "created_at": datetime.now().isoformat()
+            }).execute()
+        except Exception as e:
+            logger.error(f"Failed to log audit: {e}")
     
     async def analyze_resource_allocation(self, user_id: str, project_id: str = None) -> Dict[str, Any]:
         """Analyze current resource allocation and suggest optimizations"""

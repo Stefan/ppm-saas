@@ -1,15 +1,16 @@
 # RAG Implementation Status
 
-## Aktueller Stand (19. Januar 2026)
+## Aktueller Stand (19. Januar 2026 - Update 2)
 
-### ✅ Implementiert
+### ✅ Vollständig Implementiert
 
 1. **RAG Agent Klasse** (`backend/ai_agents.py`)
    - `RAGReporterAgent` vollständig implementiert
-   - Embedding-Generierung mit OpenAI
+   - Embedding-Generierung mit OpenAI ODER lokalen Modellen (sentence-transformers)
    - Vector-Similarity-Search
    - Conversation-Storage
    - Logging und Monitoring
+   - **NEU**: Unterstützung für lokale Embeddings (all-MiniLM-L6-v2, 384 Dimensionen)
 
 2. **API Endpoint** (`backend/routers/ai.py`)
    - POST `/ai/rag/query` mit Pydantic Request Body
@@ -23,22 +24,64 @@
    - PMR-Mode für Report-spezifische Queries
    - Source-Anzeige und Confidence-Scores
 
-### ⚠️ Teilweise Implementiert
+4. **Content Indexing Service** (`backend/services/content_indexing_service.py`)
+   - Vollständig implementiert
+   - Batch-Processing mit Rate-Limiting
+   - Indexierung von Projects, Portfolios, Resources, Risks, Issues
+   - Error-Handling und Logging
+   - Organization-Filtering
+
+5. **Lokale Embeddings**
+   - sentence-transformers installiert
+   - all-MiniLM-L6-v2 Modell (384 Dimensionen)
+   - USE_LOCAL_EMBEDDINGS=true in .env konfiguriert
+   - Funktioniert ohne OpenAI API Key
+
+### ⚠️ Teilweise Implementiert / Blockiert
 
 1. **Vector Database**
-   - Code verwendet pgvector für Similarity Search
-   - **FEHLT**: Database Migration für `embeddings` Tabelle
-   - **FEHLT**: pgvector Extension Installation
-   - Fallback-Logik vorhanden für fehlende Vector-DB
+   - ✅ Code verwendet pgvector für Similarity Search
+   - ✅ Database Migration 026 erstellt für `embeddings` Tabelle (1536 Dimensionen)
+   - ❌ **BLOCKIERT**: Migration 027 muss manuell angewendet werden (384 Dimensionen)
+   - ✅ Fallback-Logik vorhanden für fehlende Vector-DB
+   - **Problem**: Datenbank-Spalte ist auf 1536 Dimensionen konfiguriert, aber lokales Modell generiert 384 Dimensionen
 
 2. **Content Indexing**
-   - Code zum Speichern von Embeddings vorhanden
-   - **FEHLT**: Automatisches Indexing von Projekten/Portfolios/Ressourcen
-   - **FEHLT**: Background-Job für regelmäßiges Re-Indexing
+   - ✅ Code zum Speichern von Embeddings vorhanden
+   - ✅ Indexing-Service vollständig implementiert
+   - ❌ **BLOCKIERT**: Kann nicht ausgeführt werden wegen Dimensions-Mismatch
+   - ❌ **FEHLT**: Automatisches Indexing von Projekten/Portfolios/Ressourcen (nach Migration)
+   - ❌ **FEHLT**: Background-Job für regelmäßiges Re-Indexing
 
-### ❌ Nicht Implementiert
+### ❌ Blockiert - Manuelle Aktion Erforderlich
 
-1. **Database Setup**
+1. **Database Dimension Update** ⚠️ **KRITISCH**
+   ```sql
+   -- MUSS in Supabase SQL Editor ausgeführt werden:
+   -- Siehe: backend/migrations/027_update_embedding_dimension.sql
+   
+   -- Kurzversion:
+   DROP INDEX IF EXISTS embeddings_vector_idx;
+   ALTER TABLE embeddings ALTER COLUMN embedding TYPE vector(384);
+   CREATE INDEX embeddings_vector_idx ON embeddings 
+   USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+   ```
+   
+   **Warum**: Lokales Modell (all-MiniLM-L6-v2) generiert 384-dimensionale Vektoren,
+   aber Datenbank erwartet 1536 Dimensionen (OpenAI ada-002).
+   
+   **Wo ausführen**:
+   1. Supabase Dashboard → SQL Editor
+   2. Oder: `psql $DATABASE_URL < backend/migrations/027_update_embedding_dimension.sql`
+
+2. **Initial Content Indexing**
+   ```bash
+   # Nach Migration 027:
+   cd orka-ppm
+   python3 backend/services/content_indexing_service.py
+   ```
+   
+   **Erwartet**: 5 Projekte werden indexiert (aktuell 0 wegen Dimensions-Fehler)
    ```sql
    -- Benötigt:
    CREATE EXTENSION IF NOT EXISTS vector;
