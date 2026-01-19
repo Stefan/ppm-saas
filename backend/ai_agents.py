@@ -2055,13 +2055,327 @@ class ResourceOptimizerAgent(AIAgentBase):
             return "low"
 
 class RiskForecasterAgent(AIAgentBase):
-    """AI agent for predicting and forecasting project risks"""
+    """AI agent for forecasting project risks using ARIMA time series analysis"""
     
     def __init__(self, supabase_client: Client, openai_api_key: str, base_url: Optional[str] = None):
         super().__init__(supabase_client, openai_api_key, base_url)
+        self.min_data_points = 10
+        
+        # Import pandas and statsmodels for time series analysis
+        try:
+            import pandas as pd
+            from statsmodels.tsa.arima.model import ARIMA
+            from statsmodels.tsa.stattools import adfuller
+            self.pd = pd
+            self.ARIMA = ARIMA
+            self.adfuller = adfuller
+        except ImportError as e:
+            logger.error(f"Required libraries not available: {e}")
+            raise ImportError("pandas and statsmodels are required for RiskForecasterAgent")
     
+    async def forecast_risks(
+        self,
+        organization_id: str,
+        user_id: str,
+        project_id: Optional[str] = None,
+        forecast_periods: int = 12
+    ) -> Dict[str, Any]:
+        """
+        Forecast risks using ARIMA time series analysis
+        
+        Args:
+            organization_id: Organization ID for filtering
+            user_id: User ID for audit logging
+            project_id: Optional specific project ID
+            forecast_periods: Number of periods to forecast (default 12)
+            
+        Returns:
+            Dictionary containing forecasts, model confidence, and metrics
+        """
+        start_time = datetime.now()
+        
+        try:
+            # Retrieve historical risk data filtered by organization
+            risk_data = await self._retrieve_historical_risks(organization_id, project_id)
+            
+            # Check for minimum data points
+            if len(risk_data) < self.min_data_points:
+                error_msg = f"Insufficient historical data. Minimum {self.min_data_points} data points required, found {len(risk_data)}"
+                
+                # Log error to audit_logs
+                await self._log_to_audit(
+                    user_id=user_id,
+                    organization_id=organization_id,
+                    action="risk_forecast",
+                    success=False,
+                    error_message=error_msg,
+                    details={"project_id": project_id, "data_points": len(risk_data)}
+                )
+                
+                raise ValueError(error_msg)
+            
+            # Prepare time series data
+            time_series = self._prepare_time_series(risk_data)
+            
+            # Fit ARIMA model
+            model, confidence = self._fit_arima_model(time_series)
+            
+            # Generate forecast
+            forecasts = self._generate_forecast(model, forecast_periods)
+            
+            # Calculate response time
+            response_time = int((datetime.now() - start_time).total_seconds() * 1000)
+            
+            # Log successful forecast to audit_logs
+            await self._log_to_audit(
+                user_id=user_id,
+                organization_id=organization_id,
+                action="risk_forecast",
+                success=True,
+                details={
+                    "project_id": project_id,
+                    "forecast_periods": forecast_periods,
+                    "data_points": len(risk_data),
+                    "model_confidence": confidence,
+                    "response_time_ms": response_time
+                }
+            )
+            
+            # Log metrics
+            await self.log_metrics(
+                "risk_forecast", user_id, 0, 0, response_time, True, 
+                confidence_score=confidence
+            )
+            
+            return {
+                "forecasts": forecasts,
+                "model_confidence": confidence,
+                "model_metrics": {
+                    "aic": model.aic if hasattr(model, 'aic') else None,
+                    "data_points": len(risk_data)
+                }
+            }
+            
+        except ValueError as e:
+            # Already logged in the check above
+            raise
+        except Exception as e:
+            response_time = int((datetime.now() - start_time).total_seconds() * 1000)
+            error_msg = str(e)
+            
+            # Log error to audit_logs
+            await self._log_to_audit(
+                user_id=user_id,
+                organization_id=organization_id,
+                action="risk_forecast",
+                success=False,
+                error_message=error_msg,
+                details={"project_id": project_id}
+            )
+            
+            await self.log_metrics(
+                "risk_forecast", user_id, 0, 0, response_time, False, error_msg
+            )
+            
+            logger.error(f"Risk forecasting failed: {e}")
+            raise
+    
+    async def _retrieve_historical_risks(
+        self, 
+        organization_id: str, 
+        project_id: Optional[str]
+    ) -> List[Dict]:
+        """Retrieve historical risk data from Supabase filtered by organization"""
+        try:
+            query = self.supabase.table("risks").select("*").eq("organization_id", organization_id)
+            
+            if project_id:
+                query = query.eq("project_id", project_id)
+            
+            # Order by created_at to get time series
+            query = query.order("created_at", desc=False)
+            
+            response = query.execute()
+            return response.data or []
+        except Exception as e:
+            logger.error(f"Failed to retrieve historical risks: {e}")
+            return []
+    
+    def _prepare_time_series(self, risk_data: List[Dict]) -> 'pd.Series':
+        """Prepare time series data using pandas"""
+        try:
+            # Convert to DataFrame
+            df = self.pd.DataFrame(risk_data)
+            
+            # Ensure we have created_at and a risk metric
+            if 'created_at' not in df.columns:
+                raise ValueError("Risk data must contain 'created_at' field")
+            
+            # Convert created_at to datetime
+            df['created_at'] = self.pd.to_datetime(df['created_at'])
+            
+            # Calculate risk score (probability * impact)
+            if 'probability' in df.columns and 'impact' in df.columns:
+                df['risk_score'] = df['probability'] * df['impact']
+            elif 'severity' in df.columns:
+                # Map severity to numeric score
+                severity_map = {'low': 1, 'medium': 2, 'high': 3, 'critical': 4}
+                df['risk_score'] = df['severity'].map(severity_map).fillna(2)
+            else:
+                # Default: count of risks per period
+                df['risk_score'] = 1
+            
+            # Group by time period (monthly) and aggregate
+            df.set_index('created_at', inplace=True)
+            time_series = df['risk_score'].resample('M').sum()
+            
+            # Fill missing periods with 0
+            time_series = time_series.fillna(0)
+            
+            return time_series
+            
+        except Exception as e:
+            logger.error(f"Failed to prepare time series: {e}")
+            raise
+    
+    def _fit_arima_model(self, time_series: 'pd.Series') -> Tuple[Any, float]:
+        """
+        Fit ARIMA model with auto parameter selection
+        
+        Returns:
+            Tuple of (fitted_model, confidence_score)
+        """
+        try:
+            # Test for stationarity
+            adf_result = self.adfuller(time_series.dropna())
+            is_stationary = adf_result[1] < 0.05  # p-value < 0.05 means stationary
+            
+            # Determine d parameter (differencing order)
+            d = 0 if is_stationary else 1
+            
+            # Try different p and q parameters
+            best_aic = float('inf')
+            best_model = None
+            best_order = None
+            
+            # Test p,d,q in range (0-2, 0-1, 0-2)
+            for p in range(3):
+                for q in range(3):
+                    try:
+                        model = self.ARIMA(time_series, order=(p, d, q))
+                        fitted_model = model.fit()
+                        
+                        if fitted_model.aic < best_aic:
+                            best_aic = fitted_model.aic
+                            best_model = fitted_model
+                            best_order = (p, d, q)
+                    except Exception as e:
+                        # Skip this combination if it fails
+                        continue
+            
+            if best_model is None:
+                raise ValueError("Failed to fit ARIMA model with any parameter combination")
+            
+            # Calculate confidence based on AIC and model fit
+            # Lower AIC is better, normalize to 0-1 scale
+            # Also consider residuals
+            residuals = best_model.resid
+            rmse = np.sqrt(np.mean(residuals**2))
+            
+            # Confidence calculation:
+            # - Good AIC (< 100): high confidence
+            # - Low RMSE relative to data range: high confidence
+            data_range = time_series.max() - time_series.min()
+            if data_range > 0:
+                normalized_rmse = rmse / data_range
+                rmse_confidence = max(0, 1 - normalized_rmse)
+            else:
+                rmse_confidence = 0.5
+            
+            # AIC confidence (lower is better, normalize)
+            aic_confidence = max(0, min(1, 1 - (best_aic / 200)))
+            
+            # Combined confidence
+            confidence = (rmse_confidence * 0.6) + (aic_confidence * 0.4)
+            confidence = max(0.0, min(1.0, confidence))
+            
+            logger.info(f"Fitted ARIMA{best_order} with AIC={best_aic:.2f}, confidence={confidence:.3f}")
+            
+            return best_model, confidence
+            
+        except Exception as e:
+            logger.error(f"Failed to fit ARIMA model: {e}")
+            raise
+    
+    def _generate_forecast(self, model: Any, periods: int) -> List[Dict]:
+        """Generate forecast with confidence intervals"""
+        try:
+            # Generate forecast
+            forecast_result = model.forecast(steps=periods)
+            
+            # Get confidence intervals (95% by default)
+            forecast_df = model.get_forecast(steps=periods).summary_frame()
+            
+            # Build forecast list
+            forecasts = []
+            start_date = datetime.now()
+            
+            for i in range(periods):
+                period_date = start_date + timedelta(days=30 * (i + 1))  # Monthly periods
+                
+                # Extract values
+                risk_value = float(forecast_result.iloc[i]) if hasattr(forecast_result, 'iloc') else float(forecast_result[i])
+                
+                # Get confidence intervals from forecast_df
+                lower_bound = float(forecast_df.iloc[i]['mean_ci_lower'])
+                upper_bound = float(forecast_df.iloc[i]['mean_ci_upper'])
+                
+                # Convert risk score back to probability and impact
+                # Assuming risk_score = probability * impact, and impact ranges 1-5
+                # We'll estimate probability and use a default impact
+                estimated_impact = 3.0  # Default medium impact
+                estimated_probability = min(1.0, max(0.0, risk_value / 5.0))
+                
+                forecasts.append({
+                    "period": period_date.strftime("%Y-%m"),
+                    "risk_probability": round(estimated_probability, 3),
+                    "risk_impact": round(estimated_impact, 1),
+                    "confidence_lower": round(max(0.0, lower_bound / 5.0), 3),
+                    "confidence_upper": round(min(1.0, upper_bound / 5.0), 3)
+                })
+            
+            return forecasts
+            
+        except Exception as e:
+            logger.error(f"Failed to generate forecast: {e}")
+            raise
+    
+    async def _log_to_audit(
+        self,
+        user_id: str,
+        organization_id: str,
+        action: str,
+        success: bool,
+        error_message: Optional[str] = None,
+        details: Optional[Dict] = None
+    ):
+        """Log forecast requests and results to audit_logs"""
+        try:
+            self.supabase.table("audit_logs").insert({
+                "user_id": user_id,
+                "organization_id": organization_id,
+                "action": action,
+                "success": success,
+                "error_message": error_message,
+                "details": details or {},
+                "created_at": datetime.now().isoformat()
+            }).execute()
+        except Exception as e:
+            logger.error(f"Failed to log to audit_logs: {e}")
+    
+    # Legacy methods for backward compatibility
     async def forecast_project_risks(self, user_id: str, project_id: str = None) -> Dict[str, Any]:
-        """Forecast potential risks for projects"""
+        """Legacy method - forecast potential risks for projects"""
         start_time = datetime.now()
         
         try:

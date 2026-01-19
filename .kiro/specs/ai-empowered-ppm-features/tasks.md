@@ -129,7 +129,7 @@ The implementation uses Python/FastAPI for backend and TypeScript/Next.js for fr
     - _Requirements: 2.2, 2.5, 2.6_
 
 - [-] 3. Implement Risk Forecaster Agent
-  - [-] 3.1 Complete RiskForecasterAgent class
+  - [x] 3.1 Complete RiskForecasterAgent class
     - Implement forecast_risks method with organization filtering
     - Retrieve historical risk data from Supabase
     - Prepare time series data using pandas
@@ -138,19 +138,19 @@ The implementation uses Python/FastAPI for backend and TypeScript/Next.js for fr
     - Log forecast requests and results to audit_logs
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.6_
   
-  - [ ] 3.2 Implement ARIMA model fitting
+  - [x] 3.2 Implement ARIMA model fitting
     - Use statsmodels auto_arima for parameter selection
     - Test p,d,q parameters in range (0-2, 0-1, 0-2)
     - Detect and model seasonality if present
     - Calculate model confidence using AIC and RMSE
     - _Requirements: 3.2_
   
-  - [ ] 3.3 Add error handling for insufficient data
+  - [x] 3.3 Add error handling for insufficient data
     - Check for minimum data points (min_data_points=10)
     - Return error message indicating minimum requirements
     - _Requirements: 3.5_
   
-  - [ ] 3.4 Write property test for forecast output format
+  - [-] 3.4 Write property test for forecast output format
     - **Property 9: ARIMA Forecast Output Format**
     - **Validates: Requirements 3.3, 3.4**
   
