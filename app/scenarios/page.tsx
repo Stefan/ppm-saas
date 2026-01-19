@@ -369,9 +369,9 @@ export default function ScenariosPage() {
                   <p className="text-sm text-gray-500 mb-3">{t('scenarios.noScenarios')}</p>
                   <button
                     onClick={() => setShowCreateModal(true)}
-                    className="inline-flex items-center px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
                   >
-                    <Plus className="h-4 w-4 mr-1" />
+                    <Plus className="h-4 w-4 mr-2" />
                     {t('scenarios.createFirst')}
                   </button>
                 </div>
@@ -411,13 +411,15 @@ export default function ScenariosPage() {
                               <div className="flex items-center space-x-1 flex-shrink-0">
                                 <button
                                   onClick={() => {/* TODO: Edit scenario */}}
-                                  className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                                  className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                  title="Edit scenario"
                                 >
                                   <Edit3 className="h-4 w-4" />
                                 </button>
                                 <button
                                   onClick={() => deleteScenario(scenario.id)}
-                                  className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                  className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                  title="Delete scenario"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </button>
