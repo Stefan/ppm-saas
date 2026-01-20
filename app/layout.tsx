@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { SupabaseAuthProvider } from './providers/SupabaseAuthProvider'
 import { ErrorBoundary } from '../components/shared/ErrorBoundary'
+import { ToastProvider } from '../components/shared/Toast'
 import PerformanceOptimizer from '../components/performance/PerformanceOptimizer'
 import { ResourcePreloader } from '../components/performance/ResourcePreloader'
 import PredictivePrefetcher from '../components/performance/PredictivePrefetcher'
@@ -111,7 +112,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ErrorBoundary>
             <SupabaseAuthProvider>
               <I18nProvider>
-                {children}
+                <ToastProvider>
+                  {children}
+                </ToastProvider>
               </I18nProvider>
             </SupabaseAuthProvider>
           </ErrorBoundary>
