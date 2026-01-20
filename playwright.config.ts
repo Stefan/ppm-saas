@@ -170,9 +170,9 @@ export default defineConfig({
 
   // Web server configuration - always start server for tests
   webServer: {
-    command: 'npm run dev',
+    command: process.env.CI ? 'npm run build && npm run start' : 'npm run dev',
     port: 3000,
     reuseExistingServer: !process.env.CI,
-    timeout: 120000
+    timeout: 180000 // 3 minutes for build + start
   }
 })

@@ -19,13 +19,13 @@ async function globalSetup(config: FullConfig) {
     console.log(`📡 Waiting for server at ${baseURL}...`)
     
     let retries = 0
-    const maxRetries = 60 // Increased from 30 to 60 (2 minutes total)
+    const maxRetries = 90 // 3 minutes total (90 * 2s)
     
     while (retries < maxRetries) {
       try {
         const response = await page.goto(baseURL, { 
-          timeout: 10000, // Increased from 5000 to 10000
-          waitUntil: 'domcontentloaded' // Changed from default to domcontentloaded
+          timeout: 15000,
+          waitUntil: 'domcontentloaded'
         })
         if (response && response.ok()) {
           console.log('✅ Server is ready!')
@@ -38,7 +38,10 @@ async function globalSetup(config: FullConfig) {
           console.error('Last error:', error)
           throw new Error(`❌ Server not ready after ${maxRetries} attempts`)
         }
-        console.log(`⏳ Server not ready, retrying... (${retries}/${maxRetries})`)
+        // Only log every 5th retry to reduce noise
+        if (retries % 5 === 0 || retries <= 3) {
+          console.log(`⏳ Server not ready, retrying... (${retries}/${maxRetries})`)
+        }
         await new Promise(resolve => setTimeout(resolve, 2000))
       }
     }
