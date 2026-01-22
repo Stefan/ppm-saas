@@ -195,9 +195,10 @@ test.describe('Core Web Vitals Performance Tests', () => {
     
     // Test for memory leaks through repeated navigation
     const leakTest = await perfUtils.testMemoryLeaks(async () => {
-      await page.goto('/dashboards')
-      await page.waitForLoadState('domcontentloaded')
-      await page.goto('/')
+      await page.goto('/dashboards', { waitUntil: 'domcontentloaded' })
+      await page.waitForTimeout(500) // Wait for navigation to settle
+      await page.goto('/', { waitUntil: 'domcontentloaded' })
+      await page.waitForTimeout(500) // Wait for navigation to settle
       await page.waitForLoadState('domcontentloaded')
     }, 5)
     

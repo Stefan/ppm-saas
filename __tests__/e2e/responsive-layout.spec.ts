@@ -138,7 +138,7 @@ test.describe('Responsive Layout Cross-Device Tests', () => {
 test.describe('Visual Regression Tests', () => {
   // Skip visual regression tests in CI - they require baseline snapshots
   // that must be generated locally first and committed to the repository
-  test.skip(({ }, testInfo) => !!process.env.CI, 'Visual regression tests require local baseline snapshots')
+  test.skip(!!process.env.CI, 'Visual regression tests require local baseline snapshots')
 
   let deviceUtils: DeviceTestUtils
 
