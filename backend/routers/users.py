@@ -521,7 +521,7 @@ def create_user_response(auth_data: dict, profile_data: dict) -> UserResponse:
     )
 
 # User Role Assignment Endpoints (separate router for cleaner organization)
-role_router = APIRouter(prefix="/users", tags=["user-roles"])
+role_router = APIRouter(prefix="/api/admin/users", tags=["user-roles"])
 
 @role_router.post("/{user_id}/roles/{role_id}", response_model=UserRoleResponse, status_code=status.HTTP_201_CREATED)
 async def assign_role_to_user(
