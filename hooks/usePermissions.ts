@@ -217,8 +217,7 @@ export function usePermissions(): UsePermissionsReturn {
         setError(null)
       }
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      const response = await fetch(`${apiUrl}/api/rbac/user-permissions`, {
+      const response = await fetch(`/api/rbac/user-permissions`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
