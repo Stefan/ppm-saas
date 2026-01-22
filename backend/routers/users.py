@@ -644,5 +644,4 @@ async def get_user_permissions(user_id: UUID, current_user = Depends(require_per
         print(f"Get user permissions error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get user permissions: {str(e)}")
 
-# Include the role router in the main router
-router.include_router(role_router)
+# Role endpoints are now part of the main router (no separate router needed)
