@@ -1,64 +1,53 @@
 'use client'
 
-import React, { useEffect, useState, Suspense } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { supabase } from '../../lib/api/supabase-minimal'
-import { AlertTriangle, CheckCircle, Eye, EyeOff, Lock } from 'lucide-react'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react'
 
-function ResetPasswordForm() {
+export default function ResetPasswordPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const supabase = createClientComponentClient()
+  
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [tokens, setTokens] = useState<{
-    accessToken: string | null
-    refreshToken: string | null
-    type: string | null
-  }>({ accessToken: null, refreshToken: null, type: null })
+  const [validating, setValidating] = useState(true)
 
   useEffect(() => {
-    // Check for tokens in URL search parameters first
-    let accessToken = searchParams.get('access_token')
-    let refreshToken = searchParams.get('refresh_token')
-    let type = searchParams.get('type')
-
-    // If not found in search params, check URL hash (Supabase default)
-    if (!accessToken && typeof window !== 'undefined') {
-      const hashParams = new URLSearchParams(window.location.hash.substring(1))
-      accessToken = hashParams.get('access_token')
-      refreshToken = hashParams.get('refresh_token')
-      type = hashParams.get('type')
-    }
-
-    setTokens({ accessToken, refreshToken, type })
-
-    // If we have tokens from the password reset email, set the session
-    if (accessToken && refreshToken && type === 'recovery') {
-      supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken
-      }).then(({ error }) => {
-        if (error) {
-          console.error('Error setting session:', error)
-          setError('Failed to authenticate. Please try requesting a new reset link.')
+    // Check if we have a valid session from the reset link
+    const checkSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error || !session) {
+          setError('Invalid or expired reset link. Please request a new password reset.')
+          setValidating(false)
+          return
         }
-      })
+        
+        setValidating(false)
+      } catch (err) {
+        setError('Failed to validate reset link')
+        setValidating(false)
+      }
     }
-  }, [searchParams])
 
-  const handlePasswordReset = async (e: React.FormEvent) => {
+    checkSession()
+  }, [supabase])
+
+  const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
     setError(null)
+    setLoading(true)
 
     // Validation
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long')
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long')
       setLoading(false)
       return
     }
@@ -75,53 +64,28 @@ function ResetPasswordForm() {
       })
 
       if (error) {
-        setError(error.message)
-      } else {
-        setSuccess(true)
-        // Clear the URL hash to remove tokens
-        if (typeof window !== 'undefined') {
-          window.history.replaceState({}, document.title, window.location.pathname)
-        }
-        // Redirect to dashboard after 2 seconds
-        setTimeout(() => {
-          router.push('/dashboards')
-        }, 2000)
+        throw error
       }
-    } catch (err) {
-      setError('An unexpected error occurred')
+
+      setSuccess(true)
+      
+      // Redirect to login after 3 seconds
+      setTimeout(() => {
+        router.push('/')
+      }, 3000)
+    } catch (err: any) {
+      setError(err.message || 'Failed to reset password')
     } finally {
       setLoading(false)
     }
   }
 
-  // If no tokens are present, show error
-  if (!tokens.accessToken || !tokens.refreshToken || tokens.type !== 'recovery') {
+  if (validating) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          <div className="text-center">
-            <AlertTriangle className="mx-auto h-12 w-12 text-red-500" />
-            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-              Invalid Reset Link
-            </h2>
-            <p className="mt-2 text-sm text-gray-600">
-              This password reset link is invalid or has expired. Please request a new one.
-            </p>
-            <div className="mt-6 space-y-3">
-              <button
-                onClick={() => router.push('/forgot-password')}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Request New Reset Link
-              </button>
-              <button
-                onClick={() => router.push('/')}
-                className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Back to Login
-              </button>
-            </div>
-          </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Validating reset link...</p>
         </div>
       </div>
     )
@@ -129,15 +93,18 @@ function ResetPasswordForm() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
           <div className="text-center">
-            <CheckCircle className="mx-auto h-12 w-12 text-green-500" />
-            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-              Password Updated!
+            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Password Reset Successful!
             </h2>
-            <p className="mt-2 text-sm text-gray-600">
-              Your password has been successfully updated. Redirecting to dashboard...
+            <p className="text-gray-600 mb-4">
+              Your password has been updated successfully.
+            </p>
+            <p className="text-sm text-gray-500">
+              Redirecting to login page...
             </p>
           </div>
         </div>
@@ -149,9 +116,6 @@ function ResetPasswordForm() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <div className="mx-auto h-12 w-12 bg-blue-600 rounded-full flex items-center justify-center">
-            <Lock className="h-6 w-6 text-white" />
-          </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Reset Your Password
           </h2>
@@ -160,13 +124,30 @@ function ResetPasswordForm() {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handlePasswordReset}>
-          <div className="space-y-5">
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start">
+            <AlertCircle className="h-5 w-5 text-red-400 mt-0.5 mr-3 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm text-red-800">{error}</p>
+              {error.includes('expired') && (
+                <button
+                  onClick={() => router.push('/forgot-password')}
+                  className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+                >
+                  Request a new reset link
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        <form className="mt-8 space-y-6" onSubmit={handleResetPassword}>
+          <div className="rounded-md shadow-sm space-y-4">
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 required">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 New Password
               </label>
-              <div className="mt-2 relative">
+              <div className="relative">
                 <input
                   id="password"
                   name="password"
@@ -174,82 +155,58 @@ function ResetPasswordForm() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input-field w-full"
-                  style={{ paddingRight: '3rem' }}
-                  placeholder="Enter your new password (min. 6 characters)"
+                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  placeholder="Enter new password"
+                  minLength={8}
                 />
                 <button
                   type="button"
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  tabIndex={-1}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
+                    <EyeOff className="h-5 w-5 text-gray-400" />
                   ) : (
-                    <Eye className="h-5 w-5" />
+                    <Eye className="h-5 w-5 text-gray-400" />
                   )}
                 </button>
               </div>
-              <p className="text-sm text-gray-500 mt-1">Choose a strong password with at least 6 characters</p>
+              <p className="mt-1 text-xs text-gray-500">
+                Must be at least 8 characters long
+              </p>
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 required">
+              <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
                 Confirm New Password
               </label>
-              <div className="mt-2 relative">
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="input-field w-full"
-                  style={{ paddingRight: '3rem' }}
-                  placeholder="Re-enter your new password"
-                />
-                <button
-                  type="button"
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
-                  tabIndex={-1}
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
-              <p className="text-sm text-gray-500 mt-1">Must match the password above</p>
+              <input
+                id="confirm-password"
+                name="confirm-password"
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Confirm new password"
+                minLength={8}
+              />
             </div>
           </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-md p-4">
-              <div className="flex">
-                <AlertTriangle className="h-5 w-5 text-red-400" />
-                <div className="ml-3">
-                  <p className="text-sm text-red-700">{error}</p>
-                </div>
-              </div>
-            </div>
-          )}
 
           <div>
             <button
               type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading || !password || !confirmPassword}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <>
+                  <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+                  Resetting Password...
+                </>
               ) : (
-                'Update Password'
+                'Reset Password'
               )}
             </button>
           </div>
@@ -258,7 +215,7 @@ function ResetPasswordForm() {
             <button
               type="button"
               onClick={() => router.push('/')}
-              className="text-blue-600 hover:text-blue-500 text-sm"
+              className="text-sm text-blue-600 hover:text-blue-800"
             >
               Back to Login
             </button>
@@ -266,18 +223,5 @@ function ResetPasswordForm() {
         </form>
       </div>
     </div>
-  )
-}
-
-export default function ResetPassword() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    }
-    >
-      <ResetPasswordForm />
-    </Suspense>
   )
 }

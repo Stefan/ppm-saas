@@ -3,3 +3,41 @@ venv/
 __pycache__/
 .vercel
 .env*.local
+
+# Credentials and secrets - NEVER COMMIT THESE!
+*CREDENTIALS*
+*PASSWORD*
+*SECRET*
+*_ADMIN_*
+*.key
+*.pem
+.env
+.env.*
+!.env.example
+
+# Python
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+
+# Testing
+.pytest_cache/
+.coverage
+.hypothesis/
+htmlcov/
+*.log
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+*.tmp
+*.bak
+temp/
+tmp/

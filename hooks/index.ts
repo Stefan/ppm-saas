@@ -17,12 +17,14 @@ export { useWindowSize } from './useWindowSize'
 
 // Performance monitoring hooks
 export {
-  useComponentPerformance,
-  usePageLoadPerformance,
-  useApiPerformanceMonitoring,
-  useMemoryMonitoring,
-  useInteractionPerformance,
-  useDashboardPerformance
+  usePerformanceMonitoring,
+  usePerformanceObserver,
+  useRenderTime
+} from './usePerformanceMonitoring'
+export type {
+  PerformanceMetric,
+  PerformanceReport,
+  LongTaskEntry
 } from './usePerformanceMonitoring'
 
 // Scroll performance hooks

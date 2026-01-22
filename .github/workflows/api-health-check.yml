@@ -73,7 +73,7 @@ jobs:
       
       - name: Run API integration tests
         run: |
-          npm test -- __tests__/admin-performance-api-integration.test.ts --run
+          npm test -- __tests__/admin-performance-api-integration.test.ts
         continue-on-error: false
   
   integration-test:
