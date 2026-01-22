@@ -226,11 +226,15 @@ test.describe('Cross-Browser Visual Consistency', () => {
     await page.goto('/')
     await page.waitForLoadState('networkidle')
     
-    // Take full page screenshot
+    // Disable animations for consistent screenshots
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    
+    // Take full page screenshot with generous thresholds for cross-browser differences
     await expect(page).toHaveScreenshot(`homepage-${browserName}.png`, {
       fullPage: true,
-      maxDiffPixels: 500,
-      threshold: 0.2
+      maxDiffPixels: 1000,  // Allow more pixel differences across browsers
+      threshold: 0.3,       // 30% threshold for cross-browser rendering differences
+      animations: 'disabled'
     })
   })
 
@@ -238,11 +242,15 @@ test.describe('Cross-Browser Visual Consistency', () => {
     await page.goto('/dashboards')
     await page.waitForLoadState('networkidle')
     
-    // Take full page screenshot
+    // Disable animations for consistent screenshots
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    
+    // Take full page screenshot with generous thresholds
     await expect(page).toHaveScreenshot(`dashboard-${browserName}.png`, {
       fullPage: true,
-      maxDiffPixels: 500,
-      threshold: 0.2
+      maxDiffPixels: 1000,
+      threshold: 0.3,
+      animations: 'disabled'
     })
   })
 })

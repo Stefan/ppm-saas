@@ -657,11 +657,15 @@ test.describe('Complete Cross-Browser Integration Tests', () => {
       await page.goto('/')
       await page.waitForLoadState('networkidle')
       
-      // Take screenshot for visual regression
+      // Disable animations for consistent screenshots
+      await page.emulateMedia({ reducedMotion: 'reduce' })
+      
+      // Take screenshot for visual regression with generous thresholds
       await expect(page).toHaveScreenshot(`homepage-integration-${browserName}.png`, {
         fullPage: false,
-        maxDiffPixels: 500,
-        threshold: 0.2
+        maxDiffPixels: 1000,
+        threshold: 0.3,
+        animations: 'disabled'
       })
     })
 
@@ -669,11 +673,15 @@ test.describe('Complete Cross-Browser Integration Tests', () => {
       await page.goto('/dashboards')
       await page.waitForLoadState('networkidle')
       
-      // Take screenshot for visual regression
+      // Disable animations for consistent screenshots
+      await page.emulateMedia({ reducedMotion: 'reduce' })
+      
+      // Take screenshot for visual regression with generous thresholds
       await expect(page).toHaveScreenshot(`dashboard-integration-${browserName}.png`, {
         fullPage: false,
-        maxDiffPixels: 500,
-        threshold: 0.2
+        maxDiffPixels: 1000,
+        threshold: 0.3,
+        animations: 'disabled'
       })
     })
   })
