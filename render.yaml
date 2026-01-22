@@ -2,8 +2,12 @@ services:
   - type: web
     name: orka-ppm-backend
     env: python
-    buildCommand: "cd backend && pip install -r requirements.txt"
-    startCommand: "cd backend && SKIP_PRE_STARTUP_TESTS=true uvicorn main:app --host 0.0.0.0 --port $PORT"
+    runtime: python
+    buildCommand: |
+      cd backend
+      pip install --upgrade pip
+      pip install --no-cache-dir -r requirements.txt
+    startCommand: "cd backend && SKIP_PRE_STARTUP_TESTS=true uvicorn main:app --host 0.0.0.0 --port $PORT --workers 2 --log-level warning"
     plan: starter
     region: frankfurt
     branch: main
@@ -17,6 +21,8 @@ services:
         value: true
       - key: ENVIRONMENT
         value: production
+      - key: WORKERS
+        value: 2
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_ANON_KEY
@@ -32,4 +38,4 @@ services:
       - key: USE_LOCAL_EMBEDDINGS
         value: true
     autoDeploy: true
-    preDeployCommand: "echo 'Starting deployment...'"
+    preDeployCommand: "echo 'Starting optimized deployment...'"
