@@ -1,20 +1,13 @@
-# Ignore everything except what we need for simple server
-*
-!simple_server.py
-!requirements-simple.txt
-!docker-start.sh
-
-# Ignore development files
+# Development and test files
 .git
 .gitignore
-.env*
+.env.local
 .DS_Store
 __pycache__
 *.pyc
 *.pyo
 *.pyd
 .Python
-env
 pip-log.txt
 pip-delete-this-directory.txt
 .tox
@@ -25,26 +18,40 @@ nosetests.xml
 coverage.xml
 *.cover
 *.log
-.venv
-venv/
 .pytest_cache/
 .mypy_cache/
 
-# Ignore all other files and directories
-auth/
-config/
-docs/
-migrations/
-models/
-pre_startup_testing/
-routers/
-scripts/
-services/
-temp/
-tests/
-utils/
+# Virtual environments
+.venv
 venv/
-main.py
-requirements.txt
-*.py
-!simple_server.py
+env/
+
+# Test files
+test_*.py
+*_test.py
+tests/
+
+# Documentation
+docs/
+*.md
+
+# Temporary files
+temp/
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# IDE files
+.vscode/
+.idea/
+
+# Build artifacts
+*.egg-info/
+dist/
+build/
+
+# Logs
+*.log
+backend.log
+backend.pid
