@@ -5847,3 +5847,81 @@ select {
 /* ========================================
    END SKELETON LOADER ANIMATIONS
    ======================================== */
+
+
+/* ========================================
+   ICON BUTTON STYLES - NO BACKGROUND
+   Clean icon buttons without button styling
+   ======================================== */
+
+/* Icon buttons in input fields (password toggle, search, etc.) */
+.icon-button,
+button[aria-label*="password"],
+button[aria-label*="Password"],
+button[aria-label*="Passwort"],
+button[aria-label*="Show"],
+button[aria-label*="Hide"],
+button[aria-label*="anzeigen"],
+button[aria-label*="verbergen"] {
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  cursor: pointer !important;
+  transition: color 0.2s ease-in-out, opacity 0.2s ease-in-out !important;
+}
+
+/* Hover state for icon buttons */
+.icon-button:hover,
+button[aria-label*="password"]:hover,
+button[aria-label*="Password"]:hover,
+button[aria-label*="Passwort"]:hover,
+button[aria-label*="Show"]:hover,
+button[aria-label*="Hide"]:hover,
+button[aria-label*="anzeigen"]:hover,
+button[aria-label*="verbergen"]:hover {
+  background: none !important;
+  opacity: 0.8 !important;
+}
+
+/* Focus state for icon buttons (accessibility) */
+.icon-button:focus-visible,
+button[aria-label*="password"]:focus-visible,
+button[aria-label*="Password"]:focus-visible,
+button[aria-label*="Passwort"]:focus-visible,
+button[aria-label*="Show"]:focus-visible,
+button[aria-label*="Hide"]:focus-visible,
+button[aria-label*="anzeigen"]:focus-visible,
+button[aria-label*="verbergen"]:focus-visible {
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+  border-radius: 4px !important;
+}
+
+/* Active state for icon buttons */
+.icon-button:active,
+button[aria-label*="password"]:active,
+button[aria-label*="Password"]:active,
+button[aria-label*="Passwort"]:active,
+button[aria-label*="Show"]:active,
+button[aria-label*="Hide"]:active,
+button[aria-label*="anzeigen"]:active,
+button[aria-label*="verbergen"]:active {
+  background: none !important;
+  transform: scale(0.95) !important;
+}
+
+/* Ensure icons inside these buttons are properly styled */
+.icon-button svg,
+button[aria-label*="password"] svg,
+button[aria-label*="Password"] svg,
+button[aria-label*="Passwort"] svg,
+button[aria-label*="Show"] svg,
+button[aria-label*="Hide"] svg,
+button[aria-label*="anzeigen"] svg,
+button[aria-label*="verbergen"] svg {
+  display: block !important;
+  pointer-events: none !important;
+}
