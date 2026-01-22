@@ -1,12 +1,9 @@
 name: Deploy to Vercel
 
+# Disabled: Vercel auto-deploy is configured via GitHub integration
+# This workflow is redundant and requires VERCEL_TOKEN secret
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch: # Manual trigger only
 
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
