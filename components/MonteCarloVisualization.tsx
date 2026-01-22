@@ -54,7 +54,7 @@ export default function MonteCarloVisualization({
 
     try {
       const response = await fetch(
-        getApiUrl(`/monte-carlo/simulations/${simulationId}/visualizations/generate`),
+        getApiUrl(`/api/v1/monte-carlo/simulations/${simulationId}/visualizations/generate`),
         {
           method: 'POST',
           headers: {

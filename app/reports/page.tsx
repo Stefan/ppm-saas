@@ -445,7 +445,7 @@ export default function Reports() {
     setIsLoading(true)
 
     try {
-      const response = await fetch(getApiUrl('/reports/pmr/chat'), {
+      const response = await fetch(getApiUrl('/api/reports/pmr/chat'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

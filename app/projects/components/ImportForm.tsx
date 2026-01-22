@@ -70,7 +70,7 @@ export default function ImportForm({ onComplete }: ImportFormProps) {
 
     setUploading(true)
     try {
-      const response = await fetch(getApiUrl('/api/csv-import'), {
+      const response = await fetch(getApiUrl('/csv-import'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,

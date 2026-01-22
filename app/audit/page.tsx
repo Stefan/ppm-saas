@@ -56,7 +56,7 @@ export default function AuditDashboard() {
     if (!session?.access_token) return
     
     try {
-      const response = await fetch(getApiUrl('/audit/dashboard/stats'), {
+      const response = await fetch(getApiUrl('/api/audit/dashboard/stats'), {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
@@ -102,7 +102,7 @@ export default function AuditDashboard() {
         params.append('anomalies_only', 'true')
       }
       
-      const response = await fetch(getApiUrl(`/audit/logs?${params.toString()}`), {
+      const response = await fetch(getApiUrl(`/api/audit/logs?${params.toString()}`), {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
@@ -130,7 +130,7 @@ export default function AuditDashboard() {
     
     setAnomaliesLoading(true)
     try {
-      const response = await fetch(getApiUrl('/audit/detect-anomalies'), {
+      const response = await fetch(getApiUrl('/api/audit/detect-anomalies'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
@@ -162,7 +162,7 @@ export default function AuditDashboard() {
       throw new Error('Not authenticated')
     }
     
-    const response = await fetch(getApiUrl('/audit/search'), {
+    const response = await fetch(getApiUrl('/api/audit/search'), {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${session.access_token}`,
@@ -187,7 +187,7 @@ export default function AuditDashboard() {
     if (!session?.access_token) return
     
     try {
-      const response = await fetch(getApiUrl(`/audit/anomalies/${anomalyId}/feedback`), {
+      const response = await fetch(getApiUrl(`/api/audit/anomalies/${anomalyId}/feedback`), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
@@ -216,7 +216,7 @@ export default function AuditDashboard() {
     if (!session?.access_token) return
     
     try {
-      const response = await fetch(getApiUrl(`/audit/logs/${logId}/tag`), {
+      const response = await fetch(getApiUrl(`/api/audit/logs/${logId}/tag`), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
@@ -279,7 +279,7 @@ export default function AuditDashboard() {
     
     setExportLoading(format)
     try {
-      const response = await fetch(getApiUrl(`/audit/export/${format}`), {
+      const response = await fetch(getApiUrl(`/api/audit/export/${format}`), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,

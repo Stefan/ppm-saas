@@ -54,7 +54,7 @@ export default function MonteCarloAnalysisExample({
 
     try {
       const response = await fetch(
-        getApiUrl(`/reports/pmr/${reportId}/monte-carlo`),
+        getApiUrl(`/api/reports/pmr/${reportId}/monte-carlo`),
         {
           method: 'POST',
           headers: {
@@ -94,7 +94,7 @@ export default function MonteCarloAnalysisExample({
 
     try {
       const response = await fetch(
-        getApiUrl(`/reports/pmr/${reportId}/monte-carlo/export`),
+        getApiUrl(`/api/reports/pmr/${reportId}/monte-carlo/export`),
         {
           method: 'POST',
           headers: {

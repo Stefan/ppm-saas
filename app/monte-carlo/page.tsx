@@ -136,7 +136,7 @@ export default function MonteCarloPage() {
     setError(null)
 
     try {
-      const response = await fetch(getApiUrl('/monte-carlo/simulations/run'), {
+      const response = await fetch(getApiUrl('/api/v1/monte-carlo/simulations/run'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
