@@ -35,7 +35,7 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/ai/help", tags=["help-chat"])
+router = APIRouter(prefix="/api/ai/help", tags=["help-chat"])
 
 # Pydantic models for request/response
 class HelpQueryRequest(BaseModel):
