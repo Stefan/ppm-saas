@@ -520,10 +520,10 @@ def create_user_response(auth_data: dict, profile_data: dict) -> UserResponse:
         sso_provider=profile_data.get("sso_provider")
     )
 
-# User Role Assignment Endpoints (separate router for cleaner organization)
-role_router = APIRouter(prefix="/api/admin/users", tags=["user-roles"])
+# User Role Assignment Endpoints (part of main router, no separate prefix needed)
+# These endpoints are already under /api/admin/users from the main router
 
-@role_router.post("/{user_id}/roles/{role_id}", response_model=UserRoleResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/{user_id}/roles/{role_id}", response_model=UserRoleResponse, status_code=status.HTTP_201_CREATED)
 async def assign_role_to_user(
     user_id: UUID, 
     role_id: UUID, 
@@ -577,7 +577,7 @@ async def assign_role_to_user(
         print(f"Assign role error: {e}")
         raise HTTPException(status_code=400, detail=f"Failed to assign role: {str(e)}")
 
-@role_router.delete("/{user_id}/roles/{role_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{user_id}/roles/{role_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_role_from_user(
     user_id: UUID, 
     role_id: UUID, 
@@ -601,7 +601,7 @@ async def remove_role_from_user(
         print(f"Remove role error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to remove role: {str(e)}")
 
-@role_router.get("/{user_id}/roles")
+@router.get("/{user_id}/roles")
 async def get_user_roles(user_id: UUID, current_user = Depends(require_permission(Permission.user_manage))):
     """Get all roles assigned to a user"""
     try:
@@ -629,7 +629,7 @@ async def get_user_roles(user_id: UUID, current_user = Depends(require_permissio
         print(f"Get user roles error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get user roles: {str(e)}")
 
-@role_router.get("/{user_id}/permissions")
+@router.get("/{user_id}/permissions")
 async def get_user_permissions(user_id: UUID, current_user = Depends(require_permission(Permission.user_manage))):
     """Get all permissions for a user (aggregated from all roles)"""
     try:
