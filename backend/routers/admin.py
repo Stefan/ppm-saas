@@ -13,7 +13,7 @@ from auth.dependencies import get_current_user
 from config.database import supabase
 from services.rbac_audit_service import RBACAuditService
 
-router = APIRouter(prefix="/admin", tags=["admin"])
+router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 # Initialize audit service
 audit_service = RBACAuditService(supabase_client=supabase)
@@ -905,3 +905,83 @@ def validate_permission_combinations(permissions: List[str]) -> List[str]:
         errors.append("Issue write permissions require issue_read permission")
     
     return errors
+
+
+# ============================================================================
+# User Management Endpoints
+# ============================================================================
+
+class UserWithRoles(BaseModel):
+    """User information with their roles"""
+    id: str
+    email: str
+    full_name: Optional[str] = None
+    roles: List[str] = []
+    created_at: Optional[str] = None
+    last_sign_in_at: Optional[str] = None
+
+@router.get("/users-with-roles")
+async def get_users_with_roles(current_user = Depends(require_admin())):
+    """
+    Get all users with their role assignments.
+    
+    Requirements: 4.1 - User role management interface
+    """
+    try:
+        if not supabase:
+            raise HTTPException(status_code=503, detail="Database service unavailable")
+        
+        # Fetch all users from Supabase Auth
+        auth_users = supabase.auth.admin.list_users()
+        
+        if not auth_users:
+            return []
+        
+        users_with_roles = []
+        
+        for user in auth_users:
+            user_id = user.id
+            email = user.email
+            
+            # Get user metadata
+            user_metadata = getattr(user, 'user_metadata', {})
+            full_name = user_metadata.get('full_name', user_metadata.get('name', ''))
+            
+            # Get timestamps
+            created_at = getattr(user, 'created_at', None)
+            last_sign_in = getattr(user, 'last_sign_in_at', None)
+            
+            # Fetch role assignments for this user from user_roles table
+            roles_list = []
+            try:
+                roles_response = supabase.table("user_roles").select(
+                    "role"
+                ).eq("user_id", user_id).execute()
+                
+                if roles_response.data:
+                    roles_list = [r["role"] for r in roles_response.data]
+            except Exception as role_error:
+                print(f"Error fetching roles for user {user_id}: {role_error}")
+                # If user_roles table doesn't exist or error, check user_metadata
+                if 'role' in user_metadata:
+                    roles_list = [user_metadata['role']]
+            
+            users_with_roles.append({
+                "id": user_id,
+                "email": email,
+                "full_name": full_name,
+                "roles": roles_list,
+                "created_at": created_at,
+                "last_sign_in_at": last_sign_in
+            })
+        
+        return users_with_roles
+        
+    except Exception as e:
+        print(f"Error fetching users with roles: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch users with roles: {str(e)}"
+        )
