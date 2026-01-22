@@ -865,7 +865,10 @@
     "errors": {
       "fetchFailed": "Échec du chargement des données de performance",
       "refreshFailed": "Échec de l'actualisation des données",
-      "clearCacheFailed": "Échec de la vidange du cache"
+      "clearCacheFailed": "Échec de la vidange du cache",
+      "chartLoadFailed": "Impossible de charger les graphiques",
+      "tableLoadFailed": "Impossible de charger le tableau",
+      "cacheStatsLoadFailed": "Impossible de charger les statistiques du cache"
     }
   },
   "adminUsers": {

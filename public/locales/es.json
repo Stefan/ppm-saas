@@ -865,7 +865,10 @@
     "errors": {
       "fetchFailed": "Error al cargar datos de rendimiento",
       "refreshFailed": "Error al actualizar datos",
-      "clearCacheFailed": "Error al limpiar caché"
+      "clearCacheFailed": "Error al limpiar caché",
+      "chartLoadFailed": "No se pudieron cargar los gráficos",
+      "tableLoadFailed": "No se pudo cargar la tabla",
+      "cacheStatsLoadFailed": "No se pudieron cargar las estadísticas de caché"
     }
   },
   "adminUsers": {

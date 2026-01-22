@@ -865,7 +865,10 @@
     "errors": {
       "fetchFailed": "Nie udało się załadować danych wydajności",
       "refreshFailed": "Nie udało się odświeżyć danych",
-      "clearCacheFailed": "Nie udało się wyczyścić pamięci podręcznej"
+      "clearCacheFailed": "Nie udało się wyczyścić pamięci podręcznej",
+      "chartLoadFailed": "Nie udało się załadować wykresów",
+      "tableLoadFailed": "Nie udało się załadować tabeli",
+      "cacheStatsLoadFailed": "Nie udało się załadować statystyk pamięci podręcznej"
     }
   },
   "adminUsers": {

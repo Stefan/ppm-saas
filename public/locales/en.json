@@ -875,7 +875,10 @@
     "errors": {
       "fetchFailed": "Failed to fetch performance data",
       "refreshFailed": "Failed to refresh data",
-      "clearCacheFailed": "Failed to clear cache"
+      "clearCacheFailed": "Failed to clear cache",
+      "chartLoadFailed": "Unable to load charts",
+      "tableLoadFailed": "Unable to load table",
+      "cacheStatsLoadFailed": "Unable to load cache statistics"
     }
   },
   "adminUsers": {

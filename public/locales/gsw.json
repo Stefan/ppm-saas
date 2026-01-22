@@ -865,7 +865,10 @@
     "errors": {
       "fetchFailed": "Fähler bim Lade vo de Performance-Date",
       "refreshFailed": "Fähler bim Aktualisiere vo de Date",
-      "clearCacheFailed": "Fähler bim Leere vom Cache"
+      "clearCacheFailed": "Fähler bim Leere vom Cache",
+      "chartLoadFailed": "Diagramm händ nöd chönne glade werde",
+      "tableLoadFailed": "Tabelle hät nöd chönne glade werde",
+      "cacheStatsLoadFailed": "Cache-Statistike händ nöd chönne glade werde"
     }
   },
   "adminUsers": {

@@ -871,7 +871,10 @@
     "errors": {
       "fetchFailed": "Fehler beim Laden der Performance-Daten",
       "refreshFailed": "Fehler beim Aktualisieren der Daten",
-      "clearCacheFailed": "Fehler beim Leeren des Caches"
+      "clearCacheFailed": "Fehler beim Leeren des Caches",
+      "chartLoadFailed": "Diagramme konnten nicht geladen werden",
+      "tableLoadFailed": "Tabelle konnte nicht geladen werden",
+      "cacheStatsLoadFailed": "Cache-Statistiken konnten nicht geladen werden"
     }
   },
   "adminUsers": {
