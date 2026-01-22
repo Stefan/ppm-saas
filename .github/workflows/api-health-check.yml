@@ -160,11 +160,12 @@ jobs:
       
       - name: Check for deprecated Permission enums
         run: |
-          # List of deprecated or non-existent permissions
-          DEPRECATED=("Permission.admin" "Permission.superuser")
+          # List of deprecated or non-existent permissions (exact match)
+          # Use word boundaries to avoid matching admin_read, admin_update, etc.
+          DEPRECATED=("Permission\.admin[^_]" "Permission\.superuser")
           
           for perm in "${DEPRECATED[@]}"; do
-            if grep -r "$perm" backend/routers/ backend/middleware/; then
+            if grep -rE "$perm" backend/routers/ backend/middleware/; then
               echo "ERROR: Found usage of deprecated permission: $perm"
               exit 1
             fi
