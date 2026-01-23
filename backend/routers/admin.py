@@ -385,8 +385,25 @@ async def assign_role_to_user(
         except ValueError:
             raise HTTPException(status_code=400, detail=f"Invalid role: {request.role}")
         
+        # Look up role_id from roles table
+        role_lookup = supabase.table("roles").select("id").eq("name", request.role).execute()
+        if not role_lookup.data:
+            # Role doesn't exist in roles table, create it
+            new_role = {
+                "name": request.role,
+                "description": f"{request.role} role",
+                "is_active": True,
+                "created_at": datetime.now().isoformat()
+            }
+            role_create = supabase.table("roles").insert(new_role).execute()
+            if not role_create.data:
+                raise HTTPException(status_code=500, detail="Failed to create role")
+            role_id = role_create.data[0]["id"]
+        else:
+            role_id = role_lookup.data[0]["id"]
+        
         # Check if role assignment already exists
-        existing_role = supabase.table("user_roles").select("*").eq("user_id", str(user_id)).eq("role", request.role).execute()
+        existing_role = supabase.table("user_roles").select("*").eq("user_id", str(user_id)).eq("role_id", role_id).execute()
         
         if existing_role.data:
             raise HTTPException(status_code=400, detail=f"User already has role: {request.role}")
@@ -394,9 +411,8 @@ async def assign_role_to_user(
         # Assign role to user
         role_assignment = {
             "user_id": str(user_id),
-            "role": request.role,
-            "assigned_at": datetime.now().isoformat(),
-            "assigned_by": current_user.get("user_id")
+            "role_id": role_id,
+            "assigned_at": datetime.now().isoformat()
         }
         
         supabase.table("user_roles").insert(role_assignment).execute()
@@ -456,7 +472,7 @@ async def remove_role_from_user(
             raise HTTPException(status_code=503, detail="Database service unavailable")
         
         # Validate user exists
-        user_response = supabase.table("user_profiles").select("id, email, full_name").eq("id", str(user_id)).execute()
+        user_response = supabase.table("user_profiles").select("user_id, role, is_active").eq("user_id", str(user_id)).execute()
         if not user_response.data:
             raise HTTPException(status_code=404, detail=f"User {user_id} not found")
         
@@ -466,14 +482,20 @@ async def remove_role_from_user(
         except ValueError:
             raise HTTPException(status_code=400, detail=f"Invalid role: {role}")
         
+        # Look up role_id from roles table
+        role_lookup = supabase.table("roles").select("id").eq("name", role).execute()
+        if not role_lookup.data:
+            raise HTTPException(status_code=404, detail=f"Role not found: {role}")
+        role_id = role_lookup.data[0]["id"]
+        
         # Check if role assignment exists
-        existing_role = supabase.table("user_roles").select("*").eq("user_id", str(user_id)).eq("role", role).execute()
+        existing_role = supabase.table("user_roles").select("*").eq("user_id", str(user_id)).eq("role_id", role_id).execute()
         
         if not existing_role.data:
             raise HTTPException(status_code=404, detail=f"User does not have role: {role}")
         
         # Remove role from user
-        supabase.table("user_roles").delete().eq("user_id", str(user_id)).eq("role", role).execute()
+        supabase.table("user_roles").delete().eq("user_id", str(user_id)).eq("role_id", role_id).execute()
         
         # Log role removal to audit_logs
         admin_user_id = current_user.get("user_id")
