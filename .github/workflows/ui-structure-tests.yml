@@ -1,0 +1,417 @@
+# UI Structure Tests CI/CD Workflow
+#
+# This workflow runs UI structure tests including unit tests, E2E tests, and visual regression tests.
+# It provides comprehensive verification of page structure and component integrity.
+#
+# Task: 14.1 Create GitHub Actions workflow
+# **Validates: Requirements 6.1, 6.4, 6.5, 6.6**
+
+name: UI Structure Tests
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'app/**'
+      - 'components/**'
+      - 'lib/testing/**'
+      - '__tests__/**'
+      - '.github/workflows/ui-structure-tests.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'app/**'
+      - 'components/**'
+      - 'lib/testing/**'
+      - '__tests__/**'
+      - '.github/workflows/ui-structure-tests.yml'
+  workflow_dispatch:
+    inputs:
+      update_snapshots:
+        description: 'Update visual regression snapshots'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  NODE_VERSION: '20'
+  CI: true
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  unit-structure-tests:
+    name: Unit Structure Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run unit structure tests
+        id: unit-tests
+        run: |
+          npm run test:structure:unit -- --ci --coverage --json --outputFile=test-results/unit-structure-results.json
+          TEST_EXIT_CODE=$?
+          echo "exit_code=$TEST_EXIT_CODE" >> $GITHUB_OUTPUT
+          exit $TEST_EXIT_CODE
+        continue-on-error: true
+      
+      - name: Generate test summary
+        if: always()
+        run: |
+          echo "## Unit Structure Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.unit-tests.outputs.exit_code }}" == "0" ]; then
+            echo "✅ **All unit tests passed**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Some unit tests failed**" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "See coverage report in artifacts" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-structure-test-results
+          path: |
+            test-results/
+            coverage/
+          retention-days: 30
+      
+      - name: Check test status
+        if: steps.unit-tests.outputs.exit_code != '0'
+        run: |
+          echo "::error::Unit structure tests failed. See test results for details."
+          exit 1
+
+  e2e-structure-tests:
+    name: E2E Structure Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: orka_ppm_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements*.txt
+      
+      - name: Install frontend dependencies
+        run: npm ci
+      
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+      
+      - name: Start backend server
+        run: |
+          cd backend
+          python -m uvicorn main:app --host 0.0.0.0 --port 8000 &
+          sleep 10
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/orka_ppm_test
+          SKIP_PRE_STARTUP_TESTS: true
+      
+      - name: Build frontend
+        run: npm run build
+      
+      - name: Run E2E structure tests
+        id: e2e-tests
+        run: |
+          npm run test:structure:e2e -- --reporter=junit --reporter=json
+          TEST_EXIT_CODE=$?
+          echo "exit_code=$TEST_EXIT_CODE" >> $GITHUB_OUTPUT
+          exit $TEST_EXIT_CODE
+        env:
+          BACKEND_URL: http://localhost:8000
+        continue-on-error: true
+      
+      - name: Generate test summary
+        if: always()
+        run: |
+          echo "## E2E Structure Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.e2e-tests.outputs.exit_code }}" == "0" ]; then
+            echo "✅ **All E2E tests passed**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Some E2E tests failed**" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Failed Test Screenshots" >> $GITHUB_STEP_SUMMARY
+          echo "See artifacts for failure screenshots and traces" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-structure-test-results
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 30
+      
+      - name: Upload failure screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-failure-screenshots
+          path: test-results/**/*.png
+          retention-days: 30
+      
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: E2E Structure Test Results
+          path: test-results/junit.xml
+          reporter: java-junit
+          fail-on-error: false
+      
+      - name: Check test status
+        if: steps.e2e-tests.outputs.exit_code != '0'
+        run: |
+          echo "::error::E2E structure tests failed. See test results for details."
+          exit 1
+
+  visual-regression-tests:
+    name: Visual Regression Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: orka_ppm_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements*.txt
+      
+      - name: Install frontend dependencies
+        run: npm ci
+      
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+      
+      - name: Start backend server
+        run: |
+          cd backend
+          python -m uvicorn main:app --host 0.0.0.0 --port 8000 &
+          sleep 10
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/orka_ppm_test
+          SKIP_PRE_STARTUP_TESTS: true
+      
+      - name: Build frontend
+        run: npm run build
+      
+      - name: Run visual regression tests
+        id: visual-tests
+        run: |
+          if [ "${{ github.event.inputs.update_snapshots }}" == "true" ]; then
+            npm run test:visual:update
+          else
+            npm run test:visual -- --reporter=junit --reporter=json
+          fi
+          TEST_EXIT_CODE=$?
+          echo "exit_code=$TEST_EXIT_CODE" >> $GITHUB_OUTPUT
+          exit $TEST_EXIT_CODE
+        env:
+          BACKEND_URL: http://localhost:8000
+        continue-on-error: true
+      
+      - name: Generate test summary
+        if: always()
+        run: |
+          echo "## Visual Regression Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.visual-tests.outputs.exit_code }}" == "0" ]; then
+            echo "✅ **All visual tests passed**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Visual regressions detected**" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Visual Diffs" >> $GITHUB_STEP_SUMMARY
+          echo "See artifacts for visual diff images" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: visual-regression-test-results
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 30
+      
+      - name: Upload visual diffs
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: visual-diffs
+          path: test-results/visual-diffs/
+          retention-days: 30
+      
+      - name: Check test status
+        if: steps.visual-tests.outputs.exit_code != '0' && github.event.inputs.update_snapshots != 'true'
+        run: |
+          echo "::error::Visual regression tests failed. See artifacts for diff images."
+          exit 1
+
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [unit-structure-tests, e2e-structure-tests, visual-regression-tests]
+    if: always()
+    
+    steps:
+      - name: Download all test results
+        uses: actions/download-artifact@v4
+        with:
+          path: all-test-results
+      
+      - name: Generate comprehensive summary
+        run: |
+          echo "# 📊 UI Structure Tests - Complete Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Test Jobs Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Structure Tests | ${{ needs.unit-structure-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| E2E Structure Tests | ${{ needs.e2e-structure-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Visual Regression Tests | ${{ needs.visual-regression-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.unit-structure-tests.result }}" == "success" ] && \
+             [ "${{ needs.e2e-structure-tests.result }}" == "success" ] && \
+             [ "${{ needs.visual-regression-tests.result }}" == "success" ]; then
+            echo "### ✅ All UI structure tests passed!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Some tests failed - review artifacts for details" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Check overall status
+        if: |
+          needs.unit-structure-tests.result != 'success' ||
+          needs.e2e-structure-tests.result != 'success' ||
+          needs.visual-regression-tests.result != 'success'
+        run: |
+          echo "::error::UI structure tests failed. Check individual job results."
+          exit 1
+
+  comment-pr:
+    name: Comment on PR
+    runs-on: ubuntu-latest
+    needs: [unit-structure-tests, e2e-structure-tests, visual-regression-tests]
+    if: github.event_name == 'pull_request' && always()
+    
+    steps:
+      - name: Comment PR with results
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const unitStatus = '${{ needs.unit-structure-tests.result }}' === 'success' ? '✅' : '❌';
+            const e2eStatus = '${{ needs.e2e-structure-tests.result }}' === 'success' ? '✅' : '❌';
+            const visualStatus = '${{ needs.visual-regression-tests.result }}' === 'success' ? '✅' : '❌';
+            
+            const comment = `## 🧪 UI Structure Test Results
+            
+            | Test Suite | Status |
+            |------------|--------|
+            | Unit Structure Tests | ${unitStatus} |
+            | E2E Structure Tests | ${e2eStatus} |
+            | Visual Regression Tests | ${visualStatus} |
+            
+            ${unitStatus === '❌' || e2eStatus === '❌' || visualStatus === '❌' 
+              ? '⚠️ Some tests failed. Review the [workflow run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.'
+              : '✅ All UI structure tests passed!'}
+            
+            ### Artifacts
+            - [Unit Test Results](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            - [E2E Test Results](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            - [Visual Regression Results](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

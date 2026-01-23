@@ -120,10 +120,10 @@ function VarianceTrends({ session, selectedCurrency = 'USD' }: VarianceTrendsPro
 
   if (loading) {
     return (
-      <div className="bg-white p-2 rounded-lg border border-gray-200 h-full flex flex-col" style={{ minHeight: '280px' }}>
+      <div data-testid="variance-trends-skeleton" className="bg-white p-4 rounded-lg border border-gray-200 h-full flex flex-col" style={{ minHeight: '240px' }}>
         <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/3 mb-4"></div>
-          <div className="flex-1 bg-gray-200 rounded" style={{ minHeight: '200px' }}></div>
+          <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="flex-1 bg-gray-200 rounded" style={{ minHeight: '180px' }}></div>
         </div>
       </div>
     )
@@ -131,37 +131,39 @@ function VarianceTrends({ session, selectedCurrency = 'USD' }: VarianceTrendsPro
 
   if (error || (trendData?.length || 0) === 0) {
     return (
-      <div className="bg-white p-2 rounded-lg border border-gray-200 h-full flex flex-col" style={{ minHeight: '280px' }}>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('variance.trends')}</h3>
-        <div className="text-center py-8">
-          <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500">
-            {error ? `${t('common.error')}: ${error}` : t('scenarios.noScenarios')}
-          </p>
+      <div data-testid="variance-trends-error" className="bg-white p-4 rounded-lg border border-gray-200 h-full flex flex-col" style={{ minHeight: '240px' }}>
+        <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">{t('variance.trends')}</h3>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <Calendar className="h-10 w-10 text-gray-400 mx-auto mb-3" />
+            <p className="text-sm text-gray-500">
+              {error ? `${t('common.error')}: ${error}` : t('scenarios.noScenarios')}
+            </p>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="bg-white p-2 rounded-lg border border-gray-200 h-full flex flex-col" style={{ minHeight: '280px' }}>
-      <div className="flex items-center justify-between mb-1.5">
-        <h3 className="text-[10px] font-semibold text-gray-900 uppercase tracking-wide">{t('variance.trends')}</h3>
-        <div className="flex items-center gap-1">
-          <Filter className="h-3 w-3 text-gray-500" />
+    <div data-testid="variance-trends" className="bg-white p-4 rounded-lg border border-gray-200 h-full flex flex-col" style={{ minHeight: '240px' }}>
+      <div data-testid="variance-trends-header" className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">{t('variance.trends')}</h3>
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-gray-500" />
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value as any)}
-            className="text-[10px] border border-gray-300 rounded px-1.5 py-0.5 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="7d">7d</option>
-            <option value="30d">30d</option>
-            <option value="90d">90d</option>
+            <option value="7d">7 days</option>
+            <option value="30d">30 days</option>
+            <option value="90d">90 days</option>
           </select>
         </div>
       </div>
       
-      <div ref={containerRef} className="flex-1 min-h-0" style={{ minHeight: '200px' }}>
+      <div data-testid="variance-trends-chart" ref={containerRef} className="flex-1 min-h-0" style={{ minHeight: '180px' }}>
         {isContainerReady ? (
           <ResponsiveContainer width="100%" height="100%" minHeight={200}>
             <ComposedChart data={trendData}>

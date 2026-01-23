@@ -32,6 +32,14 @@ class UserCreateRequest(BaseModel):
     def email_must_be_lowercase(cls, v):
         return v.lower()
 
+class UserInviteRequest(BaseModel):
+    email: EmailStr
+    role: UserRole = UserRole.team_member
+    
+    @validator('email')
+    def email_must_be_lowercase(cls, v):
+        return v.lower()
+
 class UserUpdateRequest(BaseModel):
     role: Optional[UserRole] = None
     is_active: Optional[bool] = None

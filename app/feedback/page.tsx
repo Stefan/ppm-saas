@@ -392,10 +392,11 @@ export default function Feedback() {
   return (
     <AppLayout>
       <ResponsiveContainer padding="md" className="space-y-6">
+        <div data-testid="feedback-page">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-4 sm:space-y-0">
+        <div data-testid="feedback-header" className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-4 sm:space-y-0">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('feedback.title')}</h1>
+            <h1 data-testid="feedback-title" className="text-2xl sm:text-3xl font-bold text-gray-900">{t('feedback.title')}</h1>
             <p className="text-gray-600 mt-2">{t('feedback.subtitle')}</p>
           </div>
           
@@ -479,7 +480,7 @@ export default function Feedback() {
 
         {/* Feature Requests Tab */}
         {activeTab === 'features' && (
-          <div className="space-y-6">
+          <div data-testid="feedback-form" className="space-y-6">
             {/* Filters */}
             <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
@@ -889,6 +890,7 @@ export default function Feedback() {
             </div>
           </div>
         )}
+        </div>
       </ResponsiveContainer>
     </AppLayout>
   )

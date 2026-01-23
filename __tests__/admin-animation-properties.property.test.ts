@@ -90,7 +90,6 @@ describe('Property 9: Animations Use Only Compositable Properties', () => {
     // Read CSS files
     const cssFiles = [
       path.join(process.cwd(), 'app/globals.css'),
-      path.join(process.cwd(), 'app/design-system.css'),
     ]
 
     const violations: Array<{ file: string; keyframe: string; property: string }> = []
@@ -135,7 +134,6 @@ describe('Property 9: Animations Use Only Compositable Properties', () => {
   it('should verify all keyframe animations use GPU-compositable properties', () => {
     const cssFiles = [
       path.join(process.cwd(), 'app/globals.css'),
-      path.join(process.cwd(), 'app/design-system.css'),
     ]
 
     const keyframeData: Array<{ name: string; properties: string[] }> = []

@@ -245,10 +245,11 @@ export default function MonteCarloPage() {
   return (
     <AppLayout>
       <ResponsiveContainer padding="md" className="space-y-6">
+        <div data-testid="monte-carlo-page">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-4 sm:space-y-0">
+        <div data-testid="monte-carlo-header" className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-4 sm:space-y-0">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('monteCarlo.title')}</h1>
+            <h1 data-testid="monte-carlo-title" className="text-2xl sm:text-3xl font-bold text-gray-900">{t('monteCarlo.title')}</h1>
             <p className="mt-2 text-gray-600">
               {t('monteCarlo.subtitle')}
             </p>
@@ -289,7 +290,7 @@ export default function MonteCarloPage() {
 
         {/* Configuration Panel */}
         {showConfig && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div data-testid="monte-carlo-controls" className="bg-white rounded-lg shadow-sm border border-gray-200">
             <div className="px-6 py-4 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">{t('monteCarlo.simulationConfiguration')}</h3>
             </div>
@@ -583,6 +584,7 @@ export default function MonteCarloPage() {
             </button>
           </div>
         )}
+        </div>
       </ResponsiveContainer>
     </AppLayout>
   )

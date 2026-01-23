@@ -6,6 +6,8 @@
 'use client';
 
 import { useCacheManager } from '@/hooks/useCacheManager';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 
 export function CacheManagement() {
   const {
@@ -19,84 +21,88 @@ export function CacheManagement() {
 
   if (!isAvailable) {
     return (
-      <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-        <p className="text-sm text-yellow-800">
+      <Card padding="md" border className="bg-warning-50 border-warning-200">
+        <p className="text-sm text-warning-800">
           Service Worker caching is not available in this browser or context.
         </p>
-      </div>
+      </Card>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+      <Card padding="md" border>
+        <h3 className="text-lg font-semibold text-neutral-900 mb-4">
           Cache Statistics
         </h3>
         
         <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="rounded-lg bg-blue-50 p-4">
-            <p className="text-sm text-gray-600">API Cache</p>
-            <p className="text-2xl font-bold text-blue-600">
+          <Card padding="md" className="bg-primary-50">
+            <p className="text-sm text-neutral-600">API Cache</p>
+            <p className="text-2xl font-bold text-primary-600">
               {cacheStats.apiCacheSize}
             </p>
-            <p className="text-xs text-gray-500">cached requests</p>
-          </div>
+            <p className="text-xs text-neutral-500">cached requests</p>
+          </Card>
           
-          <div className="rounded-lg bg-green-50 p-4">
-            <p className="text-sm text-gray-600">Static Assets</p>
-            <p className="text-2xl font-bold text-green-600">
+          <Card padding="md" className="bg-success-50">
+            <p className="text-sm text-neutral-600">Static Assets</p>
+            <p className="text-2xl font-bold text-success-600">
               {cacheStats.staticCacheSize}
             </p>
-            <p className="text-xs text-gray-500">cached files</p>
-          </div>
+            <p className="text-xs text-neutral-500">cached files</p>
+          </Card>
           
-          <div className="rounded-lg bg-purple-50 p-4">
-            <p className="text-sm text-gray-600">Images</p>
+          <Card padding="md" className="bg-purple-50">
+            <p className="text-sm text-neutral-600">Images</p>
             <p className="text-2xl font-bold text-purple-600">
               {cacheStats.imageCacheSize}
             </p>
-            <p className="text-xs text-gray-500">cached images</p>
-          </div>
+            <p className="text-xs text-neutral-500">cached images</p>
+          </Card>
           
-          <div className="rounded-lg bg-gray-50 p-4">
-            <p className="text-sm text-gray-600">Total</p>
-            <p className="text-2xl font-bold text-gray-900">
+          <Card padding="md" className="bg-neutral-50">
+            <p className="text-sm text-neutral-600">Total</p>
+            <p className="text-2xl font-bold text-neutral-900">
               {cacheStats.totalSize}
             </p>
-            <p className="text-xs text-gray-500">total cached items</p>
-          </div>
+            <p className="text-xs text-neutral-500">total cached items</p>
+          </Card>
         </div>
 
         <div className="flex gap-2">
-          <button
+          <Button
             onClick={refreshStats}
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+            variant="secondary"
+            size="sm"
           >
             {isLoading ? 'Loading...' : 'Refresh Stats'}
-          </button>
+          </Button>
           
-          <button
+          <Button
             onClick={clearApiCache}
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+            variant="primary"
+            size="sm"
           >
             Clear API Cache
-          </button>
+          </Button>
           
-          <button
+          <Button
             onClick={clearAllCaches}
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50"
+            variant="primary"
+            size="sm"
+            className="bg-error-600 hover:bg-error-700"
           >
             Clear All Caches
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
 
-      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-        <h4 className="text-sm font-semibold text-blue-900 mb-2">
+      <Card padding="md" border className="bg-primary-50 border-primary-200">
+        <h4 className="text-sm font-semibold text-primary-900 mb-2">
           Cache Strategy
         </h4>
         <ul className="text-sm text-blue-800 space-y-1">

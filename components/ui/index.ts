@@ -1,15 +1,33 @@
 /**
  * ORKA-PPM UI Components
- * Enhanced with atomic design system components
+ * Professional design system components
  */
 
-// Existing components (enhanced)
+// Core UI Components
 export { Button } from './Button'
+export type { ButtonProps } from './Button'
+
 export { Input, Textarea } from './Input'
-export { Card, CardHeader, CardContent, CardFooter } from './Card'
-export { Modal, ModalFooter } from './Modal'
+export type { InputProps, TextareaProps } from './Input'
+
+export { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from './Card'
+export type { CardProps, CardHeaderProps, CardContentProps, CardFooterProps, CardTitleProps, CardDescriptionProps } from './Card'
+
 export { Select } from './Select'
-export { Alert, AlertDescription } from './Alert'
+
+export { Alert, AlertTitle, AlertDescription } from './Alert'
+export type { AlertProps } from './Alert'
+
+export { Badge } from './Badge'
+export type { BadgeProps } from './Badge'
+
+export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './Table'
+export type { TableProps } from './Table'
+
+export { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogBody, DialogFooter } from './Dialog'
+export type { DialogProps, DialogContentProps } from './Dialog'
+
+export { Modal, ModalFooter } from './Modal'
 
 // Atomic Design System Components
 // Atoms - Basic building blocks
@@ -36,24 +54,13 @@ export {
   PinchZoomContainer,
 } from './organisms'
 
-// New Roche Construction PPM Components
+// Additional Components
 export { SimulationCard, ImpactBadge, StatisticDisplay } from './SimulationCard'
 export { FormField, FormSection, CheckboxField } from './FormField'
 export { ProgressIndicator, LinearProgress, CircularProgress } from './ProgressIndicator'
 export { Tooltip, InfoTooltip } from './Tooltip'
 export { GuidedWorkflow, HelpPanel } from './GuidedWorkflow'
 export { ErrorMessage, ValidationError, EmptyState } from './ErrorMessage'
-
-// Re-export types
-export type { 
-  ButtonProps, 
-  InputProps, 
-  TextareaProps,
-  CardProps,
-  ModalProps,
-  SelectProps,
-  SelectOption,
-} from '@/types'
 
 export type {
   SmartIconProps,

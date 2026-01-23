@@ -1,11 +1,15 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import designSystemRules from "./eslint-rules/index.js";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   {
+    plugins: {
+      'design-system': designSystemRules,
+    },
     languageOptions: {
       globals: {
         // Jest globals
@@ -166,6 +170,10 @@ const eslintConfig = defineConfig([
           message: "initKeyboardEvent is deprecated. Use the KeyboardEvent constructor instead."
         }
       ],
+      
+      // Design System Compliance Rules
+      'design-system/no-hardcoded-colors': 'warn',
+      'design-system/no-hardcoded-spacing': 'warn',
       
       // Catch common JSX syntax issues
       "react/jsx-no-undef": "error",

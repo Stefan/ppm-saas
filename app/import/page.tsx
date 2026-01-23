@@ -137,18 +137,18 @@ export default function ImportPage() {
 
   return (
     <AppLayout>
-      <div className="p-4 sm:p-6 lg:p-8">
+      <div data-testid="import-page" className="p-4 sm:p-6 lg:p-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Bulk Import</h1>
+          <div data-testid="import-header" className="mb-8">
+            <h1 data-testid="import-title" className="text-3xl font-bold text-gray-900 mb-2">Bulk Import</h1>
             <p className="text-gray-600">
               Import multiple records from CSV or JSON files
             </p>
           </div>
 
           {/* Entity Type Selector */}
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div data-testid="import-interface" className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <h2 className="text-lg font-semibold mb-4">Select Entity Type</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {entityTypeOptions.map(option => {

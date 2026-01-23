@@ -1,119 +1,127 @@
-import React, { forwardRef } from 'react'
-import { cn, componentVariants } from '@/lib/design-system'
-import type { InputProps, TextareaProps } from '@/types'
-
 /**
- * Enhanced Input component with design system integration
+ * Input Component
+ * 
+ * A professional input component with clean styling, proper focus states,
+ * and support for labels and error messages.
  */
-export const Input = forwardRef<HTMLInputElement, InputProps>(({
-  type = 'text',
-  value,
-  placeholder,
-  disabled = false,
-  error,
-  onChange,
-  onBlur,
-  onFocus,
-  className,
-  children,
-  size: componentSize = 'md',
-  variant = 'default',
-  ...props
-}, ref) => {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (onChange) {
-      onChange(e.target.value, e)
-    }
-  }
 
-  return (
-    <div className="w-full">
-      <div className="relative">
-        <input
-          ref={ref}
-          type={type}
-          value={value}
-          placeholder={placeholder}
-          disabled={disabled}
-          onChange={handleChange}
-          onBlur={onBlur}
-          onFocus={onFocus}
-          className={cn(
-            'input-base',
-            error ? componentVariants.input.error : componentVariants.input.default,
-            disabled && 'opacity-50 cursor-not-allowed',
-            className
-          )}
-          {...props}
-        />
-        {children && (
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-            {children}
-          </div>
-        )}
-      </div>
-      {error && (
-        <p className="mt-1 text-sm text-red-600">
-          {error}
-        </p>
-      )}
-    </div>
-  )
-})
+import React from 'react'
+import { cn } from '@/lib/design-system'
+import type { ComponentSize } from '@/types/components'
 
-Input.displayName = 'Input'
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  size?: ComponentSize
+  error?: boolean
+  errorMessage?: string
+  label?: string
+  className?: string
+}
 
-/**
- * Textarea component with similar styling
- */
-export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps & {
+export interface TextareaProps {
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+  disabled?: boolean
+  error?: string
   rows?: number
-}>(({
-  value,
-  placeholder,
-  disabled = false,
-  error,
-  onChange,
-  onBlur,
-  onFocus,
-  className,
-  rows = 3,
-  ...props
-}, ref) => {
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    if (onChange) {
-      onChange(e.target.value, e)
-    }
-  }
+  className?: string
+}
 
+const inputSizes: Record<ComponentSize, string> = {
+  sm: 'px-3 py-1.5 text-sm min-h-[32px]',
+  md: 'px-4 py-2.5 text-sm min-h-[40px]',
+  lg: 'px-4 py-3 text-base min-h-[48px]',
+}
+
+const inputBaseStyles = [
+  // Layout
+  'w-full',
+  // Shape
+  'rounded-lg',
+  // Border
+  'border border-gray-300',
+  // Background
+  'bg-white',
+  // Text
+  'text-gray-900',
+  // Placeholder
+  'placeholder:text-gray-400',
+  // Transitions
+  'transition-all duration-150 ease-in-out',
+  // Focus
+  'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+  // Disabled
+  'disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed',
+].join(' ')
+
+const inputErrorStyles = 'border-red-500 focus:ring-red-500'
+
+/**
+ * Input Component
+ */
+export function Input({ 
+  size = 'md', 
+  error = false,
+  errorMessage,
+  label,
+  className,
+  ...props 
+}: InputProps) {
   return (
     <div className="w-full">
-      <textarea
-        ref={ref}
-        value={value}
-        placeholder={placeholder}
-        disabled={disabled}
-        rows={rows}
-        onChange={handleChange}
-        onBlur={onBlur}
-        onFocus={onFocus}
+      {label && (
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          {label}
+        </label>
+      )}
+      <input
         className={cn(
-          'textarea-base',
-          error ? componentVariants.input.error : componentVariants.input.default,
-          disabled && 'opacity-50 cursor-not-allowed',
+          inputBaseStyles,
+          inputSizes[size],
+          error && inputErrorStyles,
           className
         )}
         {...props}
       />
-      {error && (
-        <p className="mt-1 text-sm text-red-600">
-          {error}
+      {error && errorMessage && (
+        <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          {errorMessage}
         </p>
       )}
     </div>
   )
-})
+}
 
-Textarea.displayName = 'Textarea'
+/**
+ * Textarea Component
+ */
+export function Textarea({
+  value,
+  onChange,
+  placeholder,
+  disabled = false,
+  error,
+  rows = 3,
+  className,
+}: TextareaProps) {
+  return (
+    <textarea
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      disabled={disabled}
+      rows={rows}
+      className={cn(
+        inputBaseStyles,
+        'px-4 py-2.5 text-sm resize-y min-h-[80px]',
+        error && inputErrorStyles,
+        className
+      )}
+    />
+  )
+}
 
 export default Input

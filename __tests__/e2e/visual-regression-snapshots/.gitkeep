@@ -1,0 +1,15 @@
+# Visual Regression Baseline Screenshots
+
+This directory contains baseline screenshots for visual regression testing.
+
+Baseline screenshots are automatically generated when running:
+```bash
+npm run test:visual:update
+```
+
+Or using the helper script:
+```bash
+./scripts/generate-visual-baselines.sh
+```
+
+See `__tests__/e2e/VISUAL_REGRESSION_BASELINE_GUIDE.md` for detailed documentation.

@@ -260,11 +260,11 @@ export default function ScenariosPage() {
 
   return (
     <AppLayout>
-      <div className="p-3 sm:p-4 md:p-6 space-y-3 min-h-full pb-16">
+      <div data-testid="scenarios-page" className="p-3 sm:p-4 md:p-6 space-y-3 min-h-full pb-16">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-2 sm:space-y-0">
+        <div data-testid="scenarios-header" className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-2 sm:space-y-0">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t('scenarios.title')}</h1>
+            <h1 data-testid="scenarios-title" className="text-xl sm:text-2xl font-bold text-gray-900">{t('scenarios.title')}</h1>
             <p className="mt-1 text-sm text-gray-600">
               {t('scenarios.subtitle')}
             </p>
@@ -377,7 +377,7 @@ export default function ScenariosPage() {
                   </button>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div data-testid="scenarios-list" className="space-y-2">
                   {scenarios.map((scenario) => (
                     <div
                       key={scenario.id}

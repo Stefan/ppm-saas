@@ -629,13 +629,13 @@ export default function Risks() {
 
   return (
     <AppLayout>
-      <div className="p-8 space-y-6">
+      <div data-testid="risks-page" className="p-8 space-y-6">
         {/* Enhanced Mobile-First Header */}
-        <div className="flex flex-col space-y-4">
+        <div data-testid="risks-header" className="flex flex-col space-y-4">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-4 sm:space-y-0">
             <div className="min-w-0 flex-1">
               <div className="flex flex-col space-y-2">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('risks.title')}</h1>
+                <h1 data-testid="risks-title" className="text-2xl sm:text-3xl font-bold text-gray-900">{t('risks.title')}</h1>
                 <div className="flex flex-wrap items-center gap-2">
                   {alerts.length > 0 && (
                     <div className="flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
@@ -985,7 +985,7 @@ export default function Risks() {
 
         {/* View Mode Content */}
         {viewMode === 'overview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div data-testid="risks-dashboard" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Enhanced Risk by Category */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Risks by Category</h3>

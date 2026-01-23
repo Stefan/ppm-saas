@@ -78,6 +78,7 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
       
       {/* Drawer */}
       <div 
+        data-testid="mobile-nav"
         ref={navRef}
         className="fixed left-0 top-0 h-full w-80 max-w-[85vw] bg-white z-50 xl:hidden transform transition-transform duration-300 ease-in-out overflow-y-auto"
         style={{
@@ -85,7 +86,7 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div data-testid="mobile-nav-header" className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
               <span className="text-white font-bold text-lg">O</span>
@@ -96,6 +97,7 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
             </div>
           </div>
           <button
+            data-testid="mobile-nav-close"
             onClick={onClose}
             className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
             aria-label="Close menu"
@@ -105,7 +107,7 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
         </div>
 
         {/* Navigation Links */}
-        <nav className="p-3">
+        <nav data-testid="mobile-nav-links" className="p-3">
           <ul className="space-y-1">
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon

@@ -87,14 +87,20 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
   const userEmail = session?.user?.email || 'User'
   const userName = session?.user?.user_metadata?.full_name || userEmail.split('@')[0]
 
+  // Navigation link styles
+  const navLinkBase = 'px-3 py-1.5 rounded-md text-sm font-medium transition-all'
+  const navLinkActive = 'bg-blue-600 text-white shadow-sm'
+  const navLinkInactive = 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+
   return (
-    <header className="bg-white border-b border-gray-200 w-full shadow-sm" style={{ position: 'sticky', top: 0, zIndex: 9999, flexShrink: 0, minHeight: '56px' }}>
+    <header data-testid="top-bar" className="bg-white border-b border-gray-200 w-full shadow-sm" style={{ position: 'sticky', top: 0, zIndex: 9999, flexShrink: 0, minHeight: '56px' }}>
       <div className="flex items-center justify-between h-14 px-4 lg:px-6 w-full">
         {/* Left Section: Logo + Menu Button */}
-        <div className="flex items-center space-x-4 flex-shrink-0">
+        <div data-testid="top-bar-logo" className="flex items-center space-x-4 flex-shrink-0">
           <button
+            data-testid="top-bar-menu-toggle"
             onClick={onMenuToggle}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-md hover:bg-gray-100 transition-colors"
             style={{ display: showNav ? 'none' : 'block' }}
             aria-label="Toggle menu"
           >
@@ -103,7 +109,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
           
           <Link href="/dashboards" className="flex items-center space-x-2">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-md flex items-center justify-center">
                 <span className="text-white font-bold text-sm">O</span>
               </div>
               <span className="text-lg font-semibold text-gray-900 hidden sm:inline">ORKA PPM</span>
@@ -113,6 +119,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
 
         {/* Center Section: Navigation Links */}
         <nav 
+          data-testid="top-bar-nav"
           className="items-center space-x-1 flex-1 justify-center"
           style={{ 
             display: showNav ? 'flex' : 'none'
@@ -120,51 +127,31 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
         >
           <Link
             href="/dashboards"
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              pathname === '/dashboards'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-            }`}
+            className={`${navLinkBase} ${pathname === '/dashboards' ? navLinkActive : navLinkInactive}`}
           >
             {t('nav.dashboards')}
           </Link>
           <Link
             href="/scenarios"
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              pathname === '/scenarios'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-            }`}
+            className={`${navLinkBase} ${pathname === '/scenarios' ? navLinkActive : navLinkInactive}`}
           >
             {t('nav.scenarios')}
           </Link>
           <Link
             href="/resources"
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              pathname === '/resources'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-            }`}
+            className={`${navLinkBase} ${pathname === '/resources' ? navLinkActive : navLinkInactive}`}
           >
             {t('nav.resources')}
           </Link>
           <Link
             href="/reports"
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              pathname === '/reports'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-            }`}
+            className={`${navLinkBase} ${pathname === '/reports' ? navLinkActive : navLinkInactive}`}
           >
             {t('nav.reports')}
           </Link>
           <Link
             href="/financials"
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              pathname === '/financials'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-            }`}
+            className={`${navLinkBase} ${pathname === '/financials' ? navLinkActive : navLinkInactive}`}
           >
             {t('nav.financials')}
           </Link>
@@ -173,10 +160,10 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
           <div className="relative" ref={moreMenuRef}>
             <button
               onClick={() => setMoreMenuOpen(!moreMenuOpen)}
-              className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+              className={`flex items-center space-x-1 ${navLinkBase} ${
                 moreMenuOpen || ['/risks', '/monte-carlo', '/changes', '/feedback', '/admin/performance', '/admin/users'].includes(pathname)
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  ? navLinkActive
+                  : navLinkInactive
               }`}
             >
               <MoreHorizontal className="h-4 w-4" />
@@ -185,13 +172,13 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
 
             {/* More Dropdown Menu */}
             {moreMenuOpen && (
-              <div className="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+              <div className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                 <Link
                   href="/risks"
-                  className={`flex items-center px-3 py-2 mx-2 rounded-lg text-sm transition-all ${
+                  className={`flex items-center px-3 py-2 mx-2 rounded-md text-sm transition-all ${
                     pathname === '/risks'
                       ? 'bg-blue-50 text-blue-700 font-medium'
-                      : 'text-gray-900 hover:bg-gray-50'
+                      : 'text-gray-800 hover:bg-gray-50'
                   }`}
                   onClick={() => setMoreMenuOpen(false)}
                 >
@@ -200,10 +187,10 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
                 </Link>
                 <Link
                   href="/monte-carlo"
-                  className={`flex items-center px-3 py-2 mx-2 rounded-lg text-sm transition-all ${
+                  className={`flex items-center px-3 py-2 mx-2 rounded-md text-sm transition-all ${
                     pathname === '/monte-carlo'
                       ? 'bg-blue-50 text-blue-700 font-medium'
-                      : 'text-gray-900 hover:bg-gray-50'
+                      : 'text-gray-800 hover:bg-gray-50'
                   }`}
                   onClick={() => setMoreMenuOpen(false)}
                 >
@@ -212,10 +199,10 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
                 </Link>
                 <Link
                   href="/changes"
-                  className={`flex items-center px-3 py-2 mx-2 rounded-lg text-sm transition-all ${
+                  className={`flex items-center px-3 py-2 mx-2 rounded-md text-sm transition-all ${
                     pathname === '/changes'
                       ? 'bg-blue-50 text-blue-700 font-medium'
-                      : 'text-gray-900 hover:bg-gray-50'
+                      : 'text-gray-800 hover:bg-gray-50'
                   }`}
                   onClick={() => setMoreMenuOpen(false)}
                 >
@@ -224,10 +211,10 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
                 </Link>
                 <Link
                   href="/feedback"
-                  className={`flex items-center px-3 py-2 mx-2 rounded-lg text-sm transition-all ${
+                  className={`flex items-center px-3 py-2 mx-2 rounded-md text-sm transition-all ${
                     pathname === '/feedback'
                       ? 'bg-blue-50 text-blue-700 font-medium'
-                      : 'text-gray-900 hover:bg-gray-50'
+                      : 'text-gray-800 hover:bg-gray-50'
                   }`}
                   onClick={() => setMoreMenuOpen(false)}
                 >
@@ -239,10 +226,10 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
                 
                 <Link
                   href="/admin/performance"
-                  className={`flex items-center px-3 py-2 mx-2 rounded-lg text-sm transition-all ${
+                  className={`flex items-center px-3 py-2 mx-2 rounded-md text-sm transition-all ${
                     pathname === '/admin/performance'
                       ? 'bg-blue-50 text-blue-700 font-medium'
-                      : 'text-gray-900 hover:bg-gray-50'
+                      : 'text-gray-800 hover:bg-gray-50'
                   }`}
                   onClick={() => setMoreMenuOpen(false)}
                 >
@@ -251,10 +238,10 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
                 </Link>
                 <Link
                   href="/admin/users"
-                  className={`flex items-center px-3 py-2 mx-2 rounded-lg text-sm transition-all ${
+                  className={`flex items-center px-3 py-2 mx-2 rounded-md text-sm transition-all ${
                     pathname === '/admin/users'
                       ? 'bg-blue-50 text-blue-700 font-medium'
-                      : 'text-gray-900 hover:bg-gray-50'
+                      : 'text-gray-800 hover:bg-gray-50'
                   }`}
                   onClick={() => setMoreMenuOpen(false)}
                 >
@@ -267,13 +254,14 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
         </nav>
 
         {/* Right Section: Language, Notifications, User Menu */}
-        <div className="flex items-center space-x-2 flex-shrink-0">
+        <div data-testid="top-bar-actions" className="flex items-center space-x-2 flex-shrink-0">
           {/* Language Selector */}
           <GlobalLanguageSelector variant="topbar" />
 
           {/* Notifications */}
           <button
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
+            data-testid="top-bar-notifications"
+            className="p-2 rounded-md hover:bg-gray-100 transition-colors relative"
             aria-label="Notifications"
           >
             <Bell className="h-5 w-5 text-gray-600" />
@@ -283,11 +271,12 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
           {/* User Menu */}
           <div className="relative" ref={userMenuRef}>
             <button
+              data-testid="top-bar-user-menu"
               onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className="flex items-center space-x-2 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+              className="flex items-center space-x-2 p-1.5 rounded-md hover:bg-gray-100 transition-colors"
               aria-label="User menu"
             >
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-md flex items-center justify-center">
                 <span className="text-white text-sm font-medium">
                   {userName.charAt(0).toUpperCase()}
                 </span>
@@ -297,7 +286,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
 
             {/* User Dropdown Menu */}
             {userMenuOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                 <div className="px-4 py-3 border-b border-gray-100">
                   <p className="text-sm font-medium text-gray-900 truncate">{userName}</p>
                   <p className="text-xs text-gray-500 truncate">{userEmail}</p>
@@ -305,7 +294,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
                 
                 <Link
                   href="/admin/users"
-                  className="flex items-center px-3 py-2 mx-2 mt-2 rounded-lg text-sm text-gray-900 hover:bg-gray-50 transition-colors"
+                  className="flex items-center px-3 py-2 mx-2 mt-2 rounded-md text-sm text-gray-800 hover:bg-gray-50 transition-colors"
                   onClick={() => setUserMenuOpen(false)}
                 >
                   <User className="h-4 w-4 mr-3 flex-shrink-0" />
@@ -319,7 +308,7 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
                 <div className="border-t border-gray-100 mt-2 pt-2">
                   <button
                     onClick={handleLogout}
-                    className="flex items-center w-full px-3 py-2 mx-2 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    className="flex items-center w-full px-3 py-2 mx-2 rounded-md text-sm text-red-600 hover:bg-red-50 transition-colors"
                   >
                     <LogOut className="h-4 w-4 mr-3 flex-shrink-0" />
                     Logout

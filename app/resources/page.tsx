@@ -215,7 +215,7 @@ export default function Resources() {
     try {
       if (!session?.access_token) throw new Error('Not authenticated')
       
-      const response = await fetch(getApiUrl('/resources/'), {
+      const response = await fetch(getApiUrl('/resources'), {
         headers: {
           'Authorization': `Bearer ${session?.access_token || ''}`,
           'Content-Type': 'application/json',
@@ -249,7 +249,7 @@ export default function Resources() {
     if (!session?.access_token) throw new Error('Not authenticated')
     
     try {
-      const response = await fetch(getApiUrl('/resources/'), {
+      const response = await fetch(getApiUrl('/resources'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session?.access_token || ''}`,
@@ -350,13 +350,13 @@ export default function Resources() {
 
   return (
     <AppLayout>
-      <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+      <div data-testid="resources-page" className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
         {/* Enhanced Mobile-First Header */}
-        <div className="flex flex-col space-y-4">
+        <div data-testid="resources-header" className="flex flex-col space-y-4">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-4 sm:space-y-0">
             <div className="min-w-0 flex-1">
               <div className="flex flex-col space-y-2">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('resources.title')}</h1>
+                <h1 data-testid="resources-title" className="text-2xl sm:text-3xl font-bold text-gray-900">{t('resources.title')}</h1>
                 <div className="flex flex-wrap items-center gap-2">
                   {analyticsData.overallocatedResources > 0 && (
                     <div className="flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
@@ -709,7 +709,7 @@ export default function Resources() {
 
         {/* Mobile-First Resource Cards */}
         {viewMode === 'cards' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div data-testid="resources-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredResources.map((resource) => (
               <ResourceCard key={resource.id} resource={resource} />
             ))}

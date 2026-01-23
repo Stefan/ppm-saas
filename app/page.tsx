@@ -8,6 +8,7 @@ import { useAutoPrefetch } from '../hooks/useRoutePrefetch'
 import { GlobalLanguageSelector } from '../components/navigation/GlobalLanguageSelector'
 import { useTranslations } from '@/lib/i18n/context'
 import { Eye, EyeOff } from 'lucide-react'
+import { Input } from '@/components/ui/Input'
 
 export default function Home() {
   const { session, loading } = useAuth()
@@ -236,28 +237,24 @@ function LoginForm() {
         
         <form className="mt-8 space-y-6" onSubmit={handleAuth}>
           <div className="space-y-5">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 required">
-                {t('auth.email')}
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-2 input-field w-full"
-                placeholder={t('auth.emailPlaceholder')}
-              />
-            </div>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              label={t('auth.email')}
+              placeholder={t('auth.emailPlaceholder')}
+              size="md"
+            />
             
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 required">
+              <label htmlFor="password" className="block text-sm font-medium text-neutral-700 mb-1 required">
                 {t('auth.password')}
               </label>
-              <div className="relative mt-2">
+              <div className="relative">
                 <input
                   id="password"
                   name="password"
@@ -266,14 +263,13 @@ function LoginForm() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input-field w-full"
-                  style={{ paddingRight: '3rem' }}
+                  className="w-full rounded-md border border-neutral-300 bg-white text-neutral-900 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors px-4 py-2 text-base pr-12"
                   placeholder={isSignup ? t('auth.newPasswordPlaceholder') : t('auth.passwordPlaceholder')}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute top-1/2 right-3 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
                   aria-label={showPassword ? 'Passwort verbergen' : 'Passwort anzeigen'}
                   tabIndex={-1}
                 >
@@ -285,7 +281,7 @@ function LoginForm() {
                 </button>
               </div>
               {isSignup && (
-                <p className="text-sm text-gray-500 mt-1">{t('auth.passwordMinLength')}</p>
+                <p className="text-sm text-neutral-500 mt-1">{t('auth.passwordMinLength')}</p>
               )}
             </div>
           </div>

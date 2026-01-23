@@ -523,14 +523,14 @@ export default function Reports() {
 
   return (
     <AppLayout>
-      <div className="h-full flex flex-col chrome-flex-gap-prevention chrome-background-coverage">
+      <div data-testid="reports-page" className="h-full flex flex-col chrome-flex-gap-prevention chrome-background-coverage">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 chrome-flex-item">
+        <div data-testid="reports-header" className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 chrome-flex-item">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0 chrome-flex-gap-prevention">
             <div className="flex items-center space-x-3 min-w-0">
               <Bot className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
               <div className="min-w-0">
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{t('reports.title')}</h1>
+                <h1 data-testid="reports-title" className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{t('reports.title')}</h1>
                 <p className="text-sm text-gray-700 hidden sm:block">{t('reports.subtitle')}</p>
               </div>
             </div>
@@ -751,7 +751,7 @@ export default function Reports() {
         )}
 
         {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-4">
+      <div data-testid="reports-list" className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-4">
         {messages.map((message) => (
           <div
             key={message.id}

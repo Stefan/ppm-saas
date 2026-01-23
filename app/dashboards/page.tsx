@@ -43,28 +43,28 @@ const WorkflowDashboard = dynamic(() => import('@/components/workflow/WorkflowDa
   loading: () => <div className="h-20 bg-gray-100 rounded-lg animate-pulse"></div>
 })
 
-// Ultra-Compact KPI Card Component - standardized font sizes
-function KPICard({ label, value, change, icon: Icon, color }: any) {
+// KPI Card Component - balanced sizing with design tokens
+function KPICard({ label, value, change, icon: Icon, color, testId }: any) {
   const isPositive = change >= 0
   return (
-    <div className="bg-white rounded border border-gray-200 px-2 py-1 hover:shadow-md hover:scale-105 transition-all duration-200 cursor-pointer group">
-      <div className="flex items-center justify-between gap-2">
+    <div data-testid={testId} className="bg-white rounded-lg border border-gray-200 px-4 py-3 hover:shadow-md transition-all duration-200 cursor-pointer group">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide truncate leading-tight mb-0.5">{label}</p>
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide truncate mb-1">{label}</p>
           <div className="flex items-baseline gap-2">
-            <p className={`text-sm font-bold leading-none ${color}`}>{value}%</p>
-            <span className={`text-[10px] font-medium leading-none ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+            <p className={`text-2xl font-bold leading-none ${color}`}>{value}%</p>
+            <span className={`text-xs font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
               {isPositive ? '↑' : '↓'}{Math.abs(change)}%
             </span>
           </div>
         </div>
-        <Icon className={`${color} opacity-20 group-hover:opacity-40 transition-opacity flex-shrink-0`} size={20} />
+        <Icon className={`${color} opacity-20 group-hover:opacity-40 transition-opacity flex-shrink-0`} size={28} />
       </div>
     </div>
   )
 }
 
-// Ultra-Compact Project Card Component - 20% height
+// Project Card Component - balanced sizing
 function ProjectCard({ project }: { project: Project }) {
   const healthColors = {
     green: 'bg-green-500',
@@ -73,14 +73,14 @@ function ProjectCard({ project }: { project: Project }) {
   }
   
   return (
-    <div className="bg-white rounded border border-gray-200 p-1.5 hover:shadow-md hover:border-blue-400 transition-all duration-200 cursor-pointer group">
-      <div className="flex items-center justify-between gap-1.5">
+    <div data-testid="project-card" className="bg-white rounded-lg border border-gray-200 px-3 py-2.5 hover:shadow-md hover:border-blue-400 transition-all duration-200 cursor-pointer group">
+      <div className="flex items-center justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-xs text-gray-900 truncate group-hover:text-blue-600 transition-colors leading-tight">
+          <h3 className="font-medium text-sm text-gray-900 truncate group-hover:text-blue-600 transition-colors">
             {project.name}
           </h3>
         </div>
-        <div className={`w-1.5 h-1.5 rounded-full ${healthColors[project.health as keyof typeof healthColors]} flex-shrink-0`}></div>
+        <div className={`w-2.5 h-2.5 rounded-full ${healthColors[project.health as keyof typeof healthColors]} flex-shrink-0`}></div>
       </div>
     </div>
   )
@@ -99,7 +99,7 @@ function QuickActionButton({ icon: Icon, label, onClick }: any) {
   )
 }
 
-// Ultra-Compact Alert Chip Component - standardized font sizes
+// Ultra-Compact Alert Chip Component - standardized font sizes using design tokens
 function AlertChip({ alert, onDismiss }: { alert: any, onDismiss: (id: string) => void }) {
   const [showTooltip, setShowTooltip] = useState(false)
   
@@ -129,25 +129,26 @@ function AlertChip({ alert, onDismiss }: { alert: any, onDismiss: (id: string) =
   
   return (
     <div 
-      className={`${config.bg} border ${config.border} rounded-md px-2 py-1.5 flex items-center gap-2 group hover:shadow-md transition-all relative`}
+      data-testid="alert-chip"
+      className={`${config.bg} border ${config.border} rounded-md px-2.5 py-1.5 flex items-center gap-2 group hover:shadow-md transition-all relative`}
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >
-      <div className={`w-1.5 h-1.5 rounded-full ${config.dot} flex-shrink-0`}></div>
+      <div className={`w-2 h-2 rounded-full ${config.dot} flex-shrink-0`}></div>
       <div className="flex flex-col min-w-0">
-        <span className={`text-xs font-semibold ${config.text}`}>{alert.title}</span>
-        <span className={`text-[10px] ${config.text} opacity-70 truncate`}>{alert.description}</span>
+        <span className={`text-sm font-semibold ${config.text}`}>{alert.title}</span>
+        <span className={`text-xs ${config.text} opacity-70 truncate`}>{alert.description}</span>
       </div>
       <button
         onClick={() => onDismiss(alert.id)}
         className={`p-0.5 rounded hover:bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ${config.text}`}
       >
-        <X size={12} />
+        <X size={14} />
       </button>
       
       {/* Tooltip on hover */}
       {showTooltip && (
-        <div className="absolute bottom-full left-0 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg z-20 whitespace-nowrap">
+        <div className="absolute bottom-full left-0 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-20 whitespace-nowrap">
           {alert.description}
           <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
         </div>
@@ -302,11 +303,11 @@ export default function CompactDashboard() {
       {/* Compact container with reduced spacing */}
       <div className="max-w-[1600px] mx-auto p-3 sm:p-4 md:p-6 space-y-2 md:space-y-3">
         
-        {/* Header - Ultra-Compact with alerts inline - standardized font sizes */}
-        <div className="flex items-center justify-between gap-3 flex-wrap">
+        {/* Header - with proper typography hierarchy */}
+        <div data-testid="dashboard-header" className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-sm font-bold text-gray-900 whitespace-nowrap">{t('dashboard.title')}</h1>
-            <span className="text-[10px] text-gray-500 whitespace-nowrap">
+            <h1 data-testid="dashboard-title" className="text-xl font-bold text-gray-900 whitespace-nowrap">{t('dashboard.title')}</h1>
+            <span data-testid="dashboard-project-count" className="text-sm text-gray-500 whitespace-nowrap">
               {quickStats?.total_projects || 0} {t('dashboard.projects')} • {quickStats?.active_projects || 0} {t('stats.activeProjects')}
             </span>
             {/* Alert Chips - Inline with header */}
@@ -317,6 +318,7 @@ export default function CompactDashboard() {
           <div className="flex items-center gap-2">
             <FilterDropdown value={timeFilter} onChange={handleFilterChange} />
             <button
+              data-testid="dashboard-refresh-button"
               onClick={quickRefresh}
               className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               title={t('dashboard.refresh')}
@@ -328,8 +330,9 @@ export default function CompactDashboard() {
 
         {/* TOP: KPI Cards - Responsive Grid (2→3→5 columns) */}
         {kpis && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-3">
+          <div data-testid="dashboard-kpi-section" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-3">
             <KPICard
+              testId="kpi-card-success-rate"
               label={t('kpi.successRate')}
               value={kpis.project_success_rate || 0}
               change={5.2}
@@ -337,6 +340,7 @@ export default function CompactDashboard() {
               color="text-green-600"
             />
             <KPICard
+              testId="kpi-card-budget-performance"
               label={t('kpi.budgetPerformance')}
               value={kpis.budget_performance || 0}
               change={-2.1}
@@ -344,6 +348,7 @@ export default function CompactDashboard() {
               color="text-blue-600"
             />
             <KPICard
+              testId="kpi-card-timeline-performance"
               label={t('kpi.timelinePerformance')}
               value={kpis.timeline_performance || 0}
               change={3.7}
@@ -351,6 +356,7 @@ export default function CompactDashboard() {
               color="text-purple-600"
             />
             <KPICard
+              testId="kpi-card-active-projects"
               label={t('kpi.activeProjects')}
               value={kpis.active_projects_ratio || 0}
               change={1.2}
@@ -358,6 +364,7 @@ export default function CompactDashboard() {
               color="text-indigo-600"
             />
             <KPICard
+              testId="kpi-card-resources"
               label={t('resources.title')}
               value={kpis.resource_efficiency || 0}
               change={0.8}
@@ -378,88 +385,88 @@ export default function CompactDashboard() {
           </Suspense>
         )}
 
-        {/* Budget Variance and Variance Trends side by side - always 2 columns on desktop */}
-        <div className="grid grid-cols-2 gap-2 md:gap-3">
-          {/* Budget Variance - 50% width */}
-          <div className="w-full" style={{ minHeight: '120px' }}>
-            <Suspense fallback={<div className="h-full bg-white rounded-lg border border-gray-200 animate-pulse" style={{ minHeight: '120px' }}></div>}>
+        {/* Budget Variance and Variance Trends side by side */}
+        <div data-testid="dashboard-variance-section" className="flex flex-col sm:flex-row gap-4">
+          {/* Budget Variance - compact fixed width */}
+          <div className="w-full sm:w-auto sm:max-w-xs flex-shrink-0">
+            <Suspense fallback={<div className="h-full bg-white rounded-lg border border-gray-200 animate-pulse" style={{ minHeight: '240px' }}></div>}>
               <VarianceKPIs session={session} selectedCurrency="USD" />
             </Suspense>
           </div>
           
-          {/* Variance Trends - 50% width */}
-          <div className="w-full" style={{ minHeight: '280px' }}>
-            <Suspense fallback={<div className="h-full bg-white rounded-lg border border-gray-200 animate-pulse" style={{ minHeight: '280px' }}></div>}>
+          {/* Variance Trends - takes remaining space */}
+          <div className="w-full sm:flex-1 min-w-0">
+            <Suspense fallback={<div className="h-full bg-white rounded-lg border border-gray-200 animate-pulse" style={{ minHeight: '240px' }}></div>}>
               <VarianceTrends session={session} selectedCurrency="USD" />
             </Suspense>
           </div>
         </div>
 
         {/* Health Summary - Full Width */}
-        <div className="space-y-2 md:space-y-3">
-          {/* Project Health Summary - Compact - standardized font sizes */}
+        <div data-testid="dashboard-health-section" className="space-y-2 md:space-y-3">
+          {/* Project Health Summary - Compact - standardized font sizes using design tokens */}
           {quickStats && (
-            <div className="bg-white rounded-lg border border-gray-200 p-3 md:p-4">
-              <h3 className="text-[10px] font-semibold text-gray-900 mb-2 uppercase tracking-wide">{t('health.projectHealth')}</h3>
+            <div data-testid="health-summary" className="bg-white rounded-lg border border-gray-200 p-4">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">{t('health.projectHealth')}</h3>
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                    <span className="text-gray-600">{t('health.healthy')}</span>
+                    <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
+                    <span className="text-sm text-gray-600">{t('health.healthy')}</span>
                   </div>
-                  <span className="font-semibold text-gray-900 text-sm">{quickStats.health_distribution?.green || 0}</span>
+                  <span data-testid="health-healthy-count" className="font-semibold text-gray-900 text-base">{quickStats.health_distribution?.green || 0}</span>
                 </div>
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                    <span className="text-gray-600">{t('health.atRisk')}</span>
+                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
+                    <span className="text-sm text-gray-600">{t('health.atRisk')}</span>
                   </div>
-                  <span className="font-semibold text-gray-900 text-sm">{quickStats.health_distribution?.yellow || 0}</span>
+                  <span data-testid="health-at-risk-count" className="font-semibold text-gray-900 text-base">{quickStats.health_distribution?.yellow || 0}</span>
                 </div>
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                    <span className="text-gray-600">{t('health.critical')}</span>
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div>
+                    <span className="text-sm text-gray-600">{t('health.critical')}</span>
                   </div>
-                  <span className="font-semibold text-gray-900 text-sm">{quickStats.health_distribution?.red || 0}</span>
+                  <span data-testid="health-critical-count" className="font-semibold text-gray-900 text-base">{quickStats.health_distribution?.red || 0}</span>
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Recent Projects Grid - Ultra Compact - standardized font sizes */}
-        <div className="bg-white rounded-lg border border-gray-200 p-2 mb-20">
-          <h2 className="text-[10px] font-semibold text-gray-900 mb-1.5 uppercase tracking-wide">{t('projects.recentProjects')}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1.5 max-h-[80px] overflow-y-auto">
-            {recentProjects.slice(0, 12).map((project) => (
+        {/* Recent Projects Grid - balanced sizing */}
+        <div data-testid="dashboard-projects-section" className="bg-white rounded-lg border border-gray-200 p-4 mb-20">
+          <h2 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">{t('projects.recentProjects')}</h2>
+          <div data-testid="recent-projects-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+            {recentProjects.slice(0, 8).map((project) => (
               <ProjectCard key={project.id} project={project} />
             ))}
           </div>
           {recentProjects.length === 0 && (
-            <p className="text-xs text-gray-500 text-center py-4">{t('scenarios.noScenarios')}</p>
+            <p className="text-sm text-gray-500 text-center py-4">{t('scenarios.noScenarios')}</p>
           )}
         </div>
       </div>
 
       {/* BOTTOM: Quick Actions - Fixed at bottom of viewport with higher z-index */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-white via-white to-white/95 border-t-2 border-gray-300 py-2 px-3 shadow-2xl z-50">
+      <div data-testid="dashboard-quick-actions" className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-white via-white to-white/95 border-t-2 border-gray-300 py-2 px-3 shadow-2xl z-50">
         <div className="max-w-[1600px] mx-auto">
           <div className="flex items-center gap-2 overflow-x-auto pb-1">
             <span className="text-xs font-bold text-gray-700 uppercase tracking-wide whitespace-nowrap mr-1">{t('actions.quickActions')}:</span>
-            <button onClick={() => {}} className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all whitespace-nowrap shadow-md hover:shadow-lg">
+            <button data-testid="action-scenarios" onClick={() => {}} className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all whitespace-nowrap shadow-md hover:shadow-lg">
               <BarChart3 size={18} />
               <span className="text-sm font-medium">{t('actions.scenarios')}</span>
             </button>
-            <button onClick={() => {}} className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all whitespace-nowrap shadow-sm">
+            <button data-testid="action-resources" onClick={() => {}} className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all whitespace-nowrap shadow-sm">
               <Users size={18} className="text-gray-600" />
               <span className="text-sm font-medium text-gray-700">{t('actions.resources')}</span>
             </button>
-            <button onClick={() => {}} className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all whitespace-nowrap shadow-sm">
+            <button data-testid="action-financials" onClick={() => {}} className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all whitespace-nowrap shadow-sm">
               <DollarSign size={18} className="text-gray-600" />
               <span className="text-sm font-medium text-gray-700">{t('actions.financials')}</span>
             </button>
-            <button onClick={() => {}} className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all whitespace-nowrap shadow-sm">
+            <button data-testid="action-reports" onClick={() => {}} className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all whitespace-nowrap shadow-sm">
               <FileText size={18} className="text-gray-600" />
               <span className="text-sm font-medium text-gray-700">{t('actions.reports')}</span>
             </button>
@@ -471,7 +478,7 @@ export default function CompactDashboard() {
               <TrendingUp size={18} className="text-gray-600" />
               <span className="text-sm font-medium text-gray-700">Analytics</span>
             </button>
-            <button onClick={() => setShowImportModal(true)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all whitespace-nowrap shadow-md hover:shadow-lg">
+            <button data-testid="action-import" onClick={() => setShowImportModal(true)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all whitespace-nowrap shadow-md hover:shadow-lg">
               <Upload size={18} />
               <span className="text-sm font-medium">Import Projects</span>
             </button>

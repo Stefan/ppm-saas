@@ -1,6 +1,12 @@
+/**
+ * Select Component
+ * 
+ * A professional select/dropdown component with custom styling.
+ */
+
 import React, { useState } from 'react'
 import { ChevronDown, Check } from 'lucide-react'
-import { cn, componentVariants } from '@/lib/design-system'
+import { cn } from '@/lib/design-system'
 import { useClickOutside } from '@/hooks'
 
 interface SelectOption {
@@ -10,7 +16,7 @@ interface SelectOption {
 }
 
 interface SelectProps {
-  options: SelectOption[]
+  options?: SelectOption[]
   value?: string
   placeholder?: string
   disabled?: boolean
@@ -18,13 +24,25 @@ interface SelectProps {
   onChange?: (value: string) => void
   className?: string
   multiple?: boolean
+  children?: React.ReactNode
 }
 
-/**
- * Enhanced Select component with custom styling
- */
+const selectBaseStyles = [
+  'w-full',
+  'px-4 py-2.5',
+  'text-sm',
+  'min-h-[40px]',
+  'rounded-lg',
+  'border border-gray-300',
+  'bg-white',
+  'text-gray-900',
+  'transition-all duration-150 ease-in-out',
+  'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+  'disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed',
+].join(' ')
+
 export const Select: React.FC<SelectProps> = ({
-  options,
+  options = [],
   value,
   placeholder = 'Select an option...',
   disabled = false,
@@ -32,6 +50,7 @@ export const Select: React.FC<SelectProps> = ({
   onChange,
   className,
   multiple = false,
+  children,
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [selectedValues, setSelectedValues] = useState<string[]>(
@@ -39,6 +58,28 @@ export const Select: React.FC<SelectProps> = ({
   )
 
   const selectRef = useClickOutside<HTMLDivElement>(() => setIsOpen(false))
+
+  // If children are provided, render native select
+  if (children) {
+    return (
+      <select
+        value={value}
+        onChange={(e) => onChange?.(e.target.value)}
+        disabled={disabled}
+        className={cn(
+          selectBaseStyles,
+          'appearance-none cursor-pointer',
+          'bg-[url("data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 20 20%27%3e%3cpath stroke=%27%236b7280%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%271.5%27 d=%27m6 8 4 4 4-4%27/%3e%3c/svg%3e")]',
+          'bg-[length:20px_20px] bg-[right_12px_center] bg-no-repeat',
+          'pr-10',
+          error && 'border-red-500 focus:ring-red-500',
+          className
+        )}
+      >
+        {children}
+      </select>
+    )
+  }
 
   const handleSelect = (optionValue: string) => {
     if (multiple) {
@@ -75,42 +116,43 @@ export const Select: React.FC<SelectProps> = ({
       <div
         ref={selectRef}
         className={cn(
-          'select-base',
-          error ? componentVariants.input.error : componentVariants.input.default,
+          selectBaseStyles,
+          'relative cursor-pointer flex items-center',
+          error && 'border-red-500',
           disabled && 'opacity-50 cursor-not-allowed',
-          'cursor-pointer',
           className
         )}
         onClick={() => !disabled && setIsOpen(!isOpen)}
       >
         <span className={cn(
-          'block truncate',
-          selectedValues.length === 0 && 'text-gray-500'
+          'block truncate flex-1',
+          selectedValues.length === 0 && 'text-gray-400'
         )}>
           {getDisplayValue()}
         </span>
         <ChevronDown
           className={cn(
-            'absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 transition-transform',
+            'h-4 w-4 text-gray-400 transition-transform duration-200',
             isOpen && 'rotate-180'
           )}
         />
       </div>
 
       {isOpen && !disabled && (
-        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
           {options.length === 0 ? (
-            <div className="px-3 py-2 text-sm text-gray-500">No options available</div>
+            <div className="px-4 py-3 text-sm text-gray-500">No options available</div>
           ) : (
             options.map((option) => (
               <div
                 key={option.value}
                 className={cn(
-                  'px-3 py-2 text-sm cursor-pointer flex items-center justify-between',
+                  'px-4 py-2.5 text-sm cursor-pointer flex items-center justify-between',
+                  'transition-colors duration-100',
                   option.disabled
                     ? 'text-gray-400 cursor-not-allowed'
-                    : 'text-gray-900 hover:bg-gray-100',
-                  selectedValues.includes(option.value) && 'bg-blue-50 text-blue-900'
+                    : 'text-gray-900 hover:bg-gray-50',
+                  selectedValues.includes(option.value) && 'bg-blue-50 text-blue-700'
                 )}
                 onClick={() => !option.disabled && handleSelect(option.value)}
               >
@@ -125,7 +167,10 @@ export const Select: React.FC<SelectProps> = ({
       )}
 
       {error && (
-        <p className="mt-1 text-sm text-red-600">
+        <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
           {error}
         </p>
       )}

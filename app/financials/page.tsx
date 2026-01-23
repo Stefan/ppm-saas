@@ -112,42 +112,50 @@ export default function Financials() {
     <AppLayout>
       <ResponsiveContainer padding="md" className="space-y-6">
         {/* Header */}
-        <FinancialHeader
-          metrics={metrics}
-          analyticsData={analyticsData}
-          selectedCurrency={selectedCurrency}
-          onCurrencyChange={setSelectedCurrency}
-          onExport={exportFinancialData}
-          onRefresh={refetch}
-          showFilters={showFilters}
-          onToggleFilters={() => setShowFilters(!showFilters)}
-        />
+        <div data-testid="financials-header">
+          <FinancialHeader
+            metrics={metrics}
+            analyticsData={analyticsData}
+            selectedCurrency={selectedCurrency}
+            onCurrencyChange={setSelectedCurrency}
+            onExport={exportFinancialData}
+            onRefresh={refetch}
+            showFilters={showFilters}
+            onToggleFilters={() => setShowFilters(!showFilters)}
+          />
+        </div>
 
         {/* Financial Action Buttons with RBAC */}
-        <FinancialActionButtons
-          onImportData={() => setViewMode('csv-import')}
-          onExportReport={exportFinancialData}
-          onEditBudget={() => setViewMode('detailed')}
-          variant="default"
-        />
+        <div data-testid="financials-actions">
+          <FinancialActionButtons
+            onImportData={() => setViewMode('csv-import')}
+            onExportReport={exportFinancialData}
+            onEditBudget={() => setViewMode('detailed')}
+            variant="default"
+          />
+        </div>
 
         {/* Navigation Tabs */}
-        <TabNavigation
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-        />
+        <div data-testid="financials-tabs">
+          <TabNavigation
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+          />
+        </div>
 
         {/* Financial Metrics Dashboard */}
         {metrics && (
-          <FinancialMetrics
-            metrics={metrics}
-            selectedCurrency={selectedCurrency}
-          />
+          <div data-testid="financials-metrics">
+            <FinancialMetrics
+              metrics={metrics}
+              selectedCurrency={selectedCurrency}
+            />
+          </div>
         )}
 
         {/* Critical Alerts */}
         {financialAlerts.length > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <div data-testid="financials-alerts" className="bg-red-50 border border-red-200 rounded-lg p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-red-900">{t('financials.budgetWarnings')}</h3>
               <span className="text-sm text-red-700">{financialAlerts.length} {financialAlerts.length !== 1 ? t('financials.criticalAlerts') : t('financials.criticalAlert')}</span>
@@ -180,7 +188,7 @@ export default function Financials() {
 
         {/* Filter Panel */}
         {showFilters && (
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div data-testid="financials-filters" className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('financials.timeRange')}</label>
@@ -226,69 +234,85 @@ export default function Financials() {
 
         {/* View-specific Content */}
         {viewMode === 'overview' && (
-          <OverviewView
-            analyticsData={analyticsData}
-            selectedCurrency={selectedCurrency}
-          />
+          <div data-testid="financials-overview-view">
+            <OverviewView
+              analyticsData={analyticsData}
+              selectedCurrency={selectedCurrency}
+            />
+          </div>
         )}
 
         {viewMode === 'analysis' && (
-          <AnalysisView
-            budgetPerformance={budgetPerformance}
-            costAnalysis={costAnalysis}
-            analyticsData={analyticsData}
-            selectedCurrency={selectedCurrency}
-          />
+          <div data-testid="financials-analysis-view">
+            <AnalysisView
+              budgetPerformance={budgetPerformance}
+              costAnalysis={costAnalysis}
+              analyticsData={analyticsData}
+              selectedCurrency={selectedCurrency}
+            />
+          </div>
         )}
 
         {viewMode === 'trends' && (
-          <TrendsView
-            comprehensiveReport={comprehensiveReport}
-            selectedCurrency={selectedCurrency}
-          />
+          <div data-testid="financials-trends-view">
+            <TrendsView
+              comprehensiveReport={comprehensiveReport}
+              selectedCurrency={selectedCurrency}
+            />
+          </div>
         )}
 
         {viewMode === 'detailed' && (
-          <DetailedView
-            comprehensiveReport={comprehensiveReport}
-            selectedCurrency={selectedCurrency}
-          />
+          <div data-testid="financials-detailed-view">
+            <DetailedView
+              comprehensiveReport={comprehensiveReport}
+              selectedCurrency={selectedCurrency}
+            />
+          </div>
         )}
 
         {viewMode === 'csv-import' && (
-          <CSVImportView
-            accessToken={session?.access_token}
-          />
+          <div data-testid="financials-csv-import-view">
+            <CSVImportView
+              accessToken={session?.access_token}
+            />
+          </div>
         )}
 
         {viewMode === 'po-breakdown' && (
-          <POBreakdownView
-            accessToken={session?.access_token}
-            projectId={projects[0]?.id}
-          />
+          <div data-testid="financials-po-breakdown-view">
+            <POBreakdownView
+              accessToken={session?.access_token}
+              projectId={projects[0]?.id}
+            />
+          </div>
         )}
 
         {viewMode === 'commitments-actuals' && (
-          <Suspense fallback={
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-          }>
-            <CommitmentsActualsView 
-              session={session}
-              selectedCurrency={selectedCurrency}
-              onRefresh={refetch}
-            />
-          </Suspense>
+          <div data-testid="financials-commitments-actuals-view">
+            <Suspense fallback={
+              <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              </div>
+            }>
+              <CommitmentsActualsView 
+                session={session}
+                selectedCurrency={selectedCurrency}
+                onRefresh={refetch}
+              />
+            </Suspense>
+          </div>
         )}
 
         {/* Budget Variance Table */}
-        <BudgetVarianceTable
-          budgetVariances={budgetVariances}
-          projects={projects}
-          selectedCurrency={selectedCurrency}
-          analyticsData={analyticsData}
-        />
+        <div data-testid="financials-variance-table">
+          <BudgetVarianceTable
+            budgetVariances={budgetVariances}
+            projects={projects}
+            selectedCurrency={selectedCurrency}
+            analyticsData={analyticsData}
+          />
+        </div>
       </ResponsiveContainer>
     </AppLayout>
   )

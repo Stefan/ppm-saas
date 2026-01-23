@@ -11,7 +11,7 @@ from auth.rbac import require_permission, Permission, require_admin
 from config.database import supabase
 from models.users import (
     UserCreateRequest, UserResponse, UserUpdateRequest, UserDeactivationRequest,
-    UserListResponse, UserStatus, UserRole, UserRoleResponse
+    UserListResponse, UserStatus, UserRole, UserRoleResponse, UserInviteRequest
 )
 from utils.converters import convert_uuids
 
@@ -199,6 +199,120 @@ def _determine_user_status(profile_data: dict) -> str:
         return "active"
     else:
         return "inactive"
+
+@router.post("/invite", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+async def invite_user(
+    invite_data: UserInviteRequest,
+    current_user = Depends(require_admin())
+):
+    """Invite a new user by email - creates user account and sends invitation"""
+    try:
+        if supabase is None:
+            raise HTTPException(status_code=503, detail="Database service unavailable")
+        
+        from config.database import service_supabase
+        
+        if not service_supabase:
+            raise HTTPException(status_code=503, detail="Admin API not available")
+        
+        # Check if user already exists
+        try:
+            existing_user = service_supabase.auth.admin.list_users()
+            if isinstance(existing_user, list):
+                for user in existing_user:
+                    if user.email == invite_data.email:
+                        raise HTTPException(status_code=400, detail="User with this email already exists")
+        except Exception as e:
+            print(f"Error checking existing users: {e}")
+        
+        # Generate a temporary password
+        import secrets
+        import string
+        temp_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(16))
+        
+        # Create user in Supabase Auth using admin API
+        try:
+            auth_user = service_supabase.auth.admin.create_user({
+                "email": invite_data.email,
+                "password": temp_password,
+                "email_confirm": True,  # Auto-confirm email for invited users
+                "user_metadata": {
+                    "invited_by": current_user.get("user_id"),
+                    "invited_at": datetime.now().isoformat()
+                }
+            })
+            
+            user_id = str(auth_user.user.id)
+            
+        except Exception as auth_error:
+            print(f"Error creating auth user: {auth_error}")
+            raise HTTPException(status_code=500, detail=f"Failed to create user account: {str(auth_error)}")
+        
+        # Create user profile
+        try:
+            user_profile_data = {
+                "user_id": user_id,
+                "role": invite_data.role.value if hasattr(invite_data.role, 'value') else invite_data.role,
+                "is_active": True,
+                "created_at": datetime.now().isoformat()
+            }
+            
+            profile_response = supabase.table("user_profiles").insert(user_profile_data).execute()
+            
+            if not profile_response.data:
+                # Rollback: delete auth user if profile creation fails
+                try:
+                    service_supabase.auth.admin.delete_user(user_id)
+                except:
+                    pass
+                raise HTTPException(status_code=400, detail="Failed to create user profile")
+            
+            profile = profile_response.data[0]
+            
+        except HTTPException:
+            raise
+        except Exception as profile_error:
+            print(f"Error creating user profile: {profile_error}")
+            # Rollback: delete auth user
+            try:
+                service_supabase.auth.admin.delete_user(user_id)
+            except:
+                pass
+            raise HTTPException(status_code=500, detail=f"Failed to create user profile: {str(profile_error)}")
+        
+        # Log admin action
+        await log_admin_action(
+            current_user.get("user_id"),
+            user_id,
+            "invite_user",
+            {"email": invite_data.email, "role": invite_data.role.value if hasattr(invite_data.role, 'value') else invite_data.role}
+        )
+        
+        # In a production system, you would send an invitation email here
+        # For now, we'll just return the user info
+        
+        return UserResponse(
+            id=user_id,
+            email=invite_data.email,
+            role=profile["role"],
+            status="active",
+            is_active=True,
+            last_login=None,
+            created_at=profile["created_at"],
+            updated_at=profile.get("updated_at"),
+            deactivated_at=None,
+            deactivated_by=None,
+            deactivation_reason=None,
+            sso_provider=None
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Invite user error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to invite user: {str(e)}")
 
 @router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(

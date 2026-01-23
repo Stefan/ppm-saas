@@ -5,7 +5,6 @@ import { useDropzone } from 'react-dropzone'
 import { Upload, FileText, Copy, Check, AlertCircle, CheckCircle, X, Loader2 } from 'lucide-react'
 import { Modal, ModalFooter } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
-import { Textarea } from '@/components/ui/Input'
 import { Alert, AlertDescription } from '@/components/ui/Alert'
 import { cn } from '@/lib/design-system'
 
@@ -253,10 +252,10 @@ export default function ProjectImportModal({
             <label className="block text-sm font-medium text-gray-700">
               Paste JSON Array
             </label>
-            <Textarea
+            <textarea
               value={jsonInput}
-              onChange={(value) => {
-                setJsonInput(value)
+              onChange={(e) => {
+                setJsonInput(e.target.value)
                 setResult(null)
               }}
               placeholder={`[
@@ -270,7 +269,7 @@ export default function ProjectImportModal({
   }
 ]`}
               rows={10}
-              className="font-mono text-sm"
+              className="font-mono text-sm w-full px-4 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-neutral-900 resize-vertical"
               disabled={loading}
             />
             <p className="text-xs text-gray-500">

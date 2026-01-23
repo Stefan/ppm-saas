@@ -1,6 +1,6 @@
 import type { Config } from 'tailwindcss'
 
-// Enhanced mobile-first design tokens
+// Design System Tokens
 const designTokens = {
   colors: {
     primary: {
@@ -14,8 +14,26 @@ const designTokens = {
       700: '#1d4ed8',
       800: '#1e40af',
       900: '#1e3a8a',
-      950: '#172554',
     },
+    neutral: {
+      50: '#fafafa',
+      100: '#f5f5f5',
+      200: '#e5e5e5',
+      300: '#d4d4d4',
+      400: '#a3a3a3',
+      500: '#737373',
+      600: '#525252',
+      700: '#404040',
+      800: '#262626',
+      900: '#171717',
+    },
+    semantic: {
+      success: '#10b981',
+      warning: '#f59e0b',
+      error: '#ef4444',
+      info: '#3b82f6',
+    },
+    // Legacy colors for backwards compatibility
     secondary: {
       50: '#f0fdf4',
       100: '#dcfce7',
@@ -41,19 +59,6 @@ const designTokens = {
       800: '#854d0e',
       900: '#713f12',
       950: '#422006',
-    },
-    neutral: {
-      50: '#fafafa',
-      100: '#f5f5f5',
-      200: '#e5e5e5',
-      300: '#d4d4d4',
-      400: '#a3a3a3',
-      500: '#737373',
-      600: '#525252',
-      700: '#404040',
-      800: '#262626',
-      900: '#171717',
-      950: '#0a0a0a',
     },
     success: {
       50: '#f0fdf4',
@@ -93,13 +98,66 @@ const designTokens = {
     },
   },
   spacing: {
+    0: '0px',
+    1: '4px',
+    2: '8px',
+    3: '12px',
+    4: '16px',
+    5: '20px',
+    6: '24px',
+    8: '32px',
+    10: '40px',
+    12: '48px',
+    16: '64px',
+    // Touch targets for mobile
     'touch-target': '44px',
     'touch-target-comfortable': '48px',
     'touch-target-large': '56px',
   },
+  fontSize: {
+    xs: ['12px', { lineHeight: '16px' }],
+    sm: ['14px', { lineHeight: '20px' }],
+    base: ['16px', { lineHeight: '24px' }],
+    lg: ['18px', { lineHeight: '28px' }],
+    xl: ['20px', { lineHeight: '28px' }],
+    '2xl': ['24px', { lineHeight: '32px' }],
+    '3xl': ['30px', { lineHeight: '36px' }],
+    '4xl': ['36px', { lineHeight: '40px' }],
+    '5xl': ['48px', { lineHeight: '1' }],
+    '6xl': ['60px', { lineHeight: '1' }],
+  },
+  fontWeight: {
+    normal: '400',
+    medium: '500',
+    semibold: '600',
+    bold: '700',
+  },
+  boxShadow: {
+    sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+    DEFAULT: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
+    md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+    lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+    // Touch and focus shadows
+    'touch': '0 2px 8px rgba(0, 0, 0, 0.1)',
+    'touch-active': '0 1px 4px rgba(0, 0, 0, 0.2)',
+    'focus-ring': '0 0 0 3px rgba(59, 130, 246, 0.3)',
+    'error-ring': '0 0 0 3px rgba(239, 68, 68, 0.3)',
+  },
   borderRadius: {
+    none: '0',
+    sm: '4px',
+    DEFAULT: '6px',
+    md: '8px',
+    lg: '12px',
+    full: '9999px',
+    // Touch-friendly radii
     'touch': '8px',
     'touch-large': '12px',
+  },
+  screens: {
+    mobile: '0px',
+    tablet: '768px',
+    desktop: '1024px',
   },
 }
 
@@ -109,40 +167,32 @@ const config: Config = {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
     './lib/**/*.{js,ts,jsx,tsx,mdx}',
+    './.storybook/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
       colors: designTokens.colors,
       spacing: designTokens.spacing,
+      fontSize: designTokens.fontSize,
+      fontWeight: designTokens.fontWeight,
+      boxShadow: designTokens.boxShadow,
       borderRadius: designTokens.borderRadius,
+      screens: designTokens.screens,
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'Consolas', 'monospace'],
       },
-      fontSize: {
-        'xs': ['0.75rem', { lineHeight: '1rem' }],
-        'sm': ['0.875rem', { lineHeight: '1.25rem' }],
-        'base': ['1rem', { lineHeight: '1.5rem' }],
-        'lg': ['1.125rem', { lineHeight: '1.75rem' }],
-        'xl': ['1.25rem', { lineHeight: '1.75rem' }],
-        '2xl': ['1.5rem', { lineHeight: '2rem' }],
-        '3xl': ['1.875rem', { lineHeight: '2.25rem' }],
-        '4xl': ['2.25rem', { lineHeight: '2.5rem' }],
-        '5xl': ['3rem', { lineHeight: '1' }],
-        '6xl': ['3.75rem', { lineHeight: '1' }],
-      },
-      screens: {
-        'xs': '475px',
-        'sm': '640px',
-        'md': '768px',
-        'lg': '1024px',
-        'xl': '1280px',
-        '2xl': '1536px',
-        'touch': { 'raw': '(hover: none) and (pointer: coarse)' },
-        'no-touch': { 'raw': '(hover: hover) and (pointer: fine)' },
-        'reduced-motion': { 'raw': '(prefers-reduced-motion: reduce)' },
-        'high-contrast': { 'raw': '(prefers-contrast: high)' },
-      },
+      // Additional responsive breakpoints for backwards compatibility
+      xs: '475px',
+      sm: '640px',
+      md: '768px',
+      lg: '1024px',
+      xl: '1280px',
+      '2xl': '1536px',
+      touch: { 'raw': '(hover: none) and (pointer: coarse)' },
+      'no-touch': { 'raw': '(hover: hover) and (pointer: fine)' },
+      'reduced-motion': { 'raw': '(prefers-reduced-motion: reduce)' },
+      'high-contrast': { 'raw': '(prefers-contrast: high)' },
       animation: {
         'fade-in': 'fadeIn 0.2s ease-in-out',
         'fade-out': 'fadeOut 0.2s ease-in-out',
@@ -178,12 +228,6 @@ const config: Config = {
           '0%, 100%': { transform: 'translateY(0) translateZ(0)' },
           '50%': { transform: 'translateY(-10px) translateZ(0)' },
         },
-      },
-      boxShadow: {
-        'touch': '0 2px 8px rgba(0, 0, 0, 0.1)',
-        'touch-active': '0 1px 4px rgba(0, 0, 0, 0.2)',
-        'focus-ring': '0 0 0 3px rgba(59, 130, 246, 0.3)',
-        'error-ring': '0 0 0 3px rgba(239, 68, 68, 0.3)',
       },
     },
   },

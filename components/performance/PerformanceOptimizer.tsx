@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react'
 import { performanceMonitor } from '../../lib/monitoring/performance-utils'
+import { Button } from '@/components/ui/Button'
 
 interface PerformanceOptimizerProps {
   children: React.ReactNode
@@ -318,12 +319,14 @@ const PerformanceDebugPanel: React.FC<{ performanceState: PerformanceState }> = 
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
-      <button
+      <Button
         onClick={() => setIsOpen(!isOpen)}
-        className="bg-blue-600 text-white px-3 py-2 rounded-lg shadow-lg hover:bg-blue-700 transition-colors"
+        variant="primary"
+        size="sm"
+        className="shadow-lg"
       >
         📊 Perf
-      </button>
+      </Button>
       
       {isOpen && (
         <div className="absolute bottom-12 right-0 bg-white border border-gray-300 rounded-lg shadow-xl p-4 w-80 max-h-96 overflow-y-auto">

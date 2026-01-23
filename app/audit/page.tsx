@@ -333,12 +333,12 @@ export default function AuditDashboard() {
 
   return (
     <AppLayout>
-      <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+      <div data-testid="audit-page" className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex flex-col space-y-4">
+        <div data-testid="audit-header" className="flex flex-col space-y-4">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-4 sm:space-y-0">
             <div className="min-w-0 flex-1">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('audit.title')}</h1>
+              <h1 data-testid="audit-title" className="text-2xl sm:text-3xl font-bold text-gray-900">{t('audit.title')}</h1>
               <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 text-sm text-gray-600">
                 {stats && (
                   <>
@@ -417,7 +417,7 @@ export default function AuditDashboard() {
         )}
 
         {/* Tabs */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div data-testid="audit-trail" className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="border-b border-gray-200">
             <nav className="flex -mb-px overflow-x-auto" aria-label="Tabs">
               <button

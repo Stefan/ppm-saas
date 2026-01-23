@@ -154,6 +154,22 @@ const nextConfig: NextConfig = {
 
   // Redirects for API calls
   async rewrites() {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://orka-ppm.onrender.com';
+    // Don't rewrite if backend URL is /api (circular)
+    if (backendUrl === '/api') {
+      return [
+        // Exclude optimized dashboard routes from rewrite - let Next.js handle them
+        {
+          source: '/api/optimized/:path*',
+          destination: '/api/optimized/:path*',
+        },
+        // Rewrite all other /api calls to local backend
+        {
+          source: '/api/:path*',
+          destination: `http://localhost:8000/:path*`,
+        },
+      ];
+    }
     return [
       // Exclude optimized dashboard routes from rewrite - let Next.js handle them
       {
@@ -163,7 +179,7 @@ const nextConfig: NextConfig = {
       // Rewrite all other /api calls to backend
       {
         source: '/api/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL || 'https://orka-ppm.onrender.com'}/:path*`,
+        destination: `${backendUrl}/:path*`,
       },
     ];
   },
