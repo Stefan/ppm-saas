@@ -274,9 +274,9 @@ export default function ScenariosPage() {
             {selectedScenarios.length >= 2 ? (
               <TouchButton
                 onClick={compareScenarios}
-                variant="secondary"
+                variant="primary"
                 size="sm"
-                className="bg-purple-600 text-white hover:bg-purple-700"
+                className="!bg-purple-600 !text-white hover:!bg-purple-700"
                 leftIcon={<BarChart3 className="h-4 w-4" />}
               >
                 {t('scenarios.compareScenarios')} ({selectedScenarios.length})
@@ -293,6 +293,7 @@ export default function ScenariosPage() {
               disabled={!selectedProject}
               variant="primary"
               size="sm"
+              className="!bg-blue-600 !text-white hover:!bg-blue-700"
               leftIcon={<Plus className="h-4 w-4" />}
             >
               {t('scenarios.createScenario')}
