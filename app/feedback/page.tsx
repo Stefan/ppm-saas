@@ -752,7 +752,7 @@ export default function Feedback() {
                 <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200">
                   <button
                     onClick={() => setShowFeatureForm(false)}
-                    className="px-6 py-3 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 font-medium transition-colors"
+                    className="px-6 py-3 text-gray-900 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 font-medium transition-colors"
                   >
                     {t('feedback.featureForm.cancel')}
                   </button>
@@ -873,7 +873,7 @@ export default function Feedback() {
                 <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
                   <button
                     onClick={() => setShowBugForm(false)}
-                    className="px-6 py-3 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 font-medium transition-colors"
+                    className="px-6 py-3 text-gray-900 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 font-medium transition-colors"
                   >
                     {t('feedback.bugForm.cancel')}
                   </button>

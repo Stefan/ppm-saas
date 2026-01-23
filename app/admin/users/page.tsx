@@ -543,7 +543,7 @@ export default function AdminUsers() {
             <div className="mt-6 flex justify-end">
               <button
                 onClick={closeRoleModal}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                className="px-4 py-2 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200"
               >
                 Close
               </button>
@@ -584,7 +584,7 @@ export default function AdminUsers() {
             <button
               onClick={fetchUsers}
               disabled={loading}
-              className="flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+              className="flex items-center px-3 py-2 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200 disabled:opacity-50"
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               {t('refresh')}
@@ -687,7 +687,7 @@ export default function AdminUsers() {
                 </button>
                 <button
                   onClick={() => setSelectedUsers([])}
-                  className="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm"
+                  className="px-3 py-1 bg-gray-100 text-gray-900 rounded hover:bg-gray-200 text-sm"
                 >
                   {t('clear')}
                 </button>

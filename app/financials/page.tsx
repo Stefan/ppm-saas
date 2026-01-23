@@ -216,7 +216,7 @@ export default function Financials() {
               </div>
               
               <div className="flex items-end">
-                <button className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
+                <button className="w-full px-4 py-2 bg-gray-100 text-gray-900 rounded-md hover:bg-gray-200">
                   {t('financials.resetFilters')}
                 </button>
               </div>

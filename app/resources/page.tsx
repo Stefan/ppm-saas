@@ -396,7 +396,7 @@ export default function Resources() {
                 className={`flex items-center justify-center min-h-[44px] px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
                   autoRefresh 
                     ? 'bg-green-100 text-green-700 hover:bg-green-200 active:bg-green-300' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300'
+                    : 'bg-gray-100 text-gray-900 hover:bg-gray-200 active:bg-gray-300'
                 }`}
               >
                 <RefreshCw className={`h-4 w-4 mr-2 flex-shrink-0 ${autoRefresh ? 'animate-spin' : ''}`} />
@@ -408,7 +408,7 @@ export default function Resources() {
                 onClick={() => {
                   fetchResources()
                 }}
-                className="flex items-center justify-center min-h-[44px] px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 active:bg-gray-300 text-sm font-medium"
+                className="flex items-center justify-center min-h-[44px] px-3 py-2 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200 active:bg-gray-300 text-sm font-medium"
               >
                 <RefreshCw className="h-4 w-4 mr-2 flex-shrink-0" />
                 <span className="hidden sm:inline">Refresh</span>
@@ -416,7 +416,7 @@ export default function Resources() {
               
               <button
                 onClick={() => setViewMode(viewMode === 'cards' ? 'table' : viewMode === 'table' ? 'heatmap' : 'cards')}
-                className="flex items-center justify-center min-h-[44px] px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 active:bg-gray-300 text-sm font-medium"
+                className="flex items-center justify-center min-h-[44px] px-3 py-2 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200 active:bg-gray-300 text-sm font-medium"
               >
                 {viewMode === 'cards' ? <BarChart3 className="h-4 w-4 mr-2 flex-shrink-0" /> : 
                  viewMode === 'table' ? <PieChartIcon className="h-4 w-4 mr-2 flex-shrink-0" /> : 
@@ -618,7 +618,7 @@ export default function Resources() {
               <div className="flex items-end">
                 <button
                   onClick={clearFilters}
-                  className="w-full min-h-[44px] px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 active:bg-gray-300 font-medium"
+                  className="w-full min-h-[44px] px-4 py-2 bg-gray-100 text-gray-900 rounded-md hover:bg-gray-200 active:bg-gray-300 font-medium"
                 >
                   Clear Filters
                 </button>

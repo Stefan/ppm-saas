@@ -226,7 +226,7 @@ export default function ImportPage() {
                 <button
                   onClick={() => setSelectedFile(null)}
                   disabled={uploading}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                  className="px-6 py-3 border border-gray-300 text-gray-900 rounded-lg hover:bg-gray-50 disabled:opacity-50"
                 >
                   Clear
                 </button>

@@ -345,7 +345,7 @@ export default function CreateScenarioModal({
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-gray-900 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
             >
               {t('scenarios.modal.cancel')}
             </button>

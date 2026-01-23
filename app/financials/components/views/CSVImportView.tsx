@@ -348,7 +348,7 @@ export default function CSVImportView({ accessToken }: CSVImportViewProps) {
             <h3 className="text-lg font-semibold text-gray-900">Import-Verlauf</h3>
             <button
               onClick={fetchCSVImportHistory}
-              className="flex items-center px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+              className="flex items-center px-3 py-1 text-sm bg-gray-100 text-gray-900 rounded hover:bg-gray-200"
             >
               <RefreshCw className="h-4 w-4 mr-1" />
               Aktualisieren

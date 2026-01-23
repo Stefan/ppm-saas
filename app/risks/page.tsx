@@ -734,7 +734,7 @@ export default function Risks() {
                 <button
                   onClick={() => setShowMonteCarloModal(true)}
                   disabled={filteredRisks.length === 0}
-                  className="inline-flex items-center justify-center h-10 px-3 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                  className="inline-flex items-center justify-center h-10 px-3 bg-white text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
                   title="Monte Carlo Simulation"
                 >
                   <Activity className="h-4 w-4" />
@@ -886,7 +886,7 @@ export default function Risks() {
                     dispatchFilterSort({ type: 'RESET_FILTERS' })
                     setSearchTerm('')
                   }}
-                  className="w-full min-h-[44px] px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 active:bg-gray-300 font-medium"
+                  className="w-full min-h-[44px] px-4 py-2 bg-gray-100 text-gray-900 rounded-md hover:bg-gray-200 active:bg-gray-300 font-medium"
                 >
                   {t('risks.clearFilters')}
                 </button>

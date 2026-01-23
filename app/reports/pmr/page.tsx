@@ -424,7 +424,7 @@ export default function EnhancedPMRPage() {
               
               <button
                 onClick={() => setShowExportModal(true)}
-                className="flex items-center space-x-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm"
+                className="flex items-center space-x-1 px-3 py-2 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200 text-sm"
                 data-tour="export"
               >
                 <Download className="h-4 w-4" />
