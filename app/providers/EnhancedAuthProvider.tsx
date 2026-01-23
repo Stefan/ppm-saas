@@ -359,11 +359,10 @@ export function EnhancedAuthProvider({ children }: { children: React.ReactNode }
         if (status === 'SUBSCRIBED') {
           console.log('Successfully subscribed to role changes for user:', user.id)
         } else if (status === 'CHANNEL_ERROR') {
-          console.error('Error subscribing to role changes:', err || 'Unknown error')
-          setError(new Error('Failed to subscribe to role changes'))
+          // Log but don't set error - realtime is optional, app works without it
+          console.warn('Could not subscribe to role changes (realtime may not be enabled):', err || 'Unknown error')
         } else if (status === 'TIMED_OUT') {
-          console.error('Subscription to role changes timed out')
-          setError(new Error('Role change subscription timed out'))
+          console.warn('Subscription to role changes timed out - continuing without realtime updates')
         }
       })
 
