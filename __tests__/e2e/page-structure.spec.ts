@@ -20,65 +20,46 @@ import {
 
 /**
  * Authentication helper for protected pages
- * Handles login flow for pages that require authentication
+ * With storageState from auth.setup.ts, we just need to navigate to the page.
+ * The authentication state is already loaded from the saved session.
  */
 async function authenticateIfNeeded(page: Page, path: string): Promise<void> {
-  // Check if the page requires authentication
-  const protectedPaths = [
-    '/dashboards',
-    '/projects',
-    '/resources',
-    '/financials',
-    '/reports',
-    '/audit',
-    '/risks',
-    '/scenarios',
-    '/monte-carlo',
-    '/admin',
-    '/changes',
-    '/feedback',
-    '/import',
-  ];
-  
-  const requiresAuth = protectedPaths.some(p => path.startsWith(p));
-  
-  if (!requiresAuth) {
-    return;
-  }
-  
-  // Navigate to the page first
+  // Simply navigate to the page - auth state is already loaded via storageState
   await page.goto(path);
-  
-  // Check if we're redirected to login
   await page.waitForLoadState('domcontentloaded');
-  const currentUrl = page.url();
   
-  // If we're on a login page, perform authentication
-  if (currentUrl.includes('/login') || currentUrl.includes('/auth')) {
-    console.log('🔐 Authentication required, attempting login...');
+  // Check if we're still on login page (auth state might be expired)
+  const currentUrl = page.url();
+  const baseURL = page.context()._options.baseURL || 'http://localhost:3000';
+  const isLoginPage = currentUrl.includes('/login') || 
+                      currentUrl.includes('/auth') || 
+                      currentUrl === baseURL || 
+                      currentUrl === baseURL + '/';
+  
+  if (isLoginPage) {
+    console.log('⚠️ Auth state expired, re-authenticating...');
     
-    // Try to find and fill login form
-    // This is a basic implementation - adjust based on your auth flow
+    const email = process.env.TEST_USER_EMAIL || 'test-e2e@orkivo.com';
+    const password = process.env.TEST_USER_PASSWORD || 'TestPassword123!';
+    
     try {
-      const emailInput = page.locator('input[type="email"], input[name="email"]');
-      const passwordInput = page.locator('input[type="password"], input[name="password"]');
-      const submitButton = page.locator('button[type="submit"]');
+      await page.waitForSelector('input[type="email"]', { timeout: 10000 });
+      await page.locator('input[type="email"]').fill(email);
+      await page.locator('input[type="password"]').fill(password);
+      await page.locator('button[type="submit"]').click();
       
-      if (await emailInput.count() > 0) {
-        await emailInput.fill(process.env.TEST_USER_EMAIL || 'test@example.com');
-        await passwordInput.fill(process.env.TEST_USER_PASSWORD || 'testpassword');
-        await submitButton.click();
-        
-        // Wait for navigation after login
-        await page.waitForURL((url) => !url.pathname.includes('/login') && !url.pathname.includes('/auth'), {
-          timeout: 10000,
-        });
-        
-        console.log('✅ Authentication successful');
-      }
+      await page.waitForURL((url) => 
+        !url.pathname.includes('/login') && 
+        !url.pathname.includes('/auth') &&
+        url.pathname !== '/', 
+        { timeout: 15000 }
+      );
+      
+      await page.waitForLoadState('networkidle', { timeout: 10000 });
+      console.log('✅ Re-authentication successful');
     } catch (error) {
-      console.warn('⚠️  Authentication failed or not needed:', error);
-      // Continue anyway - some pages might be accessible without auth
+      console.error('❌ Authentication failed:', error);
+      throw new Error(`Authentication failed: ${error}`);
     }
   }
 }
@@ -195,7 +176,6 @@ test.describe('Dashboard Page Structure - Detailed Tests', () => {
   
   test('Dashboard page has all required sections', async ({ page }) => {
     await authenticateIfNeeded(page, '/dashboards');
-    await page.goto('/dashboards');
     await waitForDynamicContent(page, {
       selector: '[data-testid="dashboard-header"]',
       timeout: 30000,
@@ -228,7 +208,6 @@ test.describe('Dashboard Page Structure - Detailed Tests', () => {
   
   test('Dashboard KPI cards are all present', async ({ page }) => {
     await authenticateIfNeeded(page, '/dashboards');
-    await page.goto('/dashboards');
     await waitForDynamicContent(page);
     
     // Verify all KPI cards exist
@@ -256,7 +235,6 @@ test.describe('Dashboard Page Structure - Detailed Tests', () => {
   
   test('Dashboard quick actions are accessible', async ({ page }) => {
     await authenticateIfNeeded(page, '/dashboards');
-    await page.goto('/dashboards');
     await waitForDynamicContent(page);
     
     // Verify quick action buttons
@@ -297,7 +275,6 @@ test.describe('Dashboard Page Structure - Detailed Tests', () => {
     // This test verifies that screenshot capture works
     // We'll navigate to dashboard and verify the mechanism is in place
     await authenticateIfNeeded(page, '/dashboards');
-    await page.goto('/dashboards');
     await waitForDynamicContent(page);
     
     // Verify the page loaded
@@ -317,7 +294,6 @@ test.describe('Interactive Elements Accessibility', () => {
   
   test('Dashboard interactive elements are accessible', async ({ page }) => {
     await authenticateIfNeeded(page, '/dashboards');
-    await page.goto('/dashboards');
     await waitForDynamicContent(page);
     
     // Verify interactive elements have proper accessibility attributes
@@ -358,7 +334,6 @@ test.describe('Interactive Elements Accessibility', () => {
   
   test('Financials tab navigation is accessible', async ({ page }) => {
     await authenticateIfNeeded(page, '/financials');
-    await page.goto('/financials');
     await waitForDynamicContent(page);
     
     // Verify tab navigation exists and is accessible
@@ -388,7 +363,6 @@ test.describe('Financials Page Structure - Detailed Tests', () => {
   
   test('Financials page has all required sections', async ({ page }) => {
     await authenticateIfNeeded(page, '/financials');
-    await page.goto('/financials');
     await waitForDynamicContent(page, {
       selector: '[data-testid="financials-header"]',
       timeout: 30000,
@@ -420,7 +394,6 @@ test.describe('Financials Page Structure - Detailed Tests', () => {
   
   test('Financials tab navigation structure is correct', async ({ page }) => {
     await authenticateIfNeeded(page, '/financials');
-    await page.goto('/financials');
     await waitForDynamicContent(page);
     
     // Verify tab navigation container exists
@@ -461,7 +434,6 @@ test.describe('Financials Page Structure - Detailed Tests', () => {
   
   test('Financials page has required action buttons', async ({ page }) => {
     await authenticateIfNeeded(page, '/financials');
-    await page.goto('/financials');
     await waitForDynamicContent(page);
     
     // Verify action buttons section exists
@@ -478,7 +450,6 @@ test.describe('Financials Page Structure - Detailed Tests', () => {
   
   test('Financials page has metrics dashboard', async ({ page }) => {
     await authenticateIfNeeded(page, '/financials');
-    await page.goto('/financials');
     await waitForDynamicContent(page);
     
     // Verify metrics section exists
@@ -495,7 +466,6 @@ test.describe('Financials Page Structure - Detailed Tests', () => {
   
   test('Financials page has variance table', async ({ page }) => {
     await authenticateIfNeeded(page, '/financials');
-    await page.goto('/financials');
     await waitForDynamicContent(page);
     
     // Verify variance table exists
@@ -512,7 +482,6 @@ test.describe('Financials Page Structure - Detailed Tests', () => {
   
   test('Financials conditional sections render appropriately', async ({ page }) => {
     await authenticateIfNeeded(page, '/financials');
-    await page.goto('/financials');
     await waitForDynamicContent(page);
     
     // Check for conditional sections (these may or may not be present)
@@ -553,7 +522,6 @@ test.describe('Projects Page Structure', () => {
   
   test('Projects page has all required sections', async ({ page }) => {
     await authenticateIfNeeded(page, '/projects');
-    await page.goto('/projects');
     await waitForDynamicContent(page);
     
     const structure = PAGE_STRUCTURES['projects'];
@@ -575,7 +543,6 @@ test.describe('Resources Page Structure', () => {
   
   test('Resources page has all required sections', async ({ page }) => {
     await authenticateIfNeeded(page, '/resources');
-    await page.goto('/resources');
     await waitForDynamicContent(page);
     
     const structure = PAGE_STRUCTURES['resources'];
@@ -597,7 +564,6 @@ test.describe('Reports Page Structure', () => {
   
   test('Reports page has all required sections', async ({ page }) => {
     await authenticateIfNeeded(page, '/reports');
-    await page.goto('/reports');
     await waitForDynamicContent(page);
     
     const structure = PAGE_STRUCTURES['reports'];
@@ -619,7 +585,6 @@ test.describe('Risks Page Structure', () => {
   
   test('Risks page has all required sections', async ({ page }) => {
     await authenticateIfNeeded(page, '/risks');
-    await page.goto('/risks');
     await waitForDynamicContent(page);
     
     const structure = PAGE_STRUCTURES['risks'];
@@ -641,7 +606,6 @@ test.describe('Scenarios Page Structure', () => {
   
   test('Scenarios page has all required sections', async ({ page }) => {
     await authenticateIfNeeded(page, '/scenarios');
-    await page.goto('/scenarios');
     await waitForDynamicContent(page);
     
     const structure = PAGE_STRUCTURES['scenarios'];
@@ -663,7 +627,6 @@ test.describe('Monte Carlo Page Structure', () => {
   
   test('Monte Carlo page has all required sections', async ({ page }) => {
     await authenticateIfNeeded(page, '/monte-carlo');
-    await page.goto('/monte-carlo');
     await waitForDynamicContent(page);
     
     const structure = PAGE_STRUCTURES['monte-carlo'];
@@ -685,7 +648,6 @@ test.describe('Admin Page Structure', () => {
   
   test('Admin page has all required sections', async ({ page }) => {
     await authenticateIfNeeded(page, '/admin');
-    await page.goto('/admin');
     await waitForDynamicContent(page);
     
     const structure = PAGE_STRUCTURES['admin'];
@@ -707,7 +669,6 @@ test.describe('Audit Page Structure', () => {
   
   test('Audit page has all required sections', async ({ page }) => {
     await authenticateIfNeeded(page, '/audit');
-    await page.goto('/audit');
     await waitForDynamicContent(page);
     
     const structure = PAGE_STRUCTURES['audit'];
@@ -729,7 +690,6 @@ test.describe('Changes Page Structure', () => {
   
   test('Changes page has all required sections', async ({ page }) => {
     await authenticateIfNeeded(page, '/changes');
-    await page.goto('/changes');
     await waitForDynamicContent(page);
     
     const structure = PAGE_STRUCTURES['changes'];
@@ -751,7 +711,6 @@ test.describe('Feedback Page Structure', () => {
   
   test('Feedback page has all required sections', async ({ page }) => {
     await authenticateIfNeeded(page, '/feedback');
-    await page.goto('/feedback');
     await waitForDynamicContent(page);
     
     const structure = PAGE_STRUCTURES['feedback'];
@@ -773,7 +732,6 @@ test.describe('Import Page Structure', () => {
   
   test('Import page has all required sections', async ({ page }) => {
     await authenticateIfNeeded(page, '/import');
-    await page.goto('/import');
     await waitForDynamicContent(page);
     
     const structure = PAGE_STRUCTURES['import'];

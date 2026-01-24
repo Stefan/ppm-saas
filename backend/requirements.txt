@@ -34,6 +34,9 @@ tiktoken==0.5.2
 # CSV parsing for project imports
 pandas==2.2.0
 
+# Encoding detection for file imports
+chardet==5.2.0
+
 # Linear programming for resource optimization
 PuLP==2.7.0
 

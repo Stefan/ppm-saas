@@ -1,4 +1,12 @@
 import { defineConfig, devices } from '@playwright/test'
+import * as dotenv from 'dotenv'
+import * as path from 'path'
+
+// Load test environment variables
+dotenv.config({ path: path.resolve(__dirname, '.env.test') })
+
+// Auth file path for persistent authentication
+const authFile = path.join(__dirname, 'playwright/.auth/user.json');
 
 /**
  * Cross-Device Testing Configuration for Mobile-First UI Enhancements
@@ -48,25 +56,37 @@ export default defineConfig({
 
   // Configure projects for major browsers and devices
   projects: [
-    // Desktop browsers
+    // Setup project for authentication
+    {
+      name: 'setup',
+      testMatch: /auth\.setup\.ts/,
+    },
+    
+    // Desktop browsers - depend on setup
     {
       name: 'chromium-desktop',
+      dependencies: ['setup'],
       use: { 
         ...devices['Desktop Chrome'],
+        storageState: authFile,
         viewport: { width: 1920, height: 1080 }
       },
     },
     {
       name: 'firefox-desktop',
+      dependencies: ['setup'],
       use: { 
         ...devices['Desktop Firefox'],
+        storageState: authFile,
         viewport: { width: 1920, height: 1080 }
       },
     },
     {
       name: 'webkit-desktop',
+      dependencies: ['setup'],
       use: { 
         ...devices['Desktop Safari'],
+        storageState: authFile,
         viewport: { width: 1920, height: 1080 }
       },
     },
@@ -74,30 +94,37 @@ export default defineConfig({
     // Mobile devices - iOS
     {
       name: 'mobile-safari-iphone-12',
-      use: { ...devices['iPhone 12'] },
+      dependencies: ['setup'],
+      use: { ...devices['iPhone 12'], storageState: authFile },
     },
     {
       name: 'mobile-safari-iphone-12-pro',
-      use: { ...devices['iPhone 12 Pro'] },
+      dependencies: ['setup'],
+      use: { ...devices['iPhone 12 Pro'], storageState: authFile },
     },
     {
       name: 'mobile-safari-iphone-se',
-      use: { ...devices['iPhone SE'] },
+      dependencies: ['setup'],
+      use: { ...devices['iPhone SE'], storageState: authFile },
     },
     {
       name: 'mobile-safari-ipad',
-      use: { ...devices['iPad Pro'] },
+      dependencies: ['setup'],
+      use: { ...devices['iPad Pro'], storageState: authFile },
     },
 
     // Mobile devices - Android
     {
       name: 'mobile-chrome-pixel-5',
-      use: { ...devices['Pixel 5'] },
+      dependencies: ['setup'],
+      use: { ...devices['Pixel 5'], storageState: authFile },
     },
     {
       name: 'mobile-chrome-galaxy-s21',
+      dependencies: ['setup'],
       use: { 
         ...devices['Galaxy S21'],
+        storageState: authFile,
         viewport: { width: 384, height: 854 }
       },
     },
@@ -105,8 +132,10 @@ export default defineConfig({
     // Tablets
     {
       name: 'tablet-chrome',
+      dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
+        storageState: authFile,
         viewport: { width: 1024, height: 768 },
         isMobile: false,
         hasTouch: true
@@ -114,8 +143,10 @@ export default defineConfig({
     },
     {
       name: 'tablet-safari',
+      dependencies: ['setup'],
       use: {
         ...devices['Desktop Safari'],
+        storageState: authFile,
         viewport: { width: 1024, height: 768 },
         isMobile: false,
         hasTouch: true
@@ -125,8 +156,10 @@ export default defineConfig({
     // High DPI displays
     {
       name: 'high-dpi-desktop',
+      dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
+        storageState: authFile,
         viewport: { width: 1920, height: 1080 },
         deviceScaleFactor: 2
       },
@@ -135,8 +168,10 @@ export default defineConfig({
     // Performance testing on slower devices
     {
       name: 'slow-device-simulation',
+      dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
+        storageState: authFile,
         viewport: { width: 375, height: 667 },
         // Simulate slower device
         launchOptions: {

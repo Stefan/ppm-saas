@@ -6,6 +6,7 @@ import {
   Download, RefreshCw, Search, Filter, AlertCircle, CheckCircle
 } from 'lucide-react'
 import { POBreakdown, POBreakdownSummary, POImportResult } from '../../types'
+import { getApiUrl } from '../../../../lib/api'
 
 interface POBreakdownViewProps {
   accessToken?: string
@@ -38,7 +39,7 @@ export default function POBreakdownView({ accessToken, projectId }: POBreakdownV
     
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/pos/breakdown/projects/${projectId}/po-breakdowns`,
+        getApiUrl(`/pos/breakdown/projects/${projectId}/po-breakdowns`),
         {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
@@ -48,13 +49,17 @@ export default function POBreakdownView({ accessToken, projectId }: POBreakdownV
       )
       
       if (!response.ok) {
-        throw new Error('Failed to fetch PO breakdowns')
+        // Don't throw, just set error message
+        setError('PO Breakdown feature is not yet configured. This requires SAP integration setup.')
+        setLoading(false)
+        return
       }
       
       const data = await response.json()
       setBreakdowns(buildHierarchy(data))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      console.error('PO Breakdown fetch error:', err)
+      setError('PO Breakdown feature is not yet configured. This requires SAP integration setup.')
     } finally {
       setLoading(false)
     }
@@ -65,7 +70,7 @@ export default function POBreakdownView({ accessToken, projectId }: POBreakdownV
     
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/pos/breakdown/projects/${projectId}/summary`,
+        getApiUrl(`/pos/breakdown/projects/${projectId}/summary`),
         {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
@@ -139,7 +144,7 @@ export default function POBreakdownView({ accessToken, projectId }: POBreakdownV
     
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/pos/breakdown/import`,
+        getApiUrl('/pos/breakdown/import'),
         {
           method: 'POST',
           headers: {
@@ -313,7 +318,7 @@ export default function POBreakdownView({ accessToken, projectId }: POBreakdownV
     <div className="space-y-6">
       {/* Summary Cards */}
       {summary && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="summary-cards-grid gap-4">
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="text-sm text-gray-600 mb-1">Total Planned</div>
             <div className="text-2xl font-bold text-gray-900">
@@ -432,9 +437,27 @@ export default function POBreakdownView({ accessToken, projectId }: POBreakdownV
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
         ) : breakdowns.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            <p>No PO breakdowns found</p>
-            <p className="text-sm mt-2">Import a CSV file or create a breakdown manually</p>
+          <div className="text-center py-12">
+            <div className="text-gray-500 mb-4">
+              <p className="text-lg font-medium">No PO breakdowns found</p>
+              <p className="text-sm mt-2">This feature requires SAP Purchase Order data</p>
+            </div>
+            <div className="mt-6 space-y-2 text-sm text-gray-600">
+              <p>To get started:</p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Import a CSV file with PO breakdown structure</li>
+                <li>Or create a breakdown manually using the "Add Breakdown" button</li>
+              </ul>
+            </div>
+            <div className="mt-6">
+              <button 
+                onClick={() => setShowUploadModal(true)}
+                className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 inline-flex items-center space-x-2"
+              >
+                <Upload className="h-5 w-5" />
+                <span>Import CSV File</span>
+              </button>
+            </div>
           </div>
         ) : (
           <div>

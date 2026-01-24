@@ -1,7 +1,8 @@
 
-import { AlertTriangle, Filter, Download, RefreshCw } from 'lucide-react'
+import { AlertTriangle, Filter, Download, Edit } from 'lucide-react'
 import { FinancialMetrics, AnalyticsData } from '../types'
 import { useTranslations } from '../../../lib/i18n/context'
+import PermissionGuard from '../../../components/auth/PermissionGuard'
 
 interface FinancialHeaderProps {
   metrics: FinancialMetrics | null
@@ -9,9 +10,9 @@ interface FinancialHeaderProps {
   selectedCurrency: string
   showFilters: boolean
   onCurrencyChange: (currency: string) => void
-  onExport: () => void
-  onRefresh: () => void
   onToggleFilters: () => void
+  onExport?: () => void
+  onEditBudget?: () => void
 }
 
 export default function FinancialHeader({
@@ -20,9 +21,9 @@ export default function FinancialHeader({
   selectedCurrency,
   showFilters: _showFilters,
   onCurrencyChange,
+  onToggleFilters,
   onExport,
-  onRefresh,
-  onToggleFilters
+  onEditBudget
 }: FinancialHeaderProps) {
   const { t } = useTranslations()
   
@@ -53,34 +54,44 @@ export default function FinancialHeader({
         <select
           value={selectedCurrency}
           onChange={(e) => onCurrencyChange(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white text-sm"
         >
           <option value="USD">USD</option>
           <option value="EUR">EUR</option>
           <option value="GBP">GBP</option>
         </select>
         
-        <button
-          onClick={onExport}
-          className="flex items-center px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
-        >
-          <Download className="h-4 w-4 mr-2" />
-          {t('common.export')}
-        </button>
+        {onExport && (
+          <PermissionGuard permission="financial_read">
+            <button
+              onClick={onExport}
+              className="flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+              title="Export Financial Report"
+            >
+              <Download className="h-4 w-4 mr-1" />
+              {t('common.export')}
+            </button>
+          </PermissionGuard>
+        )}
         
-        <button
-          onClick={onRefresh}
-          className="flex items-center px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
-        >
-          <RefreshCw className="h-4 w-4 mr-2" />
-          {t('common.refresh')}
-        </button>
+        {onEditBudget && (
+          <PermissionGuard permission="financial_update">
+            <button
+              onClick={onEditBudget}
+              className="flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+              title="Edit Budget"
+            >
+              <Edit className="h-4 w-4 mr-1" />
+              Edit Budget
+            </button>
+          </PermissionGuard>
+        )}
         
         <button
           onClick={onToggleFilters}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
         >
-          <Filter className="h-4 w-4 mr-2" />
+          <Filter className="h-4 w-4 mr-1" />
           {t('common.filters')}
         </button>
       </div>

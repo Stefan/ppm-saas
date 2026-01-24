@@ -143,7 +143,11 @@ export default function AdminUsers() {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000) // 10s timeout
       
-      const response = await fetch(getApiUrl(`/admin/users?${params}`), {
+      const url = getApiUrl(`/api/admin/users?${params}`)
+      console.log('[DEBUG] Fetching users from URL:', url)
+      console.log('[DEBUG] Auth token present:', !!session?.access_token)
+      
+      const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${session?.access_token || ''}`,
           'Content-Type': 'application/json',
@@ -153,8 +157,14 @@ export default function AdminUsers() {
       
       clearTimeout(timeoutId)
       
+      console.log('[DEBUG] Response status:', response.status, response.statusText)
+      console.log('[DEBUG] Response URL:', response.url)
+      
       if (!response.ok) {
-        throw new Error(`Failed to fetch users: ${response.statusText}`)
+        console.error(`Failed to fetch users: ${response.statusText}`)
+        setError(`Failed to fetch users: ${response.statusText}`)
+        setLoading(false)
+        return
       }
       
       const data: UserListResponse = await response.json()
@@ -185,7 +195,7 @@ export default function AdminUsers() {
     }
     
     try {
-      const url = getApiUrl('/admin/roles')
+      const url = getApiUrl('/api/admin/roles')
       console.log('Fetching roles from:', url)
       
       const response = await fetch(url, {
@@ -215,7 +225,7 @@ export default function AdminUsers() {
     setActionLoading(userId)
     
     try {
-      const response = await fetch(getApiUrl(`/admin/users/${userId}/roles`), {
+      const response = await fetch(getApiUrl(`/api/admin/users/${userId}/roles`), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session?.access_token || ''}`,
@@ -247,7 +257,7 @@ export default function AdminUsers() {
     setActionLoading(userId)
     
     try {
-      const response = await fetch(getApiUrl(`/admin/users/${userId}/roles/${role}`), {
+      const response = await fetch(getApiUrl(`/api/admin/users/${userId}/roles/${role}`), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${session?.access_token || ''}`,
@@ -313,7 +323,7 @@ export default function AdminUsers() {
     setError(null)
 
     try {
-      const url = getApiUrl('/admin/users/invite')
+      const url = getApiUrl('/api/admin/users/invite')
       console.log('Calling invite endpoint:', url)
       console.log('Request body:', { email: inviteEmail, role: inviteRole })
       console.log('Auth token:', session?.access_token ? 'Present' : 'Missing')
@@ -379,16 +389,16 @@ export default function AdminUsers() {
       
       switch (action) {
         case 'deactivate':
-          endpoint = `/admin/users/${userId}/deactivate`
+          endpoint = `/api/admin/users/${userId}/deactivate`
           body = { reason: reason || 'Admin action', notify_user: true }
           break
         case 'activate':
-          endpoint = `/admin/users/${userId}`
+          endpoint = `/api/admin/users/${userId}`
           method = 'PUT'
           body = { is_active: true }
           break
         case 'delete':
-          endpoint = `/admin/users/${userId}`
+          endpoint = `/api/admin/users/${userId}`
           method = 'DELETE'
           break
       }

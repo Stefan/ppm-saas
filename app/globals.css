@@ -171,3 +171,74 @@ body {
 .__next-dev-overlay {
   z-index: 9999;
 }
+
+/* ========================================
+   CUSTOM GRID LAYOUTS
+   ======================================== */
+
+.category-analysis-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 1024px) {
+  .category-analysis-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.project-status-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 1024px) {
+  .project-status-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Project Budgets View Grids */
+.budget-performance-grid,
+.efficiency-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 1024px) {
+  .budget-performance-grid,
+  .efficiency-metrics-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.summary-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .summary-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .summary-cards-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.savings-overruns-grid,
+.cost-analysis-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 1024px) {
+  .savings-overruns-grid,
+  .cost-analysis-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

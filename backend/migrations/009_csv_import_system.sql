@@ -5,10 +5,17 @@
 CREATE TABLE IF NOT EXISTS organizations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(255) NOT NULL,
-  code VARCHAR(50) UNIQUE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Add code column if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organizations' AND column_name = 'code') THEN
+        ALTER TABLE organizations ADD COLUMN code VARCHAR(50) UNIQUE;
+    END IF;
+END $$;
 
 -- Commitments table for planned expenditures (Purchase Orders)
 CREATE TABLE IF NOT EXISTS commitments (
@@ -223,7 +230,7 @@ RETURNS TABLE (
   variance DECIMAL(15,2),
   variance_percentage DECIMAL(5,2),
   status TEXT
-) AS $
+) AS $$
 BEGIN
   -- Delete existing variances for the scope
   IF p_project_id IS NOT NULL THEN
@@ -276,7 +283,7 @@ BEGIN
     AND (p_project_id IS NULL OR fv.project_id = p_project_id)
   ORDER BY fv.project_id, fv.wbs_element;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Function to upsert commitments
 CREATE OR REPLACE FUNCTION upsert_commitment(
@@ -301,7 +308,7 @@ CREATE OR REPLACE FUNCTION upsert_commitment(
   p_source_file TEXT,
   p_organization_id UUID
 )
-RETURNS UUID AS $
+RETURNS UUID AS $$
 DECLARE
   commitment_id UUID;
 BEGIN
@@ -341,7 +348,7 @@ BEGIN
   
   RETURN commitment_id;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Function to upsert actuals
 CREATE OR REPLACE FUNCTION upsert_actual(
@@ -361,7 +368,7 @@ CREATE OR REPLACE FUNCTION upsert_actual(
   p_source_file TEXT,
   p_organization_id UUID
 )
-RETURNS UUID AS $
+RETURNS UUID AS $$
 DECLARE
   actual_id UUID;
 BEGIN
@@ -394,7 +401,7 @@ BEGIN
   
   RETURN actual_id;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Function to get variance summary
 CREATE OR REPLACE FUNCTION get_variance_summary(
@@ -409,7 +416,7 @@ RETURNS TABLE (
   total_actual DECIMAL(15,2),
   total_variance DECIMAL(15,2),
   average_variance_percentage DECIMAL(5,2)
-) AS $
+) AS $$
 BEGIN
   RETURN QUERY
   SELECT 
@@ -424,12 +431,22 @@ BEGIN
   FROM financial_variances fv
   WHERE p_organization_id IS NULL OR fv.organization_id = p_organization_id;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Insert default organization if none exists
-INSERT INTO organizations (name, code) 
-SELECT 'Default Organization', 'DEFAULT'
-WHERE NOT EXISTS (SELECT 1 FROM organizations WHERE code = 'DEFAULT');
+DO $$
+BEGIN
+    -- Check if code column exists and insert accordingly
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organizations' AND column_name = 'code') THEN
+        INSERT INTO organizations (name, code) 
+        SELECT 'Default Organization', 'DEFAULT'
+        WHERE NOT EXISTS (SELECT 1 FROM organizations WHERE code = 'DEFAULT');
+    ELSE
+        INSERT INTO organizations (name) 
+        SELECT 'Default Organization'
+        WHERE NOT EXISTS (SELECT 1 FROM organizations WHERE name = 'Default Organization');
+    END IF;
+END $$;
 
 -- Comments for documentation
 COMMENT ON TABLE organizations IS 'Organizations for multi-tenant support';

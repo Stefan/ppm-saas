@@ -1,173 +1,295 @@
 'use client'
 
-
-import { AreaChart, Area, Line, ComposedChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, ComposedChart } from 'recharts'
 import { ComprehensiveFinancialReport } from '../../types'
+import { useCommitmentsActualsTrends } from '../../hooks/useCommitmentsActualsTrends'
+import { useTranslations } from '../../../../lib/i18n/context'
+import { useState } from 'react'
 
 interface TrendsViewProps {
   comprehensiveReport: ComprehensiveFinancialReport | null
   selectedCurrency: string
+  accessToken?: string
 }
 
-export default function TrendsView({ comprehensiveReport, selectedCurrency }: TrendsViewProps) {
-  if (!comprehensiveReport?.trend_projections) {
+export default function TrendsView({ 
+  comprehensiveReport, 
+  selectedCurrency,
+  accessToken 
+}: TrendsViewProps) {
+  const { t } = useTranslations()
+  const [timeRange, setTimeRange] = useState<'12' | '24' | '36' | 'all'>('24')
+  const { monthlyData, summary, loading } = useCommitmentsActualsTrends({
+    accessToken,
+    selectedCurrency
+  })
+
+  if (loading) {
     return (
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <p className="text-gray-500">Keine Trenddaten verfügbar</p>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
       </div>
     )
   }
 
+  if (!monthlyData.length) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <p className="text-gray-500">{t('financials.noTrendData')}</p>
+      </div>
+    )
+  }
+
+  // Filter data based on selected time range
+  const filteredData = timeRange === 'all' 
+    ? monthlyData 
+    : monthlyData.slice(-parseInt(timeRange))
+
+  // Format month for display (YYYY-MM -> MMM YYYY)
+  const formatMonth = (month: string) => {
+    const date = new Date(month + '-01')
+    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+  }
+
+  const chartData = filteredData.map(m => ({
+    month: formatMonth(m.month),
+    commitments: m.commitments,
+    actuals: m.actuals,
+    cumulativeCommitments: m.cumulativeCommitments,
+    cumulativeActuals: m.cumulativeActuals,
+    variance: m.variance,
+    spendRate: m.spendRate
+  }))
+
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Finanzielle Trendprognosen</h3>
-        <div className="flex items-center space-x-4 text-sm text-gray-600">
-          <span>Prognose für die nächsten 6 Monate</span>
-          <span>•</span>
-          <span>Währung: {selectedCurrency}</span>
-          <span>•</span>
-          <span>Basierend auf aktuellen Ausgabenmustern</span>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Spending Trend Chart with Confidence Bands */}
-        <div>
-          <h4 className="text-md font-medium text-gray-800 mb-3">Prognostizierter Ausgabentrend</h4>
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={comprehensiveReport.trend_projections}>
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip formatter={(value, name) => [
-                typeof value === 'number' ? `${value.toLocaleString()} ${selectedCurrency}` : value,
-                name === 'projected_spending' ? 'Prognostizierte Ausgaben' : 'Prognostizierte Abweichung'
-              ]}
-              />
-              <Legend />
-              <Area 
-                type="monotone" 
-                dataKey="projected_spending" 
-                stroke="#3B82F6" 
-                fill="#3B82F6" 
-                fillOpacity={0.3}
-                name="Prognostizierte Ausgaben"
-              />
-              <Line 
-                type="monotone" 
-                dataKey="projected_variance" 
-                stroke="#EF4444" 
-                strokeWidth={2}
-                name="Prognostizierte Abweichung"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Confidence Levels with Risk Assessment */}
-        <div>
-          <h4 className="text-md font-medium text-gray-800 mb-3">Prognose-Vertrauen & Risiko</h4>
-          <ResponsiveContainer width="100%" height={300}>
-            <ComposedChart data={comprehensiveReport.trend_projections}>
-              <XAxis dataKey="month" />
-              <YAxis yAxisId="left" domain={[0, 1]} tickFormatter={(value) => `${(value * 100).toFixed(0)}%`} />
-              <YAxis yAxisId="right" orientation="right" />
-              <Tooltip formatter={(value, name) => [
-                name === 'confidence' ? `${((value as number) * 100).toFixed(1)}%` : 
-                typeof value === 'number' ? `${value.toLocaleString()} ${selectedCurrency}` : value,
-                name === 'confidence' ? 'Vertrauensniveau' : 'Risikobetrag'
-              ]}
-              />
-              <Legend />
-              <Line 
-                yAxisId="left"
-                type="monotone" 
-                dataKey="confidence" 
-                stroke="#10B981" 
-                strokeWidth={3}
-                dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
-                name="Vertrauensniveau"
-              />
-              <Bar 
-                yAxisId="right"
-                dataKey="projected_variance" 
-                fill="#F59E0B" 
-                fillOpacity={0.6}
-                name="Risikobetrag"
-              />
-            </ComposedChart>
-          </ResponsiveContainer>
+    <div className="space-y-6">
+      {/* Time Range Filter */}
+      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-medium text-gray-700">{t('financials.timeRangeFilter')}</h3>
+            <p className="text-xs text-gray-500 mt-1">
+              {t('financials.totalDataRange')}: {formatMonth(monthlyData[0].month)} - {formatMonth(monthlyData[monthlyData.length - 1].month)} ({monthlyData.length} {t('financials.months')})
+            </p>
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setTimeRange('12')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                timeRange === '12'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {t('financials.last12Months')}
+            </button>
+            <button
+              onClick={() => setTimeRange('24')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                timeRange === '24'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {t('financials.last24Months')}
+            </button>
+            <button
+              onClick={() => setTimeRange('36')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                timeRange === '36'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {t('financials.last36Months')}
+            </button>
+            <button
+              onClick={() => setTimeRange('all')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                timeRange === 'all'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {t('financials.allTime')}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Risk Indicators from Comprehensive Report */}
-      {comprehensiveReport.risk_indicators && (
-        <div className="mt-6">
-          <h4 className="text-md font-medium text-gray-800 mb-4">Finanzielle Risikobewertung</h4>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-              <div className="text-2xl font-bold text-red-600">
-                {comprehensiveReport.risk_indicators.projects_over_budget}
-              </div>
-              <div className="text-sm text-red-800">Projekte über Budget</div>
-              <div className="text-xs text-red-600 mt-1">Hohes Risiko</div>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+          <div className="text-sm text-blue-700 mb-1">{t('financials.avgMonthlyCommitments')}</div>
+          <div className="text-2xl font-bold text-blue-900">
+            {summary ? (summary.avgMonthlyCommitments / 1000).toFixed(0) : '0'}K
+          </div>
+          <div className="text-xs text-blue-600 mt-1">{selectedCurrency}</div>
+        </div>
+
+        <div className="bg-gradient-to-br from-red-50 to-red-100 p-4 rounded-lg border border-red-200">
+          <div className="text-sm text-red-700 mb-1">{t('financials.burnRate')}</div>
+          <div className="text-2xl font-bold text-red-900">
+            {summary ? (summary.burnRate / 1000).toFixed(0) : '0'}K
+          </div>
+          <div className="text-xs text-red-600 mt-1">{t('financials.perMonth')}</div>
+        </div>
+
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+          <div className="text-sm text-purple-700 mb-1">{t('financials.avgSpendRate')}</div>
+          <div className="text-2xl font-bold text-purple-900">
+            {summary ? summary.avgSpendRate.toFixed(1) : '0'}%
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+          <div className="text-sm text-green-700 mb-1">{t('financials.projectedAnnual')}</div>
+          <div className="text-2xl font-bold text-green-900">
+            {summary ? (summary.projectedAnnualSpend / 1000000).toFixed(1) : '0'}M
+          </div>
+          <div className="text-xs text-green-600 mt-1">{selectedCurrency}</div>
+        </div>
+      </div>
+
+      {/* Monthly Commitments vs Actuals */}
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">{t('financials.monthlyTrend')}</h3>
+          <span className="text-sm text-gray-500">{filteredData.length} {t('financials.months')}</span>
+        </div>
+        <ResponsiveContainer width="100%" height={350}>
+          <ComposedChart data={chartData}>
+            <XAxis 
+              dataKey="month" 
+              angle={-45}
+              textAnchor="end"
+              height={80}
+              tick={{ fontSize: 11 }}
+            />
+            <YAxis tick={{ fontSize: 11 }} />
+            <Tooltip 
+              formatter={(value: number, name: string) => {
+                if (name === t('financials.spendRate')) {
+                  return `${value.toFixed(1)}%`
+                }
+                return `${value.toLocaleString()} ${selectedCurrency}`
+              }}
+            />
+            <Legend />
+            <Bar dataKey="commitments" fill="#3B82F6" name={t('financials.commitments')} />
+            <Bar dataKey="actuals" fill="#EF4444" name={t('financials.actuals')} />
+            <Line 
+              type="monotone" 
+              dataKey="spendRate" 
+              stroke="#10B981" 
+              strokeWidth={2}
+              yAxisId="right"
+              name={t('financials.spendRate')}
+            />
+            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Cumulative Trend */}
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">{t('financials.cumulativeTrend')}</h3>
+          <div className="text-sm text-gray-500">
+            {t('financials.totalPeriod')}: {formatMonth(filteredData[0].month)} - {formatMonth(filteredData[filteredData.length - 1].month)}
+          </div>
+        </div>
+        <ResponsiveContainer width="100%" height={350}>
+          <AreaChart data={chartData}>
+            <XAxis 
+              dataKey="month" 
+              angle={-45}
+              textAnchor="end"
+              height={80}
+              tick={{ fontSize: 11 }}
+            />
+            <YAxis tick={{ fontSize: 11 }} />
+            <Tooltip 
+              formatter={(value: number) => `${value.toLocaleString()} ${selectedCurrency}`}
+            />
+            <Legend />
+            <Area 
+              type="monotone" 
+              dataKey="cumulativeCommitments" 
+              stroke="#3B82F6" 
+              fill="#3B82F6" 
+              fillOpacity={0.3}
+              name={t('financials.cumulativeCommitments')}
+            />
+            <Area 
+              type="monotone" 
+              dataKey="cumulativeActuals" 
+              stroke="#EF4444" 
+              fill="#EF4444" 
+              fillOpacity={0.3}
+              name={t('financials.cumulativeActuals')}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Variance Trend */}
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">{t('financials.varianceTrend')}</h3>
+          <span className="text-sm text-gray-500">{t('financials.actualsMinusCommitments')}</span>
+        </div>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={chartData}>
+            <XAxis 
+              dataKey="month" 
+              angle={-45}
+              textAnchor="end"
+              height={80}
+              tick={{ fontSize: 11 }}
+            />
+            <YAxis tick={{ fontSize: 11 }} />
+            <Tooltip 
+              formatter={(value: number) => `${value.toLocaleString()} ${selectedCurrency}`}
+            />
+            <Legend />
+            <Bar 
+              dataKey="variance" 
+              fill="#F59E0B"
+              name={t('financials.variance')}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Forecast Summary */}
+      {summary && (
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg border border-blue-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('financials.forecastSummary')}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <div className="text-sm text-gray-600 mb-1">{t('financials.forecastCompletion')}</div>
+              <div className="text-xl font-bold text-gray-900">{formatMonth(summary.forecastCompletion)}</div>
+              <div className="text-xs text-gray-500 mt-1">{t('financials.basedOnBurnRate')}</div>
             </div>
-            
-            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-              <div className="text-2xl font-bold text-yellow-600">
-                {comprehensiveReport.risk_indicators.projects_at_risk}
+            <div>
+              <div className="text-sm text-gray-600 mb-1">{t('financials.remainingBudget')}</div>
+              <div className="text-xl font-bold text-green-600">
+                {((monthlyData[monthlyData.length - 1].cumulativeCommitments - 
+                   monthlyData[monthlyData.length - 1].cumulativeActuals) / 1000000).toFixed(2)}M
               </div>
-              <div className="text-sm text-yellow-800">Projekte mit Risiko</div>
-              <div className="text-xs text-yellow-600 mt-1">Mittleres Risiko</div>
+              <div className="text-xs text-gray-500 mt-1">{selectedCurrency}</div>
             </div>
-            
-            <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-              <div className="text-2xl font-bold text-orange-600">
-                {comprehensiveReport.risk_indicators.critical_projects}
-              </div>
-              <div className="text-sm text-orange-800">Kritische Projekte</div>
-              <div className="text-xs text-orange-600 mt-1">Sofortige Aufmerksamkeit</div>
-            </div>
-            
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <div className="text-2xl font-bold text-blue-600">
-                {comprehensiveReport.risk_indicators.average_utilization.toFixed(1)}%
-              </div>
-              <div className="text-sm text-blue-800">Ø Auslastung</div>
-              <div className="text-xs text-blue-600 mt-1">Portfolio-Effizienz</div>
+            <div>
+              <div className="text-sm text-gray-600 mb-1">{t('financials.monthsOfData')}</div>
+              <div className="text-xl font-bold text-gray-900">{summary.totalMonths}</div>
+              <div className="text-xs text-gray-500 mt-1">{t('financials.dataPoints')}</div>
             </div>
           </div>
         </div>
       )}
-
-      {/* Projection Summary */}
-      <div className="mt-6 bg-gray-50 p-4 rounded-lg">
-        <h4 className="text-md font-medium text-gray-800 mb-2">6-Monats-Prognose Zusammenfassung</h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <div>
-            <span className="text-gray-600">Erwartete Gesamtausgaben:</span>
-            <div className="font-semibold text-gray-900">
-              {comprehensiveReport.trend_projections[5]?.projected_spending.toLocaleString()} {selectedCurrency}
-            </div>
-          </div>
-          <div>
-            <span className="text-gray-600">Prognostizierte Abweichung:</span>
-            <div className={`font-semibold ${
-              (comprehensiveReport.trend_projections[5]?.projected_variance || 0) >= 0 ? 'text-red-600' : 'text-green-600'
-            }`}
-            >
-              {(comprehensiveReport.trend_projections[5]?.projected_variance || 0) >= 0 ? '+' : ''}
-              {comprehensiveReport.trend_projections[5]?.projected_variance.toLocaleString()} {selectedCurrency}
-            </div>
-          </div>
-          <div>
-            <span className="text-gray-600">Vertrauensniveau:</span>
-            <div className="font-semibold text-gray-900">
-              {((comprehensiveReport.trend_projections[5]?.confidence || 0) * 100).toFixed(1)}%
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }

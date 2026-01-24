@@ -1,7 +1,7 @@
 'use client'
 
-
 import { Project, BudgetVariance, AnalyticsData } from '../../types'
+import { useTranslations } from '../../../../lib/i18n/context'
 
 interface BudgetVarianceTableProps {
   budgetVariances: BudgetVariance[]
@@ -16,19 +16,21 @@ export default function BudgetVarianceTable({
   selectedCurrency, 
   analyticsData 
 }: BudgetVarianceTableProps) {
+  const { t } = useTranslations()
+  
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">
-            Budget-Abweichungsanalyse ({budgetVariances.length} Projekte)
+            {t('financials.varianceAnalysis')} ({budgetVariances.length} {t('financials.projects')})
           </h3>
           <div className="flex items-center space-x-4 text-sm text-gray-600">
-            <span>Alle Beträge in {selectedCurrency}</span>
+            <span>{t('financials.allAmountsIn')} {selectedCurrency}</span>
             {analyticsData && (
               <>
                 <span>•</span>
-                <span>Ø Effizienz: {analyticsData.avgEfficiency.toFixed(1)}%</span>
+                <span>{t('financials.avgEfficiency')}: {analyticsData.avgEfficiency.toFixed(1)}%</span>
               </>
             )}
           </div>
@@ -39,14 +41,14 @@ export default function BudgetVarianceTable({
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Projekt</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ist</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Abweichung</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Abweichung %</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Effizienz</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gesundheit</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('financials.project')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('financials.budget')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('financials.actual')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('financials.variance')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('financials.variancePercent')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('financials.efficiency')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('financials.status')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('financials.health')}</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -65,7 +67,7 @@ export default function BudgetVarianceTable({
                   <tr key={variance.project_id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
-                        {project?.name || 'Unbekanntes Projekt'}
+                        {project?.name || t('financials.unknownProject')}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -112,8 +114,9 @@ export default function BudgetVarianceTable({
                         'bg-blue-100 text-blue-800'
                       }`}
                       >
-                        {variance.status === 'over_budget' ? 'Über Budget' :
-                         variance.status === 'under_budget' ? 'Unter Budget' : 'Im Budget'}
+                        {variance.status === 'over_budget' ? t('financials.overBudgetStatus') :
+                         variance.status === 'under_budget' ? t('financials.underBudgetStatus') : 
+                         t('financials.onBudgetStatus')}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -124,9 +127,10 @@ export default function BudgetVarianceTable({
                         'bg-gray-100 text-gray-800'
                       }`}
                       >
-                        {project?.health === 'green' ? 'Gut' :
-                         project?.health === 'yellow' ? 'Warnung' :
-                         project?.health === 'red' ? 'Kritisch' : 'Unbekannt'}
+                        {project?.health === 'green' ? t('financials.good') :
+                         project?.health === 'yellow' ? t('financials.warningStatus') :
+                         project?.health === 'red' ? t('financials.critical') : 
+                         t('financials.unknown')}
                       </span>
                     </td>
                   </tr>
@@ -141,25 +145,25 @@ export default function BudgetVarianceTable({
         <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
             <div>
-              <span className="text-gray-600">Gesamteinsparungen:</span>
+              <span className="text-gray-600">{t('financials.totalSavings')}:</span>
               <div className="font-semibold text-green-600">
                 {analyticsData.totalSavings.toLocaleString()} {selectedCurrency}
               </div>
             </div>
             <div>
-              <span className="text-gray-600">Gesamtüberschreitungen:</span>
+              <span className="text-gray-600">{t('financials.totalOverruns')}:</span>
               <div className="font-semibold text-red-600">
                 {analyticsData.totalOverruns.toLocaleString()} {selectedCurrency}
               </div>
             </div>
             <div>
-              <span className="text-gray-600">Netto-Abweichung:</span>
+              <span className="text-gray-600">{t('financials.netVariance')}:</span>
               <div className={`font-semibold ${analyticsData.netVariance >= 0 ? 'text-red-600' : 'text-green-600'}`}>
                 {analyticsData.netVariance >= 0 ? '+' : ''}{analyticsData.netVariance.toLocaleString()} {selectedCurrency}
               </div>
             </div>
             <div>
-              <span className="text-gray-600">Portfolio-Effizienz:</span>
+              <span className="text-gray-600">{t('financials.portfolioEfficiency')}:</span>
               <div className="font-semibold text-blue-600">
                 {analyticsData.avgEfficiency.toFixed(1)}%
               </div>

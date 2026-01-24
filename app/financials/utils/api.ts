@@ -40,9 +40,15 @@ export async function fetchBudgetVariance(
     if (response.ok) {
       return await response.json()
     }
+    
+    // Silently handle 404 - endpoint may not be implemented
+    if (response.status === 404) {
+      return null
+    }
+    
     return null
   } catch (error) {
-    console.error(`Failed to fetch variance for project ${projectId}:`, error)
+    // Silently handle errors - non-critical data
     return null
   }
 }

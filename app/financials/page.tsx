@@ -6,7 +6,6 @@ import { AlertTriangle } from 'lucide-react'
 import AppLayout from '../../components/shared/AppLayout'
 import { ResponsiveContainer } from '../../components/ui/molecules/ResponsiveContainer'
 import { useTranslations } from '../../lib/i18n/context'
-import FinancialActionButtons from '../../components/financial/FinancialActionButtons'
 
 // Import modular components
 import FinancialHeader from './components/FinancialHeader'
@@ -118,20 +117,10 @@ export default function Financials() {
             analyticsData={analyticsData}
             selectedCurrency={selectedCurrency}
             onCurrencyChange={setSelectedCurrency}
-            onExport={exportFinancialData}
-            onRefresh={refetch}
             showFilters={showFilters}
             onToggleFilters={() => setShowFilters(!showFilters)}
-          />
-        </div>
-
-        {/* Financial Action Buttons with RBAC */}
-        <div data-testid="financials-actions">
-          <FinancialActionButtons
-            onImportData={() => setViewMode('csv-import')}
-            onExportReport={exportFinancialData}
+            onExport={exportFinancialData}
             onEditBudget={() => setViewMode('detailed')}
-            variant="default"
           />
         </div>
 
@@ -238,6 +227,8 @@ export default function Financials() {
             <OverviewView
               analyticsData={analyticsData}
               selectedCurrency={selectedCurrency}
+              accessToken={session?.access_token}
+              totalProjectBudget={metrics?.total_budget}
             />
           </div>
         )}
@@ -249,6 +240,7 @@ export default function Financials() {
               costAnalysis={costAnalysis}
               analyticsData={analyticsData}
               selectedCurrency={selectedCurrency}
+              accessToken={session?.access_token}
             />
           </div>
         )}
@@ -258,6 +250,7 @@ export default function Financials() {
             <TrendsView
               comprehensiveReport={comprehensiveReport}
               selectedCurrency={selectedCurrency}
+              accessToken={session?.access_token}
             />
           </div>
         )}
@@ -267,6 +260,7 @@ export default function Financials() {
             <DetailedView
               comprehensiveReport={comprehensiveReport}
               selectedCurrency={selectedCurrency}
+              accessToken={session?.access_token}
             />
           </div>
         )}
@@ -304,15 +298,17 @@ export default function Financials() {
           </div>
         )}
 
-        {/* Budget Variance Table */}
-        <div data-testid="financials-variance-table">
-          <BudgetVarianceTable
-            budgetVariances={budgetVariances}
-            projects={projects}
-            selectedCurrency={selectedCurrency}
-            analyticsData={analyticsData}
-          />
-        </div>
+        {/* Original Budget Variance Table (hidden by default, can be shown if needed) */}
+        {budgetVariances.length > 0 && false && (
+          <div data-testid="financials-budget-variance-table">
+            <BudgetVarianceTable
+              budgetVariances={budgetVariances}
+              projects={projects}
+              selectedCurrency={selectedCurrency}
+              analyticsData={analyticsData}
+            />
+          </div>
+        )}
       </ResponsiveContainer>
     </AppLayout>
   )

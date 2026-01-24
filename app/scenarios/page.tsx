@@ -103,19 +103,30 @@ export default function ScenariosPage() {
         headers['Authorization'] = `Bearer ${session.access_token}`
       }
       
-      const response = await fetch(getApiUrl('/projects'), {
+      const url = getApiUrl('/projects')
+      
+      const response = await fetch(url, {
         headers
       })
       
-      if (!response.ok) throw new Error('Failed to fetch projects')
+      if (!response.ok) {
+        console.error('Failed to fetch projects:', response.statusText)
+        throw new Error('Failed to fetch projects')
+      }
       
       const projectsData = await response.json()
-      const projectsArray = projectsData.projects || projectsData || []
-      setProjects(projectsArray)
+      
+      // Backend returns array directly, not wrapped in {projects: [...]}
+      const projectsArray = Array.isArray(projectsData) ? projectsData : (projectsData.projects || [])
+      
+      // Filter out invalid projects (must have id and name)
+      const validProjects = projectsArray.filter((p: any) => p && p.id && p.name)
+      
+      setProjects(validProjects)
       
       // Auto-select first project if available
-      if (projectsArray.length > 0 && !selectedProject) {
-        setSelectedProject(projectsArray[0])
+      if (validProjects.length > 0 && !selectedProject) {
+        setSelectedProject(validProjects[0])
       }
       
     } catch (err) {

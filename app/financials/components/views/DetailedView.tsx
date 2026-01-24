@@ -1,126 +1,262 @@
 'use client'
 
-
+import { useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { ComprehensiveFinancialReport } from '../../types'
+import { useCommitmentsActualsData } from '../../hooks/useCommitmentsActualsData'
+import { useTranslations } from '../../../../lib/i18n/context'
 
 interface DetailedViewProps {
   comprehensiveReport: ComprehensiveFinancialReport | null
   selectedCurrency: string
+  accessToken?: string
 }
 
-export default function DetailedView({ comprehensiveReport, selectedCurrency }: DetailedViewProps) {
-  if (!comprehensiveReport?.category_spending) {
+export default function DetailedView({ 
+  comprehensiveReport, 
+  selectedCurrency,
+  accessToken 
+}: DetailedViewProps) {
+  const { t } = useTranslations()
+  const [sortBy, setSortBy] = useState<'name' | 'commitments' | 'actuals' | 'variance'>('variance')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [filterStatus, setFilterStatus] = useState<'all' | 'over' | 'under' | 'on'>('all')
+  
+  // Fetch commitments & actuals data
+  const { analytics, summary, loading } = useCommitmentsActualsData({
+    accessToken,
+    selectedCurrency
+  })
+
+  if (loading) {
     return (
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <p className="text-gray-500">Keine Kategoriedaten verfügbar</p>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
       </div>
     )
   }
 
+  if (!analytics || !summary) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <p className="text-gray-500">{t('financials.noDetailedData')}</p>
+      </div>
+    )
+  }
+
+  // Prepare project data for table
+  const projectData = analytics.projectPerformanceData.map(p => ({
+    name: p.name,
+    commitments: p.commitments,
+    actuals: p.actuals,
+    variance: p.variance,
+    variance_percentage: p.variance_percentage,
+    spend_percentage: p.spend_percentage,
+    status: p.spend_percentage > 100 ? 'over' : p.spend_percentage > 50 ? 'on' : 'under'
+  }))
+
+  // Filter data
+  const filteredData = projectData.filter(p => {
+    if (filterStatus === 'all') return true
+    return p.status === filterStatus
+  })
+
+  // Sort data
+  const sortedData = [...filteredData].sort((a, b) => {
+    let comparison = 0
+    switch (sortBy) {
+      case 'name':
+        comparison = a.name.localeCompare(b.name)
+        break
+      case 'commitments':
+        comparison = a.commitments - b.commitments
+        break
+      case 'actuals':
+        comparison = a.actuals - b.actuals
+        break
+      case 'variance':
+        comparison = Math.abs(a.variance) - Math.abs(b.variance)
+        break
+    }
+    return sortOrder === 'asc' ? comparison : -comparison
+  })
+
+  const handleSort = (column: typeof sortBy) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortBy(column)
+      setSortOrder('desc')
+    }
+  }
+
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Detaillierte Kategorieanalyse</h3>
-        <div className="flex items-center space-x-4 text-sm text-gray-600">
-          <span>Alle Beträge in {selectedCurrency}</span>
-          <span>•</span>
-          <span>{comprehensiveReport.category_spending.length} Kategorien</span>
+    <div className="space-y-6">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="text-sm text-gray-600">{t('stats.totalProjects')}</div>
+          <div className="text-2xl font-bold text-gray-900">{projectData.length}</div>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="text-sm text-gray-600">{t('financials.totalCommitments')}</div>
+          <div className="text-2xl font-bold text-blue-600">
+            {summary.totalCommitments.toLocaleString()}
+          </div>
+          <div className="text-xs text-gray-500">{selectedCurrency}</div>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="text-sm text-gray-600">{t('financials.totalActuals')}</div>
+          <div className="text-2xl font-bold text-red-600">
+            {summary.totalActuals.toLocaleString()}
+          </div>
+          <div className="text-xs text-gray-500">{selectedCurrency}</div>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="text-sm text-gray-600">{t('financials.avgSpendRate')}</div>
+          <div className="text-2xl font-bold text-purple-600">
+            {((summary.totalActuals / summary.totalCommitments) * 100).toFixed(1)}%
+          </div>
         </div>
       </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Category Spending Chart */}
-        <div>
-          <h4 className="text-md font-medium text-gray-800 mb-3">Kategorieverteilung</h4>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={comprehensiveReport.category_spending}>
-              <XAxis dataKey="category" />
-              <YAxis />
-              <Tooltip formatter={(value, name) => [
-                typeof value === 'number' ? `${value.toLocaleString()} ${selectedCurrency}` : value,
-                name === 'total_spending' ? 'Gesamtausgaben' : 'Durchschnitt pro Transaktion'
-              ]}
-              />
-              <Legend />
-              <Bar dataKey="total_spending" fill="#3B82F6" name="Gesamtausgaben" />
-            </BarChart>
-          </ResponsiveContainer>
+
+      {/* Project Breakdown Table */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">
+              {t('financials.projectLevelBreakdown')}
+            </h3>
+            <div className="flex items-center space-x-4">
+              {/* Filter */}
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value as any)}
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">{t('financials.allProjects')} ({projectData.length})</option>
+                <option value="over">{t('financials.overBudget')} ({projectData.filter(p => p.status === 'over').length})</option>
+                <option value="on">{t('financials.onTrack')} ({projectData.filter(p => p.status === 'on').length})</option>
+                <option value="under">{t('financials.underUtilized')} ({projectData.filter(p => p.status === 'under').length})</option>
+              </select>
+            </div>
+          </div>
         </div>
 
-        {/* Category Details Table */}
         <div className="overflow-x-auto">
-          <h4 className="text-md font-medium text-gray-800 mb-3">Kategorie-Leistungsmetriken</h4>
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Kategorie</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Ausgaben</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Transaktionen</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Ø/Transaktion</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">% vom Gesamt</th>
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('name')}
+                >
+                  <div className="flex items-center space-x-1">
+                    <span>{t('financials.project')}</span>
+                    {sortBy === 'name' && (
+                      <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </div>
+                </th>
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('commitments')}
+                >
+                  <div className="flex items-center space-x-1">
+                    <span>{t('financials.commitments')}</span>
+                    {sortBy === 'commitments' && (
+                      <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </div>
+                </th>
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('actuals')}
+                >
+                  <div className="flex items-center space-x-1">
+                    <span>{t('financials.actuals')}</span>
+                    {sortBy === 'actuals' && (
+                      <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </div>
+                </th>
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('variance')}
+                >
+                  <div className="flex items-center space-x-1">
+                    <span>{t('financials.variance')}</span>
+                    {sortBy === 'variance' && (
+                      <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </div>
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t('financials.spendRate')}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t('financials.status')}
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {comprehensiveReport.category_spending
-                .sort((a, b) => b.total_spending - a.total_spending)
-                .map((category, index) => {
-                  const totalSpending = comprehensiveReport.category_spending.reduce((sum, cat) => sum + cat.total_spending, 0)
-                  const percentage = totalSpending > 0 ? (category.total_spending / totalSpending * 100) : 0
-                  return (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-4 py-2 text-sm font-medium text-gray-900">{category.category}</td>
-                      <td className="px-4 py-2 text-sm text-gray-900">
-                        {category.total_spending.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-2 text-sm text-gray-900">{category.transaction_count}</td>
-                      <td className="px-4 py-2 text-sm text-gray-900">
-                        {category.average_per_transaction.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-2 text-sm">
-                        <div className="flex items-center">
-                          <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                            <div 
-                              className="bg-blue-600 h-2 rounded-full" 
-                              style={{ width: `${Math.min(percentage, 100)}%` }}
-                            >
-                            </div>
-                          </div>
-                          <span className="text-gray-600">{percentage.toFixed(1)}%</span>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
+              {sortedData.map((project, index) => (
+                <tr key={index} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{project.name}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {project.commitments.toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {project.actuals.toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <span className={project.variance >= 0 ? 'text-red-600' : 'text-green-600'}>
+                      {project.variance >= 0 ? '+' : ''}{project.variance.toLocaleString()}
+                    </span>
+                    <div className="text-xs text-gray-500">
+                      {project.variance_percentage >= 0 ? '+' : ''}{project.variance_percentage.toFixed(1)}%
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="w-20 bg-gray-200 rounded-full h-2 mr-2">
+                        <div 
+                          className={`h-2 rounded-full ${
+                            project.spend_percentage > 100 ? 'bg-red-500' :
+                            project.spend_percentage > 50 ? 'bg-green-500' : 'bg-yellow-500'
+                          }`}
+                          style={{ width: `${Math.min(project.spend_percentage, 100)}%` }}
+                        />
+                      </div>
+                      <span className="text-sm text-gray-600">
+                        {project.spend_percentage.toFixed(1)}%
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      project.status === 'over' ? 'bg-red-100 text-red-800' :
+                      project.status === 'on' ? 'bg-green-100 text-green-800' :
+                      'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {project.status === 'over' ? t('financials.overBudget') :
+                       project.status === 'on' ? t('financials.onTrack') : t('financials.underUtilized')}
+                    </span>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
-      </div>
 
-      {/* Category Insights */}
-      <div className="mt-6 bg-blue-50 p-4 rounded-lg">
-        <h4 className="text-md font-medium text-blue-800 mb-2">Kategorie-Einblicke</h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <div>
-            <span className="text-blue-600">Höchste Ausgabenkategorie:</span>
-            <div className="font-semibold text-blue-900">
-              {comprehensiveReport.category_spending
-                .sort((a, b) => b.total_spending - a.total_spending)[0]?.category || 'N/A'}
-            </div>
-          </div>
-          <div>
-            <span className="text-blue-600">Aktivste Kategorie:</span>
-            <div className="font-semibold text-blue-900">
-              {comprehensiveReport.category_spending
-                .sort((a, b) => b.transaction_count - a.transaction_count)[0]?.category || 'N/A'}
-            </div>
-          </div>
-          <div>
-            <span className="text-blue-600">Höchste Ø-Transaktion:</span>
-            <div className="font-semibold text-blue-900">
-              {comprehensiveReport.category_spending
-                .sort((a, b) => b.average_per_transaction - a.average_per_transaction)[0]?.category || 'N/A'}
-            </div>
+        {/* Table Footer */}
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+          <div className="text-sm text-gray-600">
+            {t('financials.showingProjects', { shown: sortedData.length, total: projectData.length })}
           </div>
         </div>
       </div>

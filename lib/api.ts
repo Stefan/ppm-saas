@@ -51,14 +51,13 @@ export function getApiUrl(endpoint: string, baseUrl?: string): string {
   const base = baseUrl || API_CONFIG.baseUrl
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
   
-  // If base is a full URL (not just '/api'), ensure we add /api prefix to endpoint
+  // If base is a full URL (starts with http/https), use it directly with the endpoint
+  // The endpoint should already include /api if needed (e.g., /api/ai/help/languages)
   if (base.startsWith('http')) {
-    // If endpoint doesn't start with /api, prepend it
-    if (!cleanEndpoint.startsWith('/api')) {
-      return `${base}/api${cleanEndpoint}`
-    }
+    return `${base}${cleanEndpoint}`
   }
   
+  // For relative paths (like '/api'), append the endpoint
   return `${base}${cleanEndpoint}`
 }
 

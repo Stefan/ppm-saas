@@ -46,6 +46,7 @@ from routers.admin_performance import router as admin_performance_router
 from routers.workflows import router as workflows_router
 from routers.rbac import router as rbac_router
 from routers.viewer_restrictions_router import router as viewer_restrictions_router
+from routers.imports import router as imports_router
 
 # Import performance tracking middleware
 from middleware.performance_tracker import PerformanceMiddleware, performance_tracker
@@ -211,6 +212,7 @@ app.include_router(admin_performance_router)
 app.include_router(workflows_router)
 app.include_router(rbac_router)
 app.include_router(viewer_restrictions_router)
+app.include_router(imports_router)
 
 # Add performance tracking middleware
 app.add_middleware(PerformanceMiddleware, tracker=performance_tracker)

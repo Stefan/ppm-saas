@@ -25,15 +25,15 @@ import type {
 // Configuration
 const HELP_CHAT_CONFIG = {
   endpoints: {
-    query: '/ai/help/query',
-    context: '/ai/help/context',
-    feedback: '/ai/help/feedback',
-    tips: '/ai/help/tips',
-    languages: '/ai/help/languages',
-    languagePreference: '/ai/help/language/preference',
-    detectLanguage: '/ai/help/language/detect',
-    translate: '/ai/help/translate',
-    clearCache: '/ai/help/translation/cache'
+    query: '/api/ai/help/query',
+    context: '/api/ai/help/context',
+    feedback: '/api/ai/help/feedback',
+    tips: '/api/ai/help/tips',
+    languages: '/api/ai/help/languages',
+    languagePreference: '/api/ai/help/language/preference',
+    detectLanguage: '/api/ai/help/language/detect',
+    translate: '/api/ai/help/translate',
+    clearCache: '/api/ai/help/translation/cache'
   },
   cache: {
     ttl: 5 * 60 * 1000, // 5 minutes

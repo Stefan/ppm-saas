@@ -61,48 +61,102 @@ function VarianceKPIs({ session, selectedCurrency = 'USD', showDetailedMetrics, 
     setLoading(true)
     setError(null)
     
-    const result = await resilientFetch<{ variances: any[] }>(
-      getApiUrl('/csv-import/variances'),
-      {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        timeout: 5000,
-        retries: 1,
-        fallbackData: { variances: [] },
-        silentFail: true,
+    try {
+      // Fetch commitments and actuals directly instead of pre-calculated variances
+      const [commitmentsRes, actualsRes] = await Promise.all([
+        resilientFetch<{ commitments: any[] }>(
+          getApiUrl('/csv-import/commitments?limit=10000'),
+          {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: 5000,
+            retries: 1,
+            fallbackData: { commitments: [] },
+            silentFail: true,
+          }
+        ),
+        resilientFetch<{ actuals: any[] }>(
+          getApiUrl('/csv-import/actuals?limit=10000'),
+          {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: 5000,
+            retries: 1,
+            fallbackData: { actuals: [] },
+            silentFail: true,
+          }
+        )
+      ])
+      
+      const commitments = commitmentsRes.data?.commitments || []
+      const actuals = actualsRes.data?.actuals || []
+      
+      if (commitments.length === 0 && actuals.length === 0) {
+        setVarianceData(null)
+        setLoading(false)
+        return
       }
-    )
-    
-    if (!result.data || result.data.variances.length === 0) {
+      
+      // Calculate totals
+      const totalCommitments = commitments.reduce((sum: number, c: any) => 
+        sum + (c.total_amount || 0), 0
+      )
+      
+      const totalActuals = actuals.reduce((sum: number, a: any) => 
+        sum + (a.invoice_amount || a.amount || 0), 0
+      )
+      
+      // Group by project to calculate over/under budget
+      const projectSpend = new Map<string, { commitments: number; actuals: number }>()
+      
+      commitments.forEach((c: any) => {
+        const projectKey = c.project_nr || c.project || 'Unknown'
+        const existing = projectSpend.get(projectKey) || { commitments: 0, actuals: 0 }
+        existing.commitments += c.total_amount || 0
+        projectSpend.set(projectKey, existing)
+      })
+      
+      actuals.forEach((a: any) => {
+        const projectKey = a.project_nr || a.project || 'Unknown'
+        const existing = projectSpend.get(projectKey) || { commitments: 0, actuals: 0 }
+        existing.actuals += a.invoice_amount || a.amount || 0
+        projectSpend.set(projectKey, existing)
+      })
+      
+      // Count projects over/under budget
+      let projectsOverBudget = 0
+      let projectsUnderBudget = 0
+      
+      projectSpend.forEach((data) => {
+        if (data.actuals > data.commitments) {
+          projectsOverBudget++
+        } else if (data.actuals < data.commitments) {
+          projectsUnderBudget++
+        }
+      })
+      
+      const totalVariance = totalActuals - totalCommitments
+      const variancePercentage = totalCommitments > 0 ? (totalVariance / totalCommitments * 100) : 0
+      
+      setVarianceData({
+        total_variance: totalVariance,
+        variance_percentage: variancePercentage,
+        projects_over_budget: projectsOverBudget,
+        projects_under_budget: projectsUnderBudget,
+        total_commitments: totalCommitments,
+        total_actuals: totalActuals,
+        currency: selectedCurrency
+      })
+    } catch (err) {
+      console.error('Error calculating variance KPIs:', err)
       setVarianceData(null)
+    } finally {
       setLoading(false)
-      return
     }
-    
-    const variances = result.data.variances
-    
-    // Calculate KPIs from variance data
-    const totalCommitments = variances?.reduce((sum: number, v: any) => sum + (v?.total_commitment || 0), 0) || 0
-    const totalActuals = variances?.reduce((sum: number, v: any) => sum + (v?.total_actual || 0), 0) || 0
-    const totalVariance = totalActuals - totalCommitments
-    const variancePercentage = totalCommitments > 0 ? (totalVariance / totalCommitments * 100) : 0
-    
-    const projectsOverBudget = variances?.filter((v: any) => v?.status === 'over')?.length || 0
-    const projectsUnderBudget = variances?.filter((v: any) => v?.status === 'under')?.length || 0
-    
-    setVarianceData({
-      total_variance: totalVariance,
-      variance_percentage: variancePercentage,
-      projects_over_budget: projectsOverBudget,
-      projects_under_budget: projectsUnderBudget,
-      total_commitments: totalCommitments,
-      total_actuals: totalActuals,
-      currency: selectedCurrency
-    })
-    
-    setLoading(false)
   }
 
   if (loading || permissionsLoading) {

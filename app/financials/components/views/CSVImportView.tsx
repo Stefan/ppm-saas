@@ -51,13 +51,20 @@ export default function CSVImportView({ accessToken }: CSVImportViewProps) {
       const formData = new FormData()
       formData.append('file', file)
       
+      // Create abort controller for timeout (5 minutes for large imports)
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 300000) // 5 minutes
+      
       const response = await fetch(getApiUrl(`/csv-import/upload?import_type=${importType}`), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
         },
-        body: formData
+        body: formData,
+        signal: controller.signal
       })
+      
+      clearTimeout(timeoutId)
       
       if (response.ok) {
         const result = await response.json()
@@ -65,21 +72,33 @@ export default function CSVImportView({ accessToken }: CSVImportViewProps) {
         fetchCSVImportHistory() // Refresh history
       } else {
         const error = await response.json()
+        const errorMessage = typeof error.detail === 'string' 
+          ? error.detail 
+          : Array.isArray(error.detail)
+            ? error.detail.map((e: any) => e.msg || JSON.stringify(e)).join(', ')
+            : 'Upload failed'
+        
         setUploadResult({
           success: false,
           records_processed: 0,
           records_imported: 0,
-          errors: [{ row: 0, field: 'file', message: error.detail || 'Upload failed' }],
+          errors: [{ row: 0, field: 'file', message: errorMessage }],
           warnings: [],
           import_id: ''
         })
       }
     } catch (error) {
+      const errorMessage = error instanceof Error 
+        ? error.name === 'AbortError' 
+          ? 'Import timeout - Die Datei ist zu groß oder der Server antwortet nicht. Bitte versuchen Sie es mit einer kleineren Datei.'
+          : error.message
+        : 'Upload failed'
+      
       setUploadResult({
         success: false,
         records_processed: 0,
         records_imported: 0,
-        errors: [{ row: 0, field: 'file', message: error instanceof Error ? error.message : 'Upload failed' }],
+        errors: [{ row: 0, field: 'file', message: errorMessage }],
         warnings: [],
         import_id: ''
       })
@@ -307,7 +326,7 @@ export default function CSVImportView({ accessToken }: CSVImportViewProps) {
                   <div className="max-h-32 overflow-y-auto">
                     {uploadResult.errors.slice(0, 5).map((error, index) => (
                       <div key={index} className="text-xs text-red-700 mb-1">
-                        Zeile {error.row}: {error.message}
+                        Zeile {error.row}: {typeof error.message === 'string' ? error.message : JSON.stringify(error.message)}
                       </div>
                     ))}
                     {uploadResult.errors.length > 5 && (
@@ -325,7 +344,7 @@ export default function CSVImportView({ accessToken }: CSVImportViewProps) {
                   <div className="max-h-32 overflow-y-auto">
                     {uploadResult.warnings.slice(0, 3).map((warning, index) => (
                       <div key={index} className="text-xs text-yellow-700 mb-1">
-                        Zeile {warning.row}: {warning.message}
+                        Zeile {warning.row}: {typeof warning.message === 'string' ? warning.message : JSON.stringify(warning.message)}
                       </div>
                     ))}
                     {uploadResult.warnings.length > 3 && (

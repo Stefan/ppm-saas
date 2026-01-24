@@ -1,0 +1,223 @@
+import { useState, useEffect, useCallback } from 'react'
+import { getApiUrl } from '../../../lib/api'
+
+export interface CommitmentsActualsSummary {
+  totalCommitments: number
+  totalActuals: number
+  totalSpend: number
+  projectCount: number
+  overBudgetCount: number
+  underBudgetCount: number
+  onBudgetCount: number
+  currency: string
+}
+
+export interface CommitmentsActualsAnalytics {
+  categoryData: Array<{
+    name: string
+    commitments: number
+    actuals: number
+    variance: number
+    variance_percentage: number
+  }>
+  projectPerformanceData: Array<{
+    name: string
+    commitments: number
+    actuals: number
+    variance: number
+    variance_percentage: number
+    spend_percentage: number
+  }>
+  statusDistribution: Array<{
+    name: string
+    value: number
+    color: string
+  }>
+}
+
+interface UseCommitmentsActualsDataProps {
+  accessToken: string | undefined
+  selectedCurrency: string
+}
+
+export function useCommitmentsActualsData({ 
+  accessToken, 
+  selectedCurrency 
+}: UseCommitmentsActualsDataProps) {
+  const [summary, setSummary] = useState<CommitmentsActualsSummary | null>(null)
+  const [analytics, setAnalytics] = useState<CommitmentsActualsAnalytics | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchSummary = useCallback(async () => {
+    if (!accessToken) return
+    
+    setLoading(true)
+    setError(null)
+    
+    try {
+      // Fetch commitments and actuals data
+      const [commitmentsRes, actualsRes] = await Promise.all([
+        fetch(getApiUrl('/csv-import/commitments?limit=10000'), {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          }
+        }),
+        fetch(getApiUrl('/csv-import/actuals?limit=10000'), {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          }
+        })
+      ])
+
+      if (!commitmentsRes.ok || !actualsRes.ok) {
+        throw new Error('Failed to fetch data')
+      }
+
+      const commitmentsData = await commitmentsRes.json()
+      const actualsData = await actualsRes.json()
+
+      // Calculate totals
+      const commitments = commitmentsData.commitments || []
+      const actuals = actualsData.actuals || []
+
+      const totalCommitments = commitments.reduce((sum: number, c: any) => 
+        sum + (c.total_amount || 0), 0
+      )
+      
+      const totalActuals = actuals.reduce((sum: number, a: any) => 
+        sum + (a.invoice_amount || a.amount || 0), 0
+      )
+
+      // Group by project to calculate budget status
+      const projectSpend = new Map<string, { commitments: number; actuals: number }>()
+      
+      commitments.forEach((c: any) => {
+        const projectKey = c.project_nr || c.project || 'Unknown'
+        const existing = projectSpend.get(projectKey) || { commitments: 0, actuals: 0 }
+        existing.commitments += c.total_amount || 0
+        projectSpend.set(projectKey, existing)
+      })
+      
+      actuals.forEach((a: any) => {
+        const projectKey = a.project_nr || a.project || 'Unknown'
+        const existing = projectSpend.get(projectKey) || { commitments: 0, actuals: 0 }
+        existing.actuals += a.invoice_amount || a.amount || 0
+        projectSpend.set(projectKey, existing)
+      })
+
+      // For now, we'll just count projects
+      // In a real implementation, you'd compare against project budgets
+      const projectCount = projectSpend.size
+
+      setSummary({
+        totalCommitments,
+        totalActuals,
+        totalSpend: totalCommitments + totalActuals,
+        projectCount,
+        overBudgetCount: 0, // Will be calculated when we have budget data
+        underBudgetCount: 0,
+        onBudgetCount: projectCount,
+        currency: selectedCurrency
+      })
+
+      // Calculate analytics data
+      
+      // 1. Category breakdown (group by WBS or cost center)
+      const categoryMap = new Map<string, { commitments: number; actuals: number }>()
+      
+      commitments.forEach((c: any) => {
+        // Try multiple field names for WBS (with and without space)
+        const category = c.wbs_element || c.wbs || c.cost_center || 'Uncategorized'
+        const existing = categoryMap.get(category) || { commitments: 0, actuals: 0 }
+        existing.commitments += c.total_amount || 0
+        categoryMap.set(category, existing)
+      })
+      
+      actuals.forEach((a: any) => {
+        // Try multiple field names for WBS (with and without space)
+        const category = a.wbs_element || a.wbs || a.cost_center || 'Uncategorized'
+        const existing = categoryMap.get(category) || { commitments: 0, actuals: 0 }
+        existing.actuals += a.invoice_amount || a.amount || 0
+        categoryMap.set(category, existing)
+      })
+
+      // Debug: Log first few entries to see what's happening
+      if (categoryMap.size > 0) {
+        console.log('Category Map Sample:', Array.from(categoryMap.entries()).slice(0, 3))
+        console.log('First commitment WBS:', commitments[0]?.wbs_element || commitments[0]?.wbs)
+        console.log('First actual WBS:', actuals[0]?.wbs_element || actuals[0]?.wbs)
+      }
+
+      const categoryData = Array.from(categoryMap.entries())
+        .map(([name, data]) => ({
+          name: name.length > 12 ? name.substring(0, 12) + '...' : name, // Truncate long names
+          commitments: data.commitments,
+          actuals: data.actuals,
+          variance: data.actuals - data.commitments,
+          variance_percentage: data.commitments > 0 
+            ? ((data.actuals - data.commitments) / data.commitments * 100) 
+            : 0
+        }))
+        .sort((a, b) => (b.commitments + b.actuals) - (a.commitments + a.actuals))
+        .slice(0, 8) // Top 8 categories (better for readability)
+
+      // 2. Project performance data
+      const projectPerformanceData = Array.from(projectSpend.entries())
+        .map(([projectNr, data]) => ({
+          name: projectNr.substring(0, 15),
+          commitments: data.commitments,
+          actuals: data.actuals,
+          variance: data.actuals - data.commitments,
+          variance_percentage: data.commitments > 0 
+            ? ((data.actuals - data.commitments) / data.commitments * 100) 
+            : 0,
+          spend_percentage: data.commitments > 0 
+            ? (data.actuals / data.commitments * 100) 
+            : 0
+        }))
+        .sort((a, b) => Math.abs(b.variance_percentage) - Math.abs(a.variance_percentage))
+
+      // 3. Status distribution (calculate on ALL projects, not just top 10)
+      const withinBudget = projectPerformanceData.filter(p => 
+        p.spend_percentage > 50 && p.spend_percentage <= 100
+      ).length
+      const overBudget = projectPerformanceData.filter(p => 
+        p.spend_percentage > 100
+      ).length
+      const underUtilized = projectPerformanceData.filter(p => 
+        p.spend_percentage <= 50
+      ).length
+
+      const statusDistribution = [
+        { name: 'Within Budget', value: withinBudget, color: '#10B981' },
+        { name: 'Over Budget', value: overBudget, color: '#EF4444' },
+        { name: 'Under-Utilized', value: underUtilized, color: '#3B82F6' }
+      ]
+
+      setAnalytics({
+        categoryData,
+        projectPerformanceData: projectPerformanceData.slice(0, 10), // Top 10 for display
+        statusDistribution
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch commitments & actuals data')
+    } finally {
+      setLoading(false)
+    }
+  }, [accessToken, selectedCurrency])
+
+  useEffect(() => {
+    fetchSummary()
+  }, [fetchSummary])
+
+  return {
+    summary,
+    analytics,
+    loading,
+    error,
+    refetch: fetchSummary
+  }
+}

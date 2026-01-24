@@ -902,6 +902,7 @@ export default function Resources() {
                 </div>
               </div>
             </div>
+            </div>
           )}
         </div>
 
